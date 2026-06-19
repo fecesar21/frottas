@@ -20,9 +20,7 @@ return new class extends Migration
                 cnh_categoria,
                 cnh_validade,
                 status,
-                CAST(
-                    (julianday(cnh_validade) - julianday('now'))
-                AS INTEGER) AS dias_para_vencer
+                DATEDIFF(cnh_validade, CURDATE()) AS dias_para_vencer
             FROM motoristas
             WHERE status = 'ativo'
             ORDER BY cnh_validade ASC
