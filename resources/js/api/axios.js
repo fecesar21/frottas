@@ -11,16 +11,17 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-api.interceptors.response.use(
-  (res) => res,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('hd_token')
-      localStorage.removeItem('hd_user')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
+ api.interceptors.response.use(
+     (res) => res,
+     (error) => {
+       const isLoginRequest = error.config?.url === '/auth/login'
+       if (error.response?.status === 401 && !isLoginRequest) {
+         localStorage.removeItem('hd_token')
+         localStorage.removeItem('hd_user')
+         window.location.href = '/login'
+       }
+     return Promise.reject(error)
+   }
 )
 
 export default api
