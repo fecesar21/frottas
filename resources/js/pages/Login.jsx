@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Truck } from 'lucide-react'
+import { Truck, User, Lock } from 'lucide-react'
 import Alert from '../components/ui/Alert'
 
 export default function Login() {
@@ -28,53 +28,79 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="bg-blue-600 rounded-xl p-2.5">
-            <Truck size={24} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Health Drive</h1>
-            <p className="text-xs text-gray-500">Gestão de Frota</p>
+    <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-brand-950 flex items-center justify-center p-4 bg-dot-pattern">
+      {/* Decorative blobs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-navy-700/40 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative w-full max-w-sm animate-fade-in">
+        {/* Card */}
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden">
+          {/* Top accent */}
+          <div className="h-1.5 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600" />
+
+          <div className="p-8">
+            {/* Logo */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl p-4 shadow-lg shadow-brand-500/30 mb-4">
+                <Truck size={32} className="text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Health Drive</h1>
+              <p className="text-sm text-gray-400 mt-1">Sistema de Gestão de Frota</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Usuário ou e-mail
+                </label>
+                <div className="relative">
+                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    value={form.usuario}
+                    onChange={(e) => setForm(f => ({ ...f, usuario: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
+                    placeholder="admin"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Senha
+                </label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="password"
+                    required
+                    value={form.senha}
+                    onChange={(e) => setForm(f => ({ ...f, senha: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+
+              {error && <Alert type="error" message={error} />}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-brand-500 to-brand-700 hover:brightness-110 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all duration-150 text-sm mt-2 shadow-md shadow-brand-500/25"
+              >
+                {loading ? 'Entrando...' : 'Entrar'}
+              </button>
+            </form>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Usuário ou e-mail</label>
-            <input
-              type="text"
-              required
-              autoFocus
-              value={form.usuario}
-              onChange={(e) => setForm(f => ({ ...f, usuario: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="admin"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-            <input
-              type="password"
-              required
-              value={form.senha}
-              onChange={(e) => setForm(f => ({ ...f, senha: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••"
-            />
-          </div>
-
-          {error && <Alert type="error" message={error} />}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2"
-          >
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
+        <p className="text-center text-xs text-white/20 mt-6">
+          © {new Date().getFullYear()} Health Drive
+        </p>
       </div>
     </div>
   )

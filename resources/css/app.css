@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-w: 240px;
+  }
+
+  * {
+    @apply transition-colors duration-150;
+  }
+
+  body {
+    @apply antialiased;
+  }
+
+  /* Slim scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+}
+
+@layer utilities {
+  .transition-all-fast {
+    transition: all 150ms ease;
+  }
+
+  /* Dot grid background for Login */
+  .bg-dot-pattern {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Sidebar glow on active */
+  .sidebar-glow {
+    box-shadow: 0 0 12px rgba(26, 171, 179, 0.35);
+  }
+
+  /* Card accent line */
+  .card-accent-brand {
+    border-top: 3px solid theme('colors.brand.400');
+  }
+  .card-accent-green {
+    border-top: 3px solid theme('colors.green.400');
+  }
+  .card-accent-yellow {
+    border-top: 3px solid theme('colors.yellow.400');
+  }
+  .card-accent-red {
+    border-top: 3px solid theme('colors.red.400');
+  }
+  .card-accent-gray {
+    border-top: 3px solid theme('colors.gray.300');
+  }
+}

@@ -11,7 +11,7 @@ export default function Alert({ type = 'info', message, className = '' }) {
   if (!message) return null
   const { icon: Icon, cls } = typeMap[type] ?? typeMap.info
   return (
-    <div className={`flex items-start gap-3 p-4 rounded-lg border ${cls} ${className}`}>
+    <div className={`flex items-start gap-3 p-4 rounded-xl border ${cls} ${className}`}>
       <Icon size={18} className="mt-0.5 shrink-0" />
       <p className="text-sm">{message}</p>
     </div>

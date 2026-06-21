@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import Sidebar from './Sidebar'
@@ -32,13 +33,14 @@ export default function Layout() {
   const location = useLocation()
   const base = '/' + location.pathname.split('/')[1]
   const title = pageTitles[base] ?? 'Health Drive'
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+    <div className="flex min-h-screen bg-slate-50">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Header title={title} />
-        <main className="flex-1 p-6 overflow-auto">
+        <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 p-5 md:p-6 overflow-auto animate-fade-in">
           <Outlet />
         </main>
       </div>
