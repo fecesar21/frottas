@@ -19,7 +19,7 @@ export default function Login() {
     setLoading(true)
     try {
       await login(form)
-      navigate('/')
+     // redirecionamento feito pela guarda if(user) no topo do componente
     } catch (err) {
       setError(err.response?.data?.error ?? 'Usuário ou senha inválidos.')
     } finally {
