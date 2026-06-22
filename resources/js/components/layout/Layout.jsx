@@ -17,9 +17,25 @@ const pageTitles = {
   '/usuarios': 'Usuários',
 }
 
+const ROTAS_OPERADOR_SEM_CHECKIN = ['/checkins']
+const ROTAS_OPERADOR_COM_CHECKIN = ['/checkins', '/viagens', '/abastecimentos']
+
 export function PrivateRoute() {
-  const { user } = useAuth()
-  return user ? <Layout /> : <Navigate to="/login" replace />
+  const { user, isOperador, checkinAtivo } = useAuth()
+  const location = useLocation()
+
+  if (!user) return <Navigate to="/login" replace />
+
+  if (isOperador) {
+    const rotasPermitidas = checkinAtivo ? ROTAS_OPERADOR_COM_CHECKIN : ROTAS_OPERADOR_SEM_CHECKIN
+    const rotaAtual = '/' + location.pathname.split('/')[1]
+
+    if (!rotasPermitidas.includes(rotaAtual)) {
+      return <Navigate to={checkinAtivo ? '/viagens' : '/checkins'} replace />
+    }
+  }
+
+  return <Layout />
 }
 
 export function AdminRoute({ children }) {

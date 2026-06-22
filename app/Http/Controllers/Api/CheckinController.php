@@ -33,7 +33,13 @@ class CheckinController extends Controller
 
     public function store(StoreCheckinRequest $request)
     {
-        $checkin = $this->service->store($request->validated());
+        $data = $request->validated();
+
+        if (auth()->user()->perfil === 'operador') {
+            $data['motorista_id'] = auth()->user()->motorista_id;
+        }
+
+        $checkin = $this->service->store($data);
 
         return (new CheckinResource($checkin))->response()->setStatusCode(201);
     }

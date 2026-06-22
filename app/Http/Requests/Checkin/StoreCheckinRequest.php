@@ -22,4 +22,12 @@ class StoreCheckinRequest extends FormRequest
             'escala_id'               => 'nullable|uuid|exists:escalas,id',
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        $user = auth()->user();
+        if ($user?->perfil === 'operador' && $user->motorista_id) {
+            $this->merge(['motorista_id' => $user->motorista_id]);
+        }
+    }
 }

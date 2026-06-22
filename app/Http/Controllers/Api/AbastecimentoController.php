@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Abastecimento\StoreAbastecimentoRequest;
 use App\Http\Resources\AbastecimentoResource;
 use App\Models\Abastecimento;
+use App\Models\Motorista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -29,6 +30,19 @@ class AbastecimentoController extends Controller
     public function store(StoreAbastecimentoRequest $request)
     {
         $data = $request->validated();
+
+        if (auth()->user()->perfil === 'operador') {
+            $motorista = Motorista::with('checkinAtivo')->find(auth()->user()->motorista_id);
+            $checkin = $motorista?->checkinAtivo;
+
+            if (!$checkin) {
+                return response()->json(['error' => 'Realize o check-in antes de registrar um abastecimento.'], 403);
+            }
+
+            $data['motorista_id'] = auth()->user()->motorista_id;
+            $data['veiculo_id']   = $checkin->veiculo_id;
+        }
+
         $data['abastecido_at'] = $data['abastecido_at'] ?? now();
 
         return (new AbastecimentoResource(Abastecimento::create($data)))->response()->setStatusCode(201);

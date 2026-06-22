@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as checkinsApi from '../../api/checkins'
+import { useAuth } from '../../contexts/AuthContext'
 import MotoristaSelect from '../../components/shared/MotoristaSelect'
 import VeiculoSelect from '../../components/shared/VeiculoSelect'
 import Alert from '../../components/ui/Alert'
 
 export default function CheckinForm({ onSuccess }) {
   const qc = useQueryClient()
+  const { user, isOperador, setCheckinAtivo } = useAuth()
+
   const [form, setForm] = useState({
-    motorista_id: '',
+    motorista_id: isOperador ? user.motorista_id : '',
     veiculo_id: '',
     turno: 'dia',
     km_saida: '',
@@ -19,7 +22,13 @@ export default function CheckinForm({ onSuccess }) {
 
   const criar = useMutation({
     mutationFn: (data) => checkinsApi.criar(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['checkins'] }); qc.invalidateQueries({ queryKey: ['veiculos'] }); onSuccess() },
+    onSuccess: (res) => {
+      const checkin = res.data?.data ?? res.data
+      if (isOperador && checkin) setCheckinAtivo(checkin)
+      qc.invalidateQueries({ queryKey: ['checkins'] })
+      qc.invalidateQueries({ queryKey: ['veiculos'] })
+      onSuccess()
+    },
     onError: (e) => {
       if (e.response?.data?.errors) setFieldErrors(e.response.data.errors)
       else setError(e.response?.data?.message ?? 'Erro ao registrar')
@@ -39,7 +48,13 @@ export default function CheckinForm({ onSuccess }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Motorista *</label>
-        <MotoristaSelect value={form.motorista_id} onChange={(v) => setForm(f => ({ ...f, motorista_id: v }))} required />
+        {isOperador ? (
+          <div className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700">
+            {user.nome}
+          </div>
+        ) : (
+          <MotoristaSelect value={form.motorista_id} onChange={(v) => setForm(f => ({ ...f, motorista_id: v }))} required />
+        )}
         {fieldErrors.motorista_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.motorista_id[0]}</p>}
       </div>
 

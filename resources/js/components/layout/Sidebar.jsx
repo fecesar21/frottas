@@ -41,8 +41,13 @@ const sections = [
 const perfil = { admin: 'Admin', gestor: 'Gestor', operador: 'Operador' }
 
 export default function Sidebar({ open, onClose }) {
-  const { user, isAdmin, logout } = useAuth()
+  const { user, isAdmin, isOperador, checkinAtivo, logout } = useAuth()
   const navigate = useNavigate()
+
+  // Rotas visíveis para operadores dependem do estado do checkin
+  const rotasPermitidas = isOperador
+    ? (checkinAtivo ? ['/checkins', '/viagens', '/abastecimentos'] : ['/checkins'])
+    : null
 
   const handleLogout = async () => {
     await logout()
@@ -95,33 +100,39 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
-          {sections.map((section) => (
-            <div key={section.label}>
-              <p className="text-[10px] font-semibold text-white/30 tracking-widest px-3 mb-1.5 uppercase">
-                {section.label}
-              </p>
-              <div className="space-y-0.5">
-                {section.items.map(({ to, label, icon: Icon }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    end={to === '/'}
-                    onClick={onClose}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                      ${isActive
-                        ? 'bg-brand-500/15 text-brand-300 border-l-2 border-brand-400 pl-[10px]'
-                        : 'text-white/60 hover:bg-white/10 hover:text-white/90 border-l-2 border-transparent hover:translate-x-0.5'
-                      }`
-                    }
-                  >
-                    <Icon size={16} className="shrink-0" />
-                    {label}
-                  </NavLink>
-                ))}
+          {sections.map((section) => {
+            const itensVisiveis = rotasPermitidas
+              ? section.items.filter(item => rotasPermitidas.includes(item.to))
+              : section.items
+            if (itensVisiveis.length === 0) return null
+            return (
+              <div key={section.label}>
+                <p className="text-[10px] font-semibold text-white/30 tracking-widest px-3 mb-1.5 uppercase">
+                  {section.label}
+                </p>
+                <div className="space-y-0.5">
+                  {itensVisiveis.map(({ to, label, icon: Icon }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={to === '/'}
+                      onClick={onClose}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                        ${isActive
+                          ? 'bg-brand-500/15 text-brand-300 border-l-2 border-brand-400 pl-[10px]'
+                          : 'text-white/60 hover:bg-white/10 hover:text-white/90 border-l-2 border-transparent hover:translate-x-0.5'
+                        }`
+                      }
+                    >
+                      <Icon size={16} className="shrink-0" />
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           {isAdmin && (
             <div>

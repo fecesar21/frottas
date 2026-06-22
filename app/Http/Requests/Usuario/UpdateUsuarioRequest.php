@@ -24,6 +24,24 @@ class UpdateUsuarioRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($v) {
+            $usuario = $this->route('usuario');
+            $perfilEfetivo = $this->input('perfil', $usuario?->perfil);
+
+            if ($perfilEfetivo === 'operador') {
+                $novoMotoristaId = array_key_exists('motorista_id', $this->all())
+                    ? $this->input('motorista_id')
+                    : $usuario?->motorista_id;
+
+                if (empty($novoMotoristaId)) {
+                    $v->errors()->add('motorista_id', 'O campo motorista é obrigatório para perfil operador.');
+                }
+            }
+        });
+    }
+
     protected function prepareForValidation(): void
     {
         if ($this->email) {

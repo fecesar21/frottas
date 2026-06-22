@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, LogOut } from 'lucide-react'
 import { format } from 'date-fns'
 import * as checkinsApi from '../../api/checkins'
+import { useAuth } from '../../contexts/AuthContext'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -14,6 +15,7 @@ const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
 
 export default function CheckinsList() {
   const qc = useQueryClient()
+  const { user, isOperador, checkinAtivo, setCheckinAtivo } = useAuth()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [checkoutTarget, setCheckoutTarget] = useState(null)
@@ -25,9 +27,19 @@ export default function CheckinsList() {
     queryFn: () => checkinsApi.listar(statusFilter ? { status: statusFilter } : undefined).then(r => r.data.data ?? r.data),
   })
 
+  // Operadores veem apenas seus próprios checkins
+  const checkinsFiltrados = isOperador
+    ? (data ?? []).filter(c => c.motorista?.id === user.motorista_id || c.motorista_id === user.motorista_id)
+    : (data ?? [])
+
   const doCheckout = useMutation({
     mutationFn: ({ id, data }) => checkinsApi.checkout(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['checkins'] }); qc.invalidateQueries({ queryKey: ['veiculos'] }); setCheckoutTarget(null) },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['checkins'] })
+      qc.invalidateQueries({ queryKey: ['veiculos'] })
+      if (isOperador) setCheckinAtivo(null)
+      setCheckoutTarget(null)
+    },
     onError: (e) => setError(e.response?.data?.message ?? 'Erro ao encerrar'),
   })
 
@@ -35,6 +47,12 @@ export default function CheckinsList() {
 
   return (
     <div className="space-y-4">
+      {isOperador && !checkinAtivo && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+          Você ainda não possui check-in ativo. Registre seu check-in para iniciar as operações.
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
           {[{ v: '', l: 'Todos' }, { v: 'ativo', l: 'Ativos' }, { v: 'finalizado', l: 'Finalizados' }].map(({ v, l }) => (
@@ -44,9 +62,11 @@ export default function CheckinsList() {
             </button>
           ))}
         </div>
-        <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
-          <Plus size={16} /> Novo check-in
-        </button>
+        {(!isOperador || !checkinAtivo) && (
+          <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+            <Plus size={16} /> Novo check-in
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -59,7 +79,7 @@ export default function CheckinsList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {(data ?? []).map((c) => (
+            {checkinsFiltrados.map((c) => (
               <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-gray-800">{c.motorista?.nome ?? '—'}</td>
                 <td className="px-4 py-3 font-mono text-gray-600">{c.veiculo?.placa ?? '—'}</td>
@@ -79,7 +99,7 @@ export default function CheckinsList() {
                 </td>
               </tr>
             ))}
-            {(data ?? []).length === 0 && (
+            {checkinsFiltrados.length === 0 && (
               <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Nenhum check-in encontrado</td></tr>
             )}
           </tbody>

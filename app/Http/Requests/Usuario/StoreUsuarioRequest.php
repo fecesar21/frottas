@@ -18,7 +18,9 @@ class StoreUsuarioRequest extends FormRequest
             'email'        => 'nullable|email|unique:usuarios',
             'senha'        => 'required|string|min:6',
             'perfil'       => 'required|in:admin,gestor,operador',
-            'motorista_id' => 'nullable|uuid|exists:motoristas,id',
+            'motorista_id' => $this->input('perfil') === 'operador'
+                ? 'required|uuid|exists:motoristas,id'
+                : 'nullable|uuid|exists:motoristas,id',
         ];
     }
 

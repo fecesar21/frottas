@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import * as abastecimentosApi from '../../api/abastecimentos'
+import { useAuth } from '../../contexts/AuthContext'
 import MotoristaSelect from '../../components/shared/MotoristaSelect'
 import VeiculoSelect from '../../components/shared/VeiculoSelect'
 import Alert from '../../components/ui/Alert'
@@ -8,9 +9,18 @@ import Alert from '../../components/ui/Alert'
 const combustiveis = ['diesel_s10', 'diesel_s500', 'gasolina', 'gasolina_aditivada', 'etanol', 'gnv', 'flex']
 
 export default function AbastecimentoForm({ onSuccess }) {
+  const { user, isOperador, checkinAtivo } = useAuth()
+
   const [form, setForm] = useState({
-    motorista_id: '', veiculo_id: '', posto: '', combustivel: 'diesel_s10',
-    litros: '', valor_litro: '', km_momento: '', nota_fiscal: '', observacoes: '',
+    motorista_id: isOperador ? user.motorista_id : '',
+    veiculo_id:   isOperador ? (checkinAtivo?.veiculo_id ?? '') : '',
+    posto: '',
+    combustivel: 'diesel_s10',
+    litros: '',
+    valor_litro: '',
+    km_momento: '',
+    nota_fiscal: '',
+    observacoes: '',
   })
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
@@ -49,14 +59,28 @@ export default function AbastecimentoForm({ onSuccess }) {
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Motorista *</label>
-          <MotoristaSelect value={form.motorista_id} onChange={v => setForm(f => ({ ...f, motorista_id: v }))} required />
+          {isOperador ? (
+            <div className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700">
+              {user.nome}
+            </div>
+          ) : (
+            <MotoristaSelect value={form.motorista_id} onChange={v => setForm(f => ({ ...f, motorista_id: v }))} required />
+          )}
           {fe('motorista_id')}
         </div>
+
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Veículo *</label>
-          <VeiculoSelect value={form.veiculo_id} onChange={v => setForm(f => ({ ...f, veiculo_id: v }))} required />
+          {isOperador ? (
+            <div className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700">
+              {checkinAtivo?.veiculo?.placa ?? checkinAtivo?.veiculo_id ?? '—'}
+            </div>
+          ) : (
+            <VeiculoSelect value={form.veiculo_id} onChange={v => setForm(f => ({ ...f, veiculo_id: v }))} required />
+          )}
           {fe('veiculo_id')}
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Posto</label>
           <input type="text" value={form.posto} onChange={e => setForm(f => ({ ...f, posto: e.target.value }))}

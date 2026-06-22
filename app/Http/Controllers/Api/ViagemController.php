@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Viagem\StoreViagemRequest;
 use App\Http\Requests\Viagem\UpdateViagemRequest;
 use App\Http\Resources\ViagemResource;
+use App\Models\Motorista;
 use App\Models\Viagem;
 use App\Services\ViagemService;
 use Illuminate\Http\Request;
@@ -32,7 +33,22 @@ class ViagemController extends Controller
 
     public function store(StoreViagemRequest $request)
     {
-        $viagem = $this->service->store($request->validated());
+        $data = $request->validated();
+
+        if (auth()->user()->perfil === 'operador') {
+            $motorista = Motorista::with('checkinAtivo')->find(auth()->user()->motorista_id);
+            $checkin = $motorista?->checkinAtivo;
+
+            if (!$checkin) {
+                return response()->json(['error' => 'Realize o check-in antes de registrar uma viagem.'], 403);
+            }
+
+            $data['motorista_id'] = auth()->user()->motorista_id;
+            $data['veiculo_id']   = $checkin->veiculo_id;
+            $data['checkin_id']   = $checkin->id;
+        }
+
+        $viagem = $this->service->store($data);
 
         return (new ViagemResource($viagem->load(['veiculo', 'motorista'])))->response()->setStatusCode(201);
     }
