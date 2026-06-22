@@ -1,31 +1,32 @@
 import { useState } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Truck, User, Lock } from 'lucide-react'
 import Alert from '../components/ui/Alert'
 
 export default function Login() {
   const { user, login } = useAuth()
-  const navigate = useNavigate()
   const [form, setForm] = useState({ usuario: '', senha: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Mantém a guarda caso o usuário já acesse a página estando logado
+  // Quando o estado `user` for atualizado após login bem-sucedido,
+  // esta guarda dispara reativamente e redireciona para o dashboard.
   if (user) return <Navigate to="/" replace />
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-    
     try {
       await login(form)
-      // Redireciona imediatamente após o sucesso do login
-      navigate('/', { replace: true })
+      // Não chamamos navigate() aqui — o setUser dentro de login()
+      // atualiza o contexto e a guarda "if (user)" acima redireciona
+      // de forma reativa, evitando a race condition com PrivateRoute.
     } catch (err) {
       setError(err.response?.data?.error ?? 'Usuário ou senha inválidos.')
-      setLoading(false) // Só desativa o loading se der erro
+    } finally {
+      setLoading(false)
     }
   }
 
