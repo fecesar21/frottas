@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('combustivel', ['diesel_s10', 'diesel_s500', 'gasolina', 'gasolina_aditivada', 'etanol', 'gnv', 'flex']);
             $table->decimal('litros', 8, 3);
             $table->decimal('valor_litro', 7, 3);
+            $table->decimal('valor_total', 10, 2)->nullable(); // ou o tipo que você usou (float, double...)
             $table->unsignedInteger('km_momento');
             $table->timestamp('abastecido_at');
             $table->string('nota_fiscal', 60)->nullable();
@@ -25,6 +26,10 @@ return new class extends Migration
             $table->foreign('veiculo_id')->references('id')->on('veiculos');
             $table->foreign('motorista_id')->references('id')->on('motoristas');
             $table->foreign('checkin_id')->references('id')->on('checkins')->nullOnDelete();
+
+            // 2. GARANTA QUE ESTA LINHA ABAIXO EXISTE (Ela cria automaticamente o 'created_at' e 'updated_at')
+            $table->timestamps();
+
         });
     }
 
@@ -33,3 +38,4 @@ return new class extends Migration
         Schema::dropIfExists('abastecimentos');
     }
 };
+

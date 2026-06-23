@@ -11,19 +11,19 @@ class UsuarioSeeder extends Seeder
     public function run(): void
     {
         Usuario::firstOrCreate(
-            ['email' => 'admin@healthdrive.com.br'],
+            ['email' => 'fernando.cardoso@isac.org.br'],
             [
-                'nome'       => 'Administrador',
-                'senha_hash' => Hash::make('admin123'),
+                'nome'       => 'Fernando César Cardoso',
+                'senha_hash' => Hash::make('Fer$2025'),
                 'perfil'     => 'admin',
                 'ativo'      => true,
             ]
         );
 
         Usuario::firstOrCreate(
-            ['email' => 'gestor@healthdrive.com.br'],
+            ['email' => 'amadeu.lima@isac.org.br'],
             [
-                'nome'       => 'Gestor de Frota',
+                'nome'       => 'Amadeu Lima',
                 'senha_hash' => Hash::make('gestor123'),
                 'perfil'     => 'gestor',
                 'ativo'      => true,
