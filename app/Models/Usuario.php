@@ -7,8 +7,11 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Usuario extends Authenticatable
+//class Usuario extends Authenticatable
+class Usuario extends Model
 {
     use HasApiTokens, HasUuids;
 
@@ -25,4 +28,9 @@ class Usuario extends Authenticatable
 
     // Sanctum usa a coluna senha_hash como password
     public function getAuthPassword() { return $this->senha_hash; }
+
+    public function motorista(): BelongsTo
+    {
+        return $this->belongsTo(Motorista::class, 'motorista_id');
+    }
 }

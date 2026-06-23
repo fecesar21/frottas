@@ -9,7 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('usuarios', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            //$table->uuid('id')->primary();
+            $table->foreignId('motorista_id')->nullable()->constrained('motoristas')->onDelete('set null');
             $table->string('nome', 100);
             $table->string('email', 100)->nullable()->unique();
             $table->string('senha_hash');
