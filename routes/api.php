@@ -37,7 +37,8 @@ Route::prefix('auth')->group(function () {
     Route::apiResource('veiculos', VeiculoController::class);
 
     // Motoristas
-    Route::get('motoristas/alertas/cnh',       [MotoristaController::class, 'alertasCnh']);
+    Route::get('motoristas/disponiveis',        [MotoristaController::class, 'disponiveis']);
+    Route::get('motoristas/alertas/cnh',        [MotoristaController::class, 'alertasCnh']);
     Route::apiResource('motoristas', MotoristaController::class);
 
     // Escalas

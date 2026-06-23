@@ -16,6 +16,7 @@ class UpdateUsuarioRequest extends FormRequest
     {
         return [
             'nome'         => 'sometimes|string|max:100',
+            'cpf'          => ['sometimes', 'string', 'max:14', Rule::unique('usuarios')->ignore($this->route('usuario'))],
             'email'        => ['sometimes', 'email', Rule::unique('usuarios')->ignore($this->route('usuario'))],
             'perfil'       => 'sometimes|in:admin,gestor,operador',
             'ativo'        => 'sometimes|boolean',

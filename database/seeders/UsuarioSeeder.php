@@ -11,19 +11,21 @@ class UsuarioSeeder extends Seeder
     public function run(): void
     {
         Usuario::firstOrCreate(
-            ['email' => 'fernando.cardoso@isac.org.br'],
+            ['cpf' => '000.000.000-01'],
             [
                 'nome'       => 'Fernando César Cardoso',
-                'senha_hash' => Hash::make('Fer$2025'),
+                'email'      => 'admin@admin.com',
+                'senha_hash' => Hash::make('admin@2026'),
                 'perfil'     => 'admin',
                 'ativo'      => true,
             ]
         );
 
         Usuario::firstOrCreate(
-            ['email' => 'amadeu.lima@isac.org.br'],
+            ['cpf' => '000.000.000-02'],
             [
                 'nome'       => 'Amadeu Lima',
+                'email'      => 'amadeu.lima@isac.org.br',
                 'senha_hash' => Hash::make('gestor123'),
                 'perfil'     => 'gestor',
                 'ativo'      => true,

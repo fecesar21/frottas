@@ -45,6 +45,16 @@ class MotoristaController extends Controller
         return response()->json(['message' => 'Motorista desativado']);
     }
 
+    public function disponiveis()
+    {
+        $motoristas = Motorista::where('status', 'ativo')
+            ->whereDoesntHave('usuario', fn ($q) => $q->where('perfil', 'operador'))
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'cpf']);
+
+        return MotoristaResource::collection($motoristas);
+    }
+
     public function alertasCnh()
     {
         return response()->json(DB::select('SELECT * FROM vw_cnh_vencimento'));

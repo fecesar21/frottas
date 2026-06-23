@@ -14,7 +14,7 @@ class StoreCheckinRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'motorista_id'            => 'required|uuid|exists:motoristas,id',
+            'motorista_id'            => 'nullable|uuid|exists:motoristas,id',
             'veiculo_id'              => 'required|uuid|exists:veiculos,id',
             'turno'                   => 'required|in:dia,noite',
             'km_saida'                => 'required|integer|min:0',

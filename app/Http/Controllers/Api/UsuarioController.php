@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Http\Resources\UsuarioResource;
-use App\Models\Motorista;
 use App\Models\Usuario;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
@@ -22,16 +20,9 @@ class UsuarioController extends Controller
     {
         $d = $request->validated();
 
-        if (empty($d['motorista_id']) && $d['perfil'] !== 'admin') {
-            $primeiro = explode(' ', $d['nome'])[0];
-            $mot = Motorista::where('nome', 'like', $primeiro . '%')->where('status', 'ativo')->first();
-            if ($mot) {
-                $d['motorista_id'] = $mot->id;
-            }
-        }
-
         $usuario = Usuario::create([
             'nome'         => $d['nome'],
+            'cpf'          => $d['cpf'],
             'email'        => $d['email'] ?? null,
             'senha_hash'   => Hash::make($d['senha']),
             'perfil'       => $d['perfil'],

@@ -15,13 +15,21 @@ class StoreUsuarioRequest extends FormRequest
     {
         return [
             'nome'         => 'required|string|max:100',
+            'cpf'          => 'required|string|max:14|unique:usuarios',
             'email'        => 'nullable|email|unique:usuarios',
             'senha'        => 'required|string|min:6',
             'perfil'       => 'required|in:admin,gestor,operador',
-            'motorista_id' => $this->input('perfil') === 'operador'
-                ? 'required|uuid|exists:motoristas,id'
-                : 'nullable|uuid|exists:motoristas,id',
+            'motorista_id' => 'nullable|uuid|exists:motoristas,id',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($v) {
+            if ($this->input('perfil') === 'operador' && empty($this->input('motorista_id'))) {
+                $v->errors()->add('motorista_id', 'O campo motorista é obrigatório para perfil operador.');
+            }
+        });
     }
 
     protected function prepareForValidation(): void

@@ -12,7 +12,11 @@ export default function Login() {
 
   // Quando o estado `user` for atualizado após login bem-sucedido,
   // esta guarda dispara reativamente e redireciona para o dashboard.
-  if (user) return <Navigate to="/" replace />
+  if (user) {
+    if (user.perfil === 'operador')
+      return <Navigate to={user.checkin_ativo ? '/viagens' : '/checkins'} replace />
+    return <Navigate to="/" replace />
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()

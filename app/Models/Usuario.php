@@ -6,14 +6,13 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-//class Usuario extends Authenticatable
-class Usuario extends Model
+class Usuario extends Authenticatable
 {
-    use HasApiTokens, HasUuids;
+    use HasApiTokens, HasFactory, HasUuids;
 
     protected $table      = 'usuarios';
     protected $primaryKey = 'id';
@@ -21,7 +20,7 @@ class Usuario extends Model
     protected $keyType    = 'string';
 
     protected $fillable = [
-        'nome', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id',
+        'nome', 'cpf', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id',
     ];
 
     protected $hidden = ['senha_hash'];

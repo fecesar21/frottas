@@ -5,15 +5,18 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Motorista extends Model {
-    use HasUuids;
+    use HasFactory, HasUuids;
     protected $table = 'motoristas';
     public $incrementing = false; protected $keyType = 'string';
     protected $fillable = [
         'nome','cpf','telefone','email','cnh_numero','cnh_categoria',
         'cnh_validade','turno_padrao','status','observacoes',
     ];
+    public function usuario(): HasOne   { return $this->hasOne(Usuario::class, 'motorista_id'); }
     public function checkinAtivo()  { return $this->hasOne(Checkin::class,'motorista_id')->where('status','ativo'); }
     public function checkins()      { return $this->hasMany(Checkin::class,'motorista_id'); }
     public function escalas()       { return $this->hasMany(Escala::class,'motorista_id'); }

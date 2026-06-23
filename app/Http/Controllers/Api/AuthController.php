@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Motorista;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -15,11 +16,13 @@ class AuthController extends Controller
     {
         $input = $r->validated();
 
-        // Aceita login por nome de usuário OU por e-mail
+        // Aceita login por CPF, e-mail ou nome de usuário
+        $login = $input['usuario'];
         $usuario = Usuario::where('ativo', true)
-            ->where(function ($q) use ($input) {
-                $q->where('nome', $input['usuario'])
-                  ->orWhere('email', strtolower($input['usuario']));
+            ->where(function ($q) use ($login) {
+                $q->where('cpf', $login)
+                  ->orWhere('email', strtolower($login))
+                  ->orWhere('nome', $login);
             })->first();
 
         if (!$usuario || !Hash::check($input['senha'], $usuario->senha_hash)) {
@@ -42,7 +45,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
+        Auth::forgetGuards();
         return response()->json(['message' => 'Logout realizado com sucesso']);
     }
 
@@ -57,6 +61,7 @@ class AuthController extends Controller
         return [
             'id'            => $usuario->id,
             'nome'          => $usuario->nome,
+            'cpf'           => $usuario->cpf,
             'email'         => $usuario->email,
             'perfil'        => $usuario->perfil,
             'motorista_id'  => $usuario->motorista_id,

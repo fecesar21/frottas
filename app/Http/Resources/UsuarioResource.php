@@ -12,6 +12,7 @@ class UsuarioResource extends JsonResource
         return [
             'id'           => $this->id,
             'nome'         => $this->nome,
+            'cpf'          => $this->cpf,
             'email'        => $this->email,
             'perfil'       => $this->perfil,
             'ativo'        => $this->ativo,

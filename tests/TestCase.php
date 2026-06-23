@@ -13,7 +13,8 @@ abstract class TestCase extends BaseTestCase
     protected function loginAs(string $perfil = 'admin'): Usuario
     {
         $usuario = Usuario::factory()->create(['perfil' => $perfil]);
-        $this->actingAs($usuario, 'sanctum');
+        $token = $usuario->createToken('test')->plainTextToken;
+        $this->withToken($token);
 
         return $usuario;
     }
