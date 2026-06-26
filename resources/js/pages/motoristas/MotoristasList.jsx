@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, AlertTriangle } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import * as motoristasApi from '../../api/motoristas'
@@ -17,15 +17,17 @@ export default function MotoristasList() {
   const [statusFilter, setStatusFilter] = useState('ativo')
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
+  const [statusError, setStatusError] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['motoristas', statusFilter],
     queryFn: () => motoristasApi.listar({ status: statusFilter || undefined }).then(r => r.data.data ?? r.data),
   })
 
-  const desativar = useMutation({
-    mutationFn: (id) => motoristasApi.desativar(id),
+  const mudarStatus = useMutation({
+    mutationFn: ({ id, status }) => motoristasApi.atualizarStatus(id, status),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['motoristas'] }),
+    onError: (e) => setStatusError(e.response?.data?.message ?? 'Erro ao atualizar status'),
   })
 
   const closeForm = () => { setFormOpen(false); setEditTarget(null) }
@@ -56,11 +58,13 @@ export default function MotoristasList() {
         )}
       </div>
 
+      {statusError && <Alert type="error" message={statusError} />}
+
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              {['Nome', 'CPF', 'CNH', 'Cat.', 'Validade CNH', 'Turno', 'Status', ''].map(h => (
+              {['Nome', 'CPF', 'CNH', 'Cat.', 'Validade CNH', 'Turno', 'Status', 'Ativo', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
@@ -70,7 +74,7 @@ export default function MotoristasList() {
               const dias = m.dias_para_vencer_cnh
               const alerta = cnhStatus(dias)
               return (
-                <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={m.id} className={`hover:bg-gray-50 transition-colors ${m.status === 'inativo' ? 'opacity-60' : ''}`}>
                   <td className="px-4 py-3 font-medium text-gray-800">{m.nome}</td>
                   <td className="px-4 py-3 text-gray-500 font-mono">{m.cpf}</td>
                   <td className="px-4 py-3 text-gray-500 font-mono">{m.cnh_numero}</td>
@@ -89,20 +93,31 @@ export default function MotoristasList() {
                   <td className="px-4 py-3 text-gray-500 capitalize">{m.turno_padrao ?? '—'}</td>
                   <td className="px-4 py-3"><Badge value={m.status} /></td>
                   <td className="px-4 py-3">
+                    {isGestor ? (
+                      <input
+                        type="checkbox"
+                        checked={m.status !== 'inativo'}
+                        disabled={mudarStatus.isPending}
+                        onChange={() => mudarStatus.mutate({ id: m.id, status: m.status === 'inativo' ? 'ativo' : 'inativo' })}
+                        title={m.status === 'inativo' ? 'Reativar motorista' : 'Inativar motorista'}
+                        className="w-4 h-4 accent-blue-600 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                    ) : (
+                      <span className={`inline-block w-2 h-2 rounded-full ${m.status !== 'inativo' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     {isGestor && (
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => { setEditTarget(m); setFormOpen(true) }} className="text-gray-400 hover:text-blue-600 transition-colors"><Pencil size={15} /></button>
-                        {m.status === 'ativo' && (
-                          <button onClick={() => desativar.mutate(m.id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
-                        )}
-                      </div>
+                      <button onClick={() => { setEditTarget(m); setFormOpen(true) }} className="text-gray-400 hover:text-blue-600 transition-colors">
+                        <Pencil size={15} />
+                      </button>
                     )}
                   </td>
                 </tr>
               )
             })}
             {(data ?? []).length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Nenhum motorista encontrado</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Nenhum motorista encontrado</td></tr>
             )}
           </tbody>
         </table>

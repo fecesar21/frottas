@@ -35,12 +35,17 @@ class MotoristaController extends Controller
     {
         $motorista->update($request->validated());
 
+        if (($request->validated()['status'] ?? null) === 'inativo') {
+            $motorista->usuario?->update(['ativo' => false]);
+        }
+
         return new MotoristaResource($motorista->fresh());
     }
 
     public function destroy(Motorista $motorista)
     {
         $motorista->update(['status' => 'inativo']);
+        $motorista->usuario?->update(['ativo' => false]);
 
         return response()->json(['message' => 'Motorista desativado']);
     }
