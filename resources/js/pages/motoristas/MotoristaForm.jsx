@@ -3,12 +3,27 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as motoristasApi from '../../api/motoristas'
 import Alert from '../../components/ui/Alert'
 
+function mascaraCpf(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 3) return d
+  if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`
+  if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`
+}
+
+function mascaraTelefone(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 2) return d
+  if (d.length <= 7) return `(${d.slice(0,2)}) ${d.slice(2)}`
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`
+}
+
 export default function MotoristaForm({ motorista, onSuccess }) {
   const qc = useQueryClient()
   const [form, setForm] = useState({
     nome: motorista?.nome ?? '',
-    cpf: motorista?.cpf ?? '',
-    telefone: motorista?.telefone ?? '',
+    cpf: mascaraCpf(motorista?.cpf ?? ''),
+    telefone: mascaraTelefone(motorista?.telefone ?? ''),
     email: motorista?.email ?? '',
     cnh_numero: motorista?.cnh_numero ?? '',
     cnh_categoria: motorista?.cnh_categoria ?? 'D',
@@ -20,6 +35,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
   const [fieldErrors, setFieldErrors] = useState({})
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+  const setMask = (k, fn) => (e) => setForm(f => ({ ...f, [k]: fn(e.target.value) }))
 
   const salvar = useMutation({
     mutationFn: (data) => motorista ? motoristasApi.atualizar(motorista.id, data) : motoristasApi.criar(data),
@@ -35,6 +51,8 @@ export default function MotoristaForm({ motorista, onSuccess }) {
     setError('')
     setFieldErrors({})
     const payload = { ...form }
+    if (payload.cpf)      payload.cpf      = payload.cpf.replace(/\D/g, '')
+    if (payload.telefone) payload.telefone = payload.telefone.replace(/\D/g, '')
     Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null })
     salvar.mutate(payload)
   }
@@ -57,11 +75,17 @@ export default function MotoristaForm({ motorista, onSuccess }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label>
-          {inp('cpf', 'text', { required: true, placeholder: '000.000.000-00' })} {fe('cpf')}
+          <input type="text" required value={form.cpf} onChange={setMask('cpf', mascaraCpf)}
+            placeholder="000.000.000-00" inputMode="numeric"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          {fe('cpf')}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-          {inp('telefone')} {fe('telefone')}
+          <input type="text" value={form.telefone} onChange={setMask('telefone', mascaraTelefone)}
+            placeholder="(00) 00000-0000" inputMode="numeric"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          {fe('telefone')}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>

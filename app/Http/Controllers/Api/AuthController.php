@@ -16,14 +16,10 @@ class AuthController extends Controller
     {
         $input = $r->validated();
 
-        // Aceita login por CPF, e-mail ou nome de usuário
-        $login = $input['usuario'];
+        $cpf = preg_replace('/\D/', '', $input['usuario']);
         $usuario = Usuario::where('ativo', true)
-            ->where(function ($q) use ($login) {
-                $q->where('cpf', $login)
-                  ->orWhere('email', strtolower($login))
-                  ->orWhere('nome', $login);
-            })->first();
+            ->where('cpf', $cpf)
+            ->first();
 
         if (!$usuario || !Hash::check($input['senha'], $usuario->senha_hash)) {
             return response()->json(['error' => 'Usuário ou senha inválidos'], 401);

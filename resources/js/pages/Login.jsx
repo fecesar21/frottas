@@ -4,6 +4,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { Truck, User, Lock } from 'lucide-react'
 import Alert from '../components/ui/Alert'
 
+function mascaraCpf(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 3) return d
+  if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`
+  if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`
+}
+
 export default function Login() {
   const { user, login } = useAuth()
   const [form, setForm] = useState({ usuario: '', senha: '' })
@@ -23,7 +31,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      await login(form)
+      await login({ ...form, usuario: form.usuario.replace(/\D/g, '') })
       // Não chamamos navigate() aqui — o setUser dentro de login()
       // atualiza o contexto e a guarda "if (user)" acima redireciona
       // de forma reativa, evitando a race condition com PrivateRoute.
@@ -55,7 +63,7 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Usuário ou e-mail
+                  CPF
                 </label>
                 <div className="relative">
                   <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -63,10 +71,11 @@ export default function Login() {
                     type="text"
                     required
                     autoFocus
+                    inputMode="numeric"
                     value={form.usuario}
-                    onChange={(e) => setForm(f => ({ ...f, usuario: e.target.value }))}
+                    onChange={(e) => setForm(f => ({ ...f, usuario: mascaraCpf(e.target.value) }))}
                     className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
-                    placeholder="admin"
+                    placeholder="000.000.000-00"
                   />
                 </div>
               </div>
@@ -80,10 +89,13 @@ export default function Login() {
                   <input
                     type="password"
                     required
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    minLength={6}
                     value={form.senha}
                     onChange={(e) => setForm(f => ({ ...f, senha: e.target.value }))}
                     className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
-                    placeholder="••••••••"
+                    placeholder="••••••"
                   />
                 </div>
               </div>

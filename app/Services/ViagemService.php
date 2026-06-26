@@ -9,6 +9,16 @@ class ViagemService
 {
     public function store(array $data): Viagem
     {
+        $jaEmAndamento = Viagem::where('motorista_id', $data['motorista_id'])
+            ->where('status', 'em_andamento')
+            ->exists();
+
+        if ($jaEmAndamento) {
+            throw ValidationException::withMessages([
+                'motorista_id' => 'Este motorista já possui uma viagem em andamento.',
+            ]);
+        }
+
         $data['saida_at'] = $data['saida_at'] ?? now();
         $data['status']   = 'em_andamento';
 

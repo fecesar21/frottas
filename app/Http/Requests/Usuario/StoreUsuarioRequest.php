@@ -17,7 +17,7 @@ class StoreUsuarioRequest extends FormRequest
             'nome'         => 'required|string|max:100',
             'cpf'          => 'required|string|max:14|unique:usuarios',
             'email'        => 'nullable|email|unique:usuarios',
-            'senha'        => 'required|string|min:6',
+            'senha'        => ['required', 'string', 'min:6', 'regex:/^[0-9]+$/'],
             'perfil'       => 'required|in:admin,gestor,operador',
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',
         ];

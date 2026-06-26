@@ -20,7 +20,7 @@ class UpdateUsuarioRequest extends FormRequest
             'email'        => ['sometimes', 'email', Rule::unique('usuarios')->ignore($this->route('usuario'))],
             'perfil'       => 'sometimes|in:admin,gestor,operador',
             'ativo'        => 'sometimes|boolean',
-            'senha'        => 'nullable|string|min:6',
+            'senha'        => ['nullable', 'string', 'min:6', 'regex:/^[0-9]+$/'],
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',
         ];
     }

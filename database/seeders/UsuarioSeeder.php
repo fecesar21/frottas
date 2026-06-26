@@ -11,11 +11,11 @@ class UsuarioSeeder extends Seeder
     public function run(): void
     {
         Usuario::firstOrCreate(
-            ['cpf' => '000.000.000-01'],
+            ['cpf' => '319.962.958-02'],
             [
                 'nome'       => 'Fernando César Cardoso',
                 'email'      => 'admin@admin.com',
-                'senha_hash' => Hash::make('admin@2026'),
+                'senha_hash' => Hash::make('28052025'),
                 'perfil'     => 'admin',
                 'ativo'      => true,
             ]

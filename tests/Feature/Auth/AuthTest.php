@@ -10,32 +10,30 @@ class AuthTest extends TestCase
 {
     public function test_login_com_credenciais_validas(): void
     {
-        $usuario = Usuario::factory()->create([
-            'nome'       => 'joao',
-            'email'      => 'joao@test.com',
-            'senha_hash' => Hash::make('senha123'),
-            'ativo'      => true,
-        ]);
-
-        $response = $this->postJson('/api/auth/login', [
-            'usuario' => 'joao',
-            'senha'   => 'senha123',
-        ]);
-
-        $response->assertOk()
-            ->assertJsonStructure(['token', 'user' => ['id', 'nome', 'email', 'perfil']]);
-    }
-
-    public function test_login_com_email(): void
-    {
         Usuario::factory()->create([
-            'email'      => 'joao@test.com',
+            'cpf'        => '11111111111',
             'senha_hash' => Hash::make('senha123'),
             'ativo'      => true,
         ]);
 
         $this->postJson('/api/auth/login', [
-            'usuario' => 'joao@test.com',
+            'usuario' => '11111111111',
+            'senha'   => 'senha123',
+        ])->assertOk()
+          ->assertJsonStructure(['token', 'user' => ['id', 'nome', 'email', 'perfil']]);
+    }
+
+    public function test_login_com_cpf_formatado(): void
+    {
+        Usuario::factory()->create([
+            'cpf'        => '22222222222',
+            'senha_hash' => Hash::make('senha123'),
+            'ativo'      => true,
+        ]);
+
+        // Backend deve normalizar a máscara antes de buscar
+        $this->postJson('/api/auth/login', [
+            'usuario' => '222.222.222-22',
             'senha'   => 'senha123',
         ])->assertOk()->assertJsonStructure(['token']);
     }
@@ -43,12 +41,12 @@ class AuthTest extends TestCase
     public function test_login_com_senha_errada_retorna_401(): void
     {
         Usuario::factory()->create([
-            'email'      => 'joao@test.com',
+            'cpf'        => '33333333333',
             'senha_hash' => Hash::make('senha123'),
         ]);
 
         $this->postJson('/api/auth/login', [
-            'usuario' => 'joao@test.com',
+            'usuario' => '33333333333',
             'senha'   => 'errada',
         ])->assertUnauthorized();
     }
@@ -56,13 +54,13 @@ class AuthTest extends TestCase
     public function test_usuario_inativo_nao_consegue_login(): void
     {
         Usuario::factory()->create([
-            'email'      => 'inativo@test.com',
+            'cpf'        => '44444444444',
             'senha_hash' => Hash::make('senha123'),
             'ativo'      => false,
         ]);
 
         $this->postJson('/api/auth/login', [
-            'usuario' => 'inativo@test.com',
+            'usuario' => '44444444444',
             'senha'   => 'senha123',
         ])->assertUnauthorized();
     }
