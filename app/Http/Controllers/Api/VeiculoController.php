@@ -51,7 +51,17 @@ class VeiculoController extends Controller
 
     public function update(UpdateVeiculoRequest $request, Veiculo $veiculo)
     {
-        $veiculo->update($request->validated());
+        $data = $request->validated();
+
+        if (isset($data['status'])) {
+            if ($data['status'] === 'manutencao' && $veiculo->status !== 'manutencao') {
+                $data['manutencao_inicio'] = now();
+            } elseif ($data['status'] !== 'manutencao') {
+                $data['manutencao_inicio'] = null;
+            }
+        }
+
+        $veiculo->update($data);
 
         return new VeiculoResource($veiculo->fresh());
     }

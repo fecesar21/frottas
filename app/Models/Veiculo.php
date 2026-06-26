@@ -17,7 +17,11 @@ class Veiculo extends Model
     protected $fillable = [
         'placa', 'modelo', 'marca', 'ano', 'cor', 'chassi', 'renavam',
         'combustivel', 'capacidade_tanque', 'km_atual', 'km_proxima_revisao',
-        'status', 'observacoes',
+        'status', 'manutencao_inicio', 'observacoes',
+    ];
+
+    protected $casts = [
+        'manutencao_inicio' => 'datetime',
     ];
 
     // Relações

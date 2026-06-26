@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import * as veiculosApi from '../../api/veiculos'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
@@ -11,27 +11,45 @@ import { useAuth } from '../../contexts/AuthContext'
 
 const fmt = (n) => Number(n ?? 0).toLocaleString('pt-BR')
 
+function tempoDecorrido(isoDate) {
+  if (!isoDate) return ''
+  const diff = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000)
+  if (diff < 3600) return `${Math.floor(diff / 60)}min`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`
+  return `${Math.floor(diff / 86400)}d`
+}
+
 export default function VeiculosList() {
   const { isGestor } = useAuth()
   const qc = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
-  const [deleteError, setDeleteError] = useState('')
+  const [statusError, setStatusError] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['veiculos', statusFilter],
     queryFn: () => veiculosApi.listar(statusFilter ? { status: statusFilter } : undefined).then(r => r.data.data ?? r.data),
   })
 
-  const desativar = useMutation({
-    mutationFn: (id) => veiculosApi.desativar(id),
+  const mudarStatus = useMutation({
+    mutationFn: ({ id, status }) => veiculosApi.atualizarStatus(id, status),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['veiculos'] }),
-    onError: (e) => setDeleteError(e.response?.data?.message ?? 'Erro ao desativar'),
+    onError: (e) => setStatusError(e.response?.data?.message ?? 'Erro ao atualizar status'),
   })
 
   const openEdit = (v) => { setEditTarget(v); setFormOpen(true) }
   const closeForm = () => { setFormOpen(false); setEditTarget(null) }
+
+  const toggleAtivo = (v) => {
+    const novoStatus = v.status === 'inativo' ? 'disponivel' : 'inativo'
+    mudarStatus.mutate({ id: v.id, status: novoStatus })
+  }
+
+  const toggleManutencao = (v) => {
+    const novoStatus = v.status === 'manutencao' ? 'disponivel' : 'manutencao'
+    mudarStatus.mutate({ id: v.id, status: novoStatus })
+  }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -56,20 +74,20 @@ export default function VeiculosList() {
         )}
       </div>
 
-      {deleteError && <Alert type="error" message={deleteError} />}
+      {statusError && <Alert type="error" message={statusError} />}
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              {['Placa', 'Modelo', 'Marca', 'Ano', 'Combustível', 'KM Atual', 'Status', ''].map(h => (
+              {['Placa', 'Modelo', 'Marca', 'Ano', 'Combustível', 'KM Atual', 'Status', 'Ativo', 'Manutenção', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {(data ?? []).map((v) => (
-              <tr key={v.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={v.id} className={`hover:bg-gray-50 transition-colors ${v.status === 'inativo' ? 'opacity-60' : ''}`}>
                 <td className="px-4 py-3 font-mono font-semibold text-gray-800">{v.placa}</td>
                 <td className="px-4 py-3 text-gray-700">{v.modelo}</td>
                 <td className="px-4 py-3 text-gray-500">{v.marca ?? '—'}</td>
@@ -77,20 +95,53 @@ export default function VeiculosList() {
                 <td className="px-4 py-3 text-gray-500 capitalize">{v.combustivel?.replace(/_/g, ' ')}</td>
                 <td className="px-4 py-3 text-gray-700">{fmt(v.km_atual)} km</td>
                 <td className="px-4 py-3"><Badge value={v.status} /></td>
+
+                <td className="px-4 py-3">
+                  {isGestor ? (
+                    <input
+                      type="checkbox"
+                      checked={v.status !== 'inativo'}
+                      disabled={v.status === 'em_uso' || mudarStatus.isPending}
+                      onChange={() => toggleAtivo(v)}
+                      title={v.status === 'em_uso' ? 'Veículo em uso' : v.status === 'inativo' ? 'Reativar' : 'Inativar'}
+                      className="w-4 h-4 accent-blue-600 cursor-pointer disabled:cursor-not-allowed"
+                    />
+                  ) : (
+                    <span className={`inline-block w-2 h-2 rounded-full ${v.status !== 'inativo' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  )}
+                </td>
+
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1.5">
+                    {isGestor ? (
+                      <input
+                        type="checkbox"
+                        checked={v.status === 'manutencao'}
+                        disabled={v.status === 'inativo' || v.status === 'em_uso' || mudarStatus.isPending}
+                        onChange={() => toggleManutencao(v)}
+                        title={v.status === 'inativo' ? 'Veículo inativo' : v.status === 'em_uso' ? 'Veículo em uso' : v.status === 'manutencao' ? 'Tirar da manutenção' : 'Colocar em manutenção'}
+                        className="w-4 h-4 accent-yellow-500 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                    ) : (
+                      <span className={`inline-block w-2 h-2 rounded-full ${v.status === 'manutencao' ? 'bg-yellow-500' : 'bg-gray-200'}`} />
+                    )}
+                    {v.status === 'manutencao' && v.manutencao_inicio && (
+                      <span className="text-xs text-yellow-600 font-medium">{tempoDecorrido(v.manutencao_inicio)}</span>
+                    )}
+                  </div>
+                </td>
+
                 <td className="px-4 py-3">
                   {isGestor && (
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => openEdit(v)} className="text-gray-400 hover:text-blue-600 transition-colors"><Pencil size={15} /></button>
-                      {v.status !== 'inativo' && (
-                        <button onClick={() => desativar.mutate(v.id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
-                      )}
-                    </div>
+                    <button onClick={() => openEdit(v)} className="text-gray-400 hover:text-blue-600 transition-colors">
+                      <Pencil size={15} />
+                    </button>
                   )}
                 </td>
               </tr>
             ))}
             {(data ?? []).length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Nenhum veículo encontrado</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">Nenhum veículo encontrado</td></tr>
             )}
           </tbody>
         </table>
