@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ViagemController;
 use App\Http\Controllers\Api\AbastecimentoController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\RelatorioController;
+use App\Http\Controllers\Api\ViagemPontoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,8 @@ Route::prefix('auth')->group(function () {
 
     // Viagens
     Route::patch('viagens/{viagem}/chegada',   [ViagemController::class, 'chegada']);
+    Route::post('viagens/{viagem}/pontos',     [ViagemPontoController::class, 'store']);
+    Route::get('viagens/{viagem}/pontos',      [ViagemPontoController::class, 'index']);
     Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store']);
     Route::put('viagens/{viagem}', [\App\Http\Controllers\Api\ViagemController::class, 'update']);
 

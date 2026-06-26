@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, MapPin } from 'lucide-react'
+import { Plus, MapPin, Eye } from 'lucide-react'
 import { format } from 'date-fns'
 import * as viagensApi from '../../api/viagens'
 import Badge from '../../components/ui/Badge'
@@ -8,22 +8,31 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import ViagemForm from './ViagemForm'
+import ViagemDetalhe from './ViagemDetalhe'
+import { useAuth } from '../../contexts/AuthContext'
+import { useRastreamento } from '../../hooks/useRastreamento'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 const fmtKm = (n) => n != null ? Number(n).toLocaleString('pt-BR') : '—'
 
 export default function ViagensList() {
+  const { isGestor, isOperador } = useAuth()
   const qc = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [chegadaTarget, setChegadaTarget] = useState(null)
   const [chegadaForm, setChegadaForm] = useState({ km_chegada: '', observacoes: '' })
+  const [detalhesTarget, setDetalhesTarget] = useState(null)
   const [error, setError] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['viagens', statusFilter],
     queryFn: () => viagensApi.listar(statusFilter ? { status: statusFilter } : undefined).then(r => r.data.data ?? r.data),
   })
+
+  // Ativa rastreamento GPS quando operador tem viagem em andamento
+  const activeTrip = isOperador ? (data ?? []).find(v => v.status === 'em_andamento') : null
+  useRastreamento(activeTrip?.id ?? null)
 
   const doChegada = useMutation({
     mutationFn: ({ id, data }) => viagensApi.chegada(id, data),
@@ -36,13 +45,19 @@ export default function ViagensList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {[{ v: '', l: 'Todas' }, { v: 'em_andamento', l: 'Em andamento' }, { v: 'concluida', l: 'Concluídas' }, { v: 'cancelada', l: 'Canceladas' }].map(({ v, l }) => (
             <button key={v} onClick={() => setStatusFilter(v)}
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${statusFilter === v ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600 hover:border-blue-400'}`}>
               {l}
             </button>
           ))}
+          {activeTrip && (
+            <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium ml-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Rastreando...
+            </span>
+          )}
         </div>
         <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
           <Plus size={16} /> Nova viagem
@@ -73,12 +88,21 @@ export default function ViagensList() {
                 <td className="px-4 py-3 text-gray-700">{fmtKm(v.km_percorrido)} {v.km_percorrido ? 'km' : ''}</td>
                 <td className="px-4 py-3"><Badge value={v.status} /></td>
                 <td className="px-4 py-3">
-                  {v.status === 'em_andamento' && (
-                    <button onClick={() => { setChegadaTarget(v); setChegadaForm({ km_chegada: '', observacoes: '' }) }}
-                      className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors">
-                      <MapPin size={12} /> Chegada
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {v.status === 'em_andamento' && (
+                      <button onClick={() => { setChegadaTarget(v); setChegadaForm({ km_chegada: '', observacoes: '' }) }}
+                        className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors">
+                        <MapPin size={12} /> Chegada
+                      </button>
+                    )}
+                    {isGestor && (
+                      <button onClick={() => setDetalhesTarget(v)}
+                        className="text-gray-400 hover:text-blue-600 transition-colors"
+                        title="Ver trajeto">
+                        <Eye size={15} />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -114,6 +138,12 @@ export default function ViagensList() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={!!detalhesTarget} onClose={() => setDetalhesTarget(null)}
+        title={detalhesTarget ? `Trajeto — ${detalhesTarget.origem} → ${detalhesTarget.destino}` : ''}
+        size="lg">
+        {detalhesTarget && <ViagemDetalhe viagem={detalhesTarget} />}
       </Modal>
     </div>
   )
