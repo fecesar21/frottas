@@ -11,7 +11,8 @@ class RelatorioController extends Controller
     // ── DASHBOARD (KPIs gerais) ──────────────────────────────────
     public function dashboard(Request $r)
     {
-        $mes = now()->format('Y-m');
+        $inicio = now()->startOfMonth();
+        $fim    = now()->endOfMonth();
 
         $veiculos = DB::table('veiculos')->selectRaw("
             COUNT(*) as total,
@@ -26,13 +27,14 @@ class RelatorioController extends Controller
 
         $km_mes = DB::table('viagens')
             ->whereNotNull('km_chegada')
-            ->whereRaw("DATE_FORMAT(saida_at,'%Y-%m') = ?", [$mes])
+            ->whereBetween('saida_at', [$inicio, $fim])
             ->selectRaw('SUM(km_chegada - km_saida) as total')
             ->value('total') ?? 0;
 
         $custo_mes = DB::table('abastecimentos')
-            ->whereRaw("DATE_FORMAT(COALESCE(abastecido_at, created_at),'%Y-%m') = ?", [$mes])
-            ->sum('valor_total');
+            ->whereBetween(DB::raw('COALESCE(abastecido_at, created_at)'), [$inicio, $fim])
+            ->selectRaw('SUM(litros * valor_litro) as total')
+            ->value('total') ?? 0;
 
         $motoristas = DB::table('motoristas')
             ->selectRaw("COUNT(*) as total, SUM(status='ativo') as ativos")
@@ -43,10 +45,14 @@ class RelatorioController extends Controller
             ->whereBetween('cnh_validade', [now(), now()->addDays(30)])
             ->pluck('nome');
 
-        return response()->json(compact(
-            'veiculos', 'checkins_ativos', 'km_mes',
-            'custo_combustivel_mes', 'motoristas', 'cnh_vencendo'
-        ) + ['custo_combustivel_mes' => $custo_mes]);
+        return response()->json([
+            'veiculos'              => $veiculos,
+            'checkins_ativos'       => $checkins_ativos,
+            'km_mes'                => $km_mes,
+            'custo_combustivel_mes' => $custo_mes,
+            'motoristas'            => $motoristas,
+            'cnh_vencendo'          => $cnh_vencendo,
+        ]);
     }
 
     // ── RELATÓRIO: ABASTECIMENTOS ─────────────────────────────────
@@ -66,7 +72,9 @@ class RelatorioController extends Controller
                 'v.placa', 'v.modelo',
                 'm.nome as motorista_nome',
                 'a.posto', 'a.combustivel',
-                'a.litros', 'a.valor_litro', 'a.valor_total', 'a.km_momento'
+                'a.litros', 'a.valor_litro',
+                DB::raw('(a.litros * a.valor_litro) as valor_total'),
+                'a.km_momento'
             )
             ->get();
 
