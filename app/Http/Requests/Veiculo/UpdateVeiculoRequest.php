@@ -13,16 +13,27 @@ class UpdateVeiculoRequest extends FormRequest
 
     public function rules(): array
     {
+        $id = $this->route('veiculo')?->id;
+
         return [
+            'placa'              => "sometimes|string|max:10|unique:veiculos,placa,{$id}",
             'modelo'             => 'sometimes|string|max:100',
             'marca'              => 'nullable|string|max:50',
             'ano'                => 'sometimes|integer|min:1980',
             'cor'                => 'nullable|string|max:30',
             'combustivel'        => 'sometimes|in:diesel_s10,diesel_s500,gasolina,gasolina_aditivada,etanol,gnv,flex',
             'capacidade_tanque'  => 'nullable|numeric|min:0',
+            'km_atual'           => 'sometimes|integer|min:0',
             'km_proxima_revisao' => 'nullable|integer|min:0',
             'status'             => 'sometimes|in:disponivel,em_uso,manutencao,inativo',
             'observacoes'        => 'nullable|string',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->placa) {
+            $this->merge(['placa' => strtoupper($this->placa)]);
+        }
     }
 }

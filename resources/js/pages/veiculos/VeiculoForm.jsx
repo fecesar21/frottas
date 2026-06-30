@@ -3,6 +3,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as veiculosApi from '../../api/veiculos'
 import Alert from '../../components/ui/Alert'
 
+const marcas = [
+  'Chevrolet', 'Citroën', 'Fiat', 'Ford', 'Honda', 'Hyundai', 'Jeep',
+  'Mercedes-Benz', 'Mitsubishi', 'Nissan', 'Peugeot', 'Renault',
+  'Scania', 'Toyota', 'Volkswagen', 'Volvo',
+]
+
 const combustiveis = ['diesel_s10', 'diesel_s500', 'gasolina', 'gasolina_aditivada', 'etanol', 'gnv', 'flex']
 
 export default function VeiculoForm({ veiculo, onSuccess }) {
@@ -25,6 +31,12 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
   const [fieldErrors, setFieldErrors] = useState({})
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const setPlaca = (e) => {
+    let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    if (v.length > 3) v = v.slice(0, 3) + '-' + v.slice(3, 7)
+    setForm(f => ({ ...f, placa: v }))
+  }
 
   const salvar = useMutation({
     mutationFn: (data) => veiculo ? veiculosApi.atualizar(veiculo.id, data) : veiculosApi.criar(data),
@@ -63,9 +75,29 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
       {error && <Alert type="error" message={error} />}
 
       <div className="grid grid-cols-2 gap-4">
-        {field('Placa *', 'placa', 'text', { required: true, maxLength: 10, style: { textTransform: 'uppercase' } })}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Placa *</label>
+          <input
+            type="text"
+            value={form.placa}
+            onChange={setPlaca}
+            required
+            maxLength={8}
+            placeholder="ABC-1234"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+          />
+          {fieldErrors.placa && <p className="text-red-500 text-xs mt-1">{fieldErrors.placa[0]}</p>}
+        </div>
         {field('Modelo *', 'modelo', 'text', { required: true })}
-        {field('Marca', 'marca')}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+          <select value={form.marca ?? ''} onChange={set('marca')}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Selecione...</option>
+            {marcas.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          {fieldErrors.marca && <p className="text-red-500 text-xs mt-1">{fieldErrors.marca[0]}</p>}
+        </div>
         {field('Ano *', 'ano', 'number', { required: true, min: 1980 })}
         {field('Cor', 'cor')}
         {field('Chassi', 'chassi', 'text', { maxLength: 17 })}

@@ -16,15 +16,13 @@ class ChecklistSeeder extends Seeder
                 'ordem' => 1,
                 'itens' => [
                     ['label' => 'CRLV em dia',         'obrigatorio' => true],
-                    ['label' => 'Licença do motorista', 'obrigatorio' => true],
-                    ['label' => 'Seguro obrigatório',   'obrigatorio' => true],
                 ],
             ],
             [
                 'nome'  => 'Exterior',
                 'ordem' => 2,
                 'itens' => [
-                    ['label' => 'Lataria sem avarias',  'obrigatorio' => false],
+                    ['label' => 'Lataria sem avarias',  'obrigatorio' => true],
                     ['label' => 'Vidros íntegros',      'obrigatorio' => true],
                     ['label' => 'Pneus calibrados',     'obrigatorio' => true],
                     ['label' => 'Estepe disponível',    'obrigatorio' => true],
@@ -46,10 +44,8 @@ class ChecklistSeeder extends Seeder
                 'nome'  => 'Interior',
                 'ordem' => 4,
                 'itens' => [
-                    ['label' => 'Limpeza interna',           'obrigatorio' => false],
-                    ['label' => 'Kit de primeiros socorros', 'obrigatorio' => true],
-                    ['label' => 'Extintor de incêndio',      'obrigatorio' => true],
-                    ['label' => 'Triângulo de segurança',    'obrigatorio' => true],
+                    ['label' => 'Limpeza interna',           'obrigatorio' => true],
+                        ['label' => 'Triângulo de segurança',    'obrigatorio' => true],
                 ],
             ],
         ];
