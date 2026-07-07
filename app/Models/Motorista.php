@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Motorista extends Model {
     use HasFactory, HasUuids;
@@ -22,6 +23,7 @@ class Motorista extends Model {
     public function escalas()       { return $this->hasMany(Escala::class,'motorista_id'); }
     public function viagens()       { return $this->hasMany(Viagem::class,'motorista_id'); }
     public function abastecimentos(){ return $this->hasMany(Abastecimento::class,'motorista_id'); }
+    public function unidades(): BelongsToMany { return $this->belongsToMany(Unidade::class, 'motorista_unidade'); }
     public function getDiasParaVencerCnhAttribute() {
         return now()->diffInDays($this->cnh_validade, false);
     }

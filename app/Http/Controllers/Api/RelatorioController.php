@@ -151,15 +151,16 @@ class RelatorioController extends Controller
             ->whereRaw("DATE(pp.created_at) BETWEEN ? AND ?", [$de, $ate])
             ->orderBy('pp.created_at', 'desc')
             ->select(
-                'pp.id', 'pp.created_at', 'pp.finalizado_at', 'pp.data_encerramento',
+                'pp.id', 'pp.created_at', 'pp.finalizado_at',
                 'pp.turno_saindo', 'pp.turno_entrando',
                 'pp.km_momento', 'pp.nivel_combustivel',
                 'pp.observacoes_gerais',
                 'v.placa', 'v.modelo',
                 'ms.nome as motorista_saindo',
                 'me.nome as motorista_entrando',
-                DB::raw("IF(pp.data_encerramento IS NOT NULL AND pp.created_at IS NOT NULL,
-                    TIMESTAMPDIFF(MINUTE, pp.created_at, pp.data_encerramento), NULL) as duracao_min")
+                DB::raw("CASE WHEN pp.finalizado_at IS NOT NULL AND pp.created_at IS NOT NULL
+                    THEN CAST((julianday(pp.finalizado_at) - julianday(pp.created_at)) * 1440 AS INTEGER)
+                    ELSE NULL END as duracao_min")
             )
             ->get();
 

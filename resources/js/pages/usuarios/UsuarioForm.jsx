@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as usuariosApi from '../../api/usuarios'
 import * as motoristasApi from '../../api/motoristas'
+import * as unidadesApi from '../../api/unidades'
 import Alert from '../../components/ui/Alert'
 
 export default function UsuarioForm({ usuario, onSuccess }) {
@@ -14,6 +15,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
     perfil: usuario?.perfil ?? 'operador',
     ativo: usuario?.ativo ?? true,
     motorista_id: usuario?.motorista_id ?? '',
+    unidade_id: usuario?.unidade_id ?? '',
   })
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
@@ -27,6 +29,11 @@ export default function UsuarioForm({ usuario, onSuccess }) {
     else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2')
     setForm(f => ({ ...f, cpf: v }))
   }
+
+  const { data: unidades = [] } = useQuery({
+    queryKey: ['unidades'],
+    queryFn: () => unidadesApi.listar({ ativo: 1 }).then(r => r.data ?? []),
+  })
 
   const { data: disponiveis = [] } = useQuery({
     queryKey: ['motoristas', 'disponiveis'],
@@ -65,6 +72,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
     const payload = { ...form }
     if (!payload.senha) delete payload.senha
     if (!payload.email) payload.email = null
+    if (!payload.unidade_id) payload.unidade_id = null
     if (payload.perfil !== 'operador') delete payload.motorista_id
     salvar.mutate(payload)
   }
@@ -110,6 +118,23 @@ export default function UsuarioForm({ usuario, onSuccess }) {
           <option value="gestor">Gestor</option>
           <option value="admin">Admin</option>
         </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Unidade</label>
+        <select
+          value={form.unidade_id}
+          onChange={set('unidade_id')}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Sem unidade específica</option>
+          {unidades.map(u => (
+            <option key={u.id} value={u.id}>
+              {u.nome} ({u.tipo === 'matriz' ? 'Matriz' : 'Filial'})
+            </option>
+          ))}
+        </select>
+        {fe('unidade_id')}
       </div>
 
       {form.perfil === 'operador' && (

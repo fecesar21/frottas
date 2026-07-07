@@ -13,8 +13,11 @@ class MotoristaController extends Controller
 {
     public function index(Request $r)
     {
+        $unidadeId = $r->unidade_efetiva;
+
         $motoristas = Motorista::with('checkinAtivo.veiculo')
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
+            ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('nome')
             ->get();
 
@@ -23,7 +26,7 @@ class MotoristaController extends Controller
 
     public function show(Motorista $motorista)
     {
-        return new MotoristaResource($motorista->load('checkinAtivo.veiculo'));
+        return new MotoristaResource($motorista->load(['checkinAtivo.veiculo', 'unidades']));
     }
 
     public function store(StoreMotoristaRequest $request)
@@ -50,10 +53,13 @@ class MotoristaController extends Controller
         return response()->json(['message' => 'Motorista desativado']);
     }
 
-    public function disponiveis()
+    public function disponiveis(Request $r)
     {
+        $unidadeId = $r->unidade_efetiva;
+
         $motoristas = Motorista::where('status', 'ativo')
             ->whereDoesntHave('usuario', fn ($q) => $q->where('perfil', 'operador'))
+            ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('nome')
             ->get(['id', 'nome', 'cpf']);
 

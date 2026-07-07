@@ -20,7 +20,7 @@ class Usuario extends Authenticatable
     protected $keyType    = 'string';
 
     protected $fillable = [
-        'nome', 'cpf', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id',
+        'nome', 'cpf', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id', 'unidade_id',
     ];
 
     protected $hidden = ['senha_hash'];
@@ -31,5 +31,10 @@ class Usuario extends Authenticatable
     public function motorista(): BelongsTo
     {
         return $this->belongsTo(Motorista::class, 'motorista_id');
+    }
+
+    public function unidade(): BelongsTo
+    {
+        return $this->belongsTo(Unidade::class, 'unidade_id');
     }
 }

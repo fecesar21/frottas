@@ -24,9 +24,12 @@ class VeiculoController extends Controller
 
     public function index(Request $request)
     {
+        $unidadeId = $request->unidade_efetiva;
+
         $veiculos = Veiculo::query()
             ->with(['checkinAtivo.motorista'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
+            ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('placa')
             ->get();
 
@@ -35,7 +38,11 @@ class VeiculoController extends Controller
 
     public function show(Veiculo $veiculo)
     {
-        $veiculo->load(['checkinAtivo.motorista', 'kmRegistros' => fn ($q) => $q->latest()->limit(10)]);
+        $veiculo->load([
+            'checkinAtivo.motorista',
+            'kmRegistros' => fn ($q) => $q->latest()->limit(10),
+            'unidades',
+        ]);
 
         return new VeiculoResource($veiculo);
     }

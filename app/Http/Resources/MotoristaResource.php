@@ -22,6 +22,7 @@ class MotoristaResource extends JsonResource
             'turno_padrao'         => $this->turno_padrao,
             'status'               => $this->status,
             'observacoes'          => $this->observacoes,
+            'unidades'             => $this->whenLoaded('unidades', fn () => $this->unidades->map(fn ($u) => ['id' => $u->id, 'nome' => $u->nome, 'tipo' => $u->tipo])),
             'checkin_ativo'        => $this->whenLoaded('checkinAtivo', fn () => new CheckinResource($this->checkinAtivo)),
             'atualizado_em'        => $this->updated_at,
         ];

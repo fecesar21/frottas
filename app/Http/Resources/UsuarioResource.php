@@ -17,6 +17,7 @@ class UsuarioResource extends JsonResource
             'perfil'       => $this->perfil,
             'ativo'        => $this->ativo,
             'motorista_id' => $this->motorista_id,
+            'unidade_id'   => $this->unidade_id,
             'ultimo_acesso'=> $this->ultimo_acesso,
             'criado_em'    => $this->created_at,
         ];

@@ -20,6 +20,7 @@ class StoreUsuarioRequest extends FormRequest
             'senha'        => ['required', 'string', 'min:6', 'regex:/^[0-9]+$/'],
             'perfil'       => 'required|in:admin,gestor,operador',
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',
+            'unidade_id'   => 'nullable|uuid|exists:unidades,id',
         ];
     }
 

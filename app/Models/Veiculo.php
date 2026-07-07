@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Veiculo extends Model
 {
@@ -48,5 +49,10 @@ class Veiculo extends Model
     public function viagens()
     {
         return $this->hasMany(Viagem::class, 'veiculo_id');
+    }
+
+    public function unidades(): BelongsToMany
+    {
+        return $this->belongsToMany(Unidade::class, 'veiculo_unidade');
     }
 }

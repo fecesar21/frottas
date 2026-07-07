@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AbastecimentoController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\RelatorioController;
 use App\Http\Controllers\Api\ViagemPontoController;
+use App\Http\Controllers\Api\UnidadeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,7 +33,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // ── Rotas protegidas por token Sanctum ────────────────────
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
 
     // Veículos
     Route::apiResource('veiculos', VeiculoController::class);
@@ -54,16 +55,14 @@ Route::prefix('auth')->group(function () {
     Route::get ('plantao/modelo/itens',            [PlantaoController::class, 'modeloItens']);
     Route::patch('plantao/{plantao}/item',         [PlantaoController::class, 'atualizarItem']);
     Route::patch('plantao/{plantao}/finalizar',    [PlantaoController::class, 'finalizar']);
+    Route::patch('plantao/{plantao}/encerrar',     [PlantaoController::class, 'encerrar']);
     Route::apiResource('plantao', PlantaoController::class)->only(['index', 'show', 'store']);
-    Route::patch('plantao/{plantao}/encerrar', [PlantaoController::class, 'encerrar']);
-    Route::patch('plantao/{plantao}/encerrar', [\App\Http\Controllers\Api\PlantaoController::class, 'encerrar']);
 
     // Viagens
     Route::patch('viagens/{viagem}/chegada',   [ViagemController::class, 'chegada']);
     Route::post('viagens/{viagem}/pontos',     [ViagemPontoController::class, 'store']);
     Route::get('viagens/{viagem}/pontos',      [ViagemPontoController::class, 'index']);
-    Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store']);
-    Route::put('viagens/{viagem}', [\App\Http\Controllers\Api\ViagemController::class, 'update']);
+    Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store', 'update']);
 
     // Abastecimentos
     Route::get('abastecimentos/resumo',        [AbastecimentoController::class, 'resumo']);
@@ -92,6 +91,17 @@ Route::prefix('auth')->group(function () {
 		Route::get('motoristas',      [\App\Http\Controllers\Api\RelatorioController::class, 'motoristas']);
 		Route::get('checkins',        [\App\Http\Controllers\Api\RelatorioController::class, 'checkins']);
 	});
+
+    // Unidades
+    Route::get('unidades', [UnidadeController::class, 'index']);
+    Route::post('unidades', [UnidadeController::class, 'store']);
+    Route::get('unidades/{unidade}', [UnidadeController::class, 'show']);
+    Route::patch('unidades/{unidade}', [UnidadeController::class, 'update']);
+    Route::delete('unidades/{unidade}', [UnidadeController::class, 'destroy']);
+    Route::post('unidades/{unidade}/motoristas', [UnidadeController::class, 'vincularMotoristas']);
+    Route::delete('unidades/{unidade}/motoristas/{motorista}', [UnidadeController::class, 'desvincularMotorista']);
+    Route::post('unidades/{unidade}/veiculos', [UnidadeController::class, 'vincularVeiculos']);
+    Route::delete('unidades/{unidade}/veiculos/{veiculo}', [UnidadeController::class, 'desvincularVeiculo']);
 
     // Usuários — somente admin
         Route::middleware('admin')->apiResource('usuarios', \App\Http\Controllers\Api\UsuarioController::class)

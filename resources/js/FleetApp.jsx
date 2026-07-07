@@ -14,6 +14,8 @@ import ViagensList from './pages/viagens/ViagensList'
 import AbastecimentosList from './pages/abastecimentos/AbastecimentosList'
 import Relatorios from './pages/relatorios/Relatorios'
 import UsuariosList from './pages/usuarios/UsuariosList'
+import UnidadesList from './pages/unidades/UnidadesList'
+import UnidadeDetalhes from './pages/unidades/UnidadeDetalhes'
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -40,6 +42,12 @@ export default function App() {
               <Route path="/relatorios/*" element={<Relatorios />} />
               <Route path="/usuarios" element={
                 <AdminRoute><UsuariosList /></AdminRoute>
+              } />
+              <Route path="/unidades" element={
+                <AdminRoute><UnidadesList /></AdminRoute>
+              } />
+              <Route path="/unidades/:id" element={
+                <AdminRoute><UnidadeDetalhes /></AdminRoute>
               } />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

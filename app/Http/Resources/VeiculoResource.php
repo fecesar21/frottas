@@ -23,6 +23,7 @@ class VeiculoResource extends JsonResource
             'status'             => $this->status,
             'manutencao_inicio'  => $this->manutencao_inicio,
             'observacoes'        => $this->observacoes,
+            'unidades'           => $this->whenLoaded('unidades', fn () => $this->unidades->map(fn ($u) => ['id' => $u->id, 'nome' => $u->nome, 'tipo' => $u->tipo])),
             'checkin_ativo'      => $this->whenLoaded('checkinAtivo', fn () => new CheckinResource($this->checkinAtivo)),
             'km_registros'       => $this->whenLoaded('kmRegistros', fn () => KmRegistroResource::collection($this->kmRegistros)),
             'atualizado_em'      => $this->updated_at,

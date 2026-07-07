@@ -22,6 +22,7 @@ class UpdateUsuarioRequest extends FormRequest
             'ativo'        => 'sometimes|boolean',
             'senha'        => ['nullable', 'string', 'min:6', 'regex:/^[0-9]+$/'],
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',
+            'unidade_id'   => 'nullable|uuid|exists:unidades,id',
         ];
     }
 

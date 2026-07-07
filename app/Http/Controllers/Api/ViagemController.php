@@ -17,8 +17,11 @@ class ViagemController extends Controller
 
     public function index(Request $r)
     {
+        $unidadeId = $r->unidade_efetiva;
+
         $viagens = Viagem::with(['veiculo', 'motorista'])
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
+            ->when($unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->latest('saida_at')
             ->limit(200)
             ->get();

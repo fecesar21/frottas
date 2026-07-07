@@ -61,6 +61,7 @@ class AuthController extends Controller
             'email'         => $usuario->email,
             'perfil'        => $usuario->perfil,
             'motorista_id'  => $usuario->motorista_id,
+            'unidade_id'    => $usuario->unidade_id,
             'checkin_ativo' => $checkinAtivo,
         ];
     }

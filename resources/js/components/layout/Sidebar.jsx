@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Truck, Users, CalendarDays, LogIn, GitBranch,
-  Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X
+  Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X, Building2
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -139,20 +139,28 @@ export default function Sidebar({ open, onClose }) {
               <p className="text-[10px] font-semibold text-white/30 tracking-widest px-3 mb-1.5 uppercase">
                 ADMIN
               </p>
-              <NavLink
-                to="/usuarios"
-                onClick={onClose}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
-                  ${isActive
-                    ? 'bg-brand-500/15 text-brand-300 border-l-2 border-brand-400 pl-[10px]'
-                    : 'text-white/60 hover:bg-white/10 hover:text-white/90 border-l-2 border-transparent hover:translate-x-0.5'
-                  }`
-                }
-              >
-                <UserCog size={16} className="shrink-0" />
-                Usuários
-              </NavLink>
+              <div className="space-y-0.5">
+                {[
+                  { to: '/usuarios', label: 'Usuários', icon: UserCog },
+                  { to: '/unidades', label: 'Unidades', icon: Building2 },
+                ].map(({ to, label, icon: Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
+                      ${isActive
+                        ? 'bg-brand-500/15 text-brand-300 border-l-2 border-brand-400 pl-[10px]'
+                        : 'text-white/60 hover:bg-white/10 hover:text-white/90 border-l-2 border-transparent hover:translate-x-0.5'
+                      }`
+                    }
+                  >
+                    <Icon size={16} className="shrink-0" />
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
             </div>
           )}
         </nav>

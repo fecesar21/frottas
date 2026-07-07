@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Veiculo;
 use App\Models\Viagem;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ViagemService
@@ -19,10 +21,17 @@ class ViagemService
             ]);
         }
 
+        $veiculo = Veiculo::findOrFail($data['veiculo_id']);
+        if ($data['km_saida'] < $veiculo->km_atual) {
+            throw ValidationException::withMessages([
+                'km_saida' => 'KM de saída menor que o KM atual do veículo.',
+            ]);
+        }
+
         $data['saida_at'] = $data['saida_at'] ?? now();
         $data['status']   = 'em_andamento';
 
-        return Viagem::create($data);
+        return DB::transaction(fn () => Viagem::create($data));
     }
 
     public function chegada(Viagem $viagem, array $data): Viagem

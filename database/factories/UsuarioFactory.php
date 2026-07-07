@@ -14,6 +14,7 @@ class UsuarioFactory extends Factory
     {
         return [
             'nome'       => fake()->name(),
+            'cpf'        => fake()->unique()->numerify('#########'),
             'email'      => fake()->unique()->safeEmail(),
             'senha_hash' => Hash::make('password'),
             'perfil'     => fake()->randomElement(['gestor', 'operador']),

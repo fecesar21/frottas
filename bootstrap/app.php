@@ -26,8 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'admin'    => \App\Http\Middleware\SomenteAdmin::class,
-            'throttle' => ThrottleRequests::class,
+            'admin'        => \App\Http\Middleware\SomenteAdmin::class,
+            'throttle'     => ThrottleRequests::class,
+            'escopo.unidade' => \App\Http\Middleware\EscopoUnidade::class,
         ]);
 
         $middleware->appendToGroup('api', [

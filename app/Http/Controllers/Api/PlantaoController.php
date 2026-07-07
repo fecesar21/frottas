@@ -18,8 +18,11 @@ class PlantaoController extends Controller
 
     public function index(Request $request)
     {
+        $unidadeId = $request->unidade_efetiva;
+
         $passagens = PassagemPlantao::with(['veiculo', 'motoristaSaindo', 'motoristaEntrando'])
             ->when($request->veiculo_id, fn ($q, $id) => $q->where('veiculo_id', $id))
+            ->when($unidadeId, fn ($q) => $q->whereHas('motoristaSaindo.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->latest()
             ->limit((int) ($request->limit ?? 20))
             ->get();

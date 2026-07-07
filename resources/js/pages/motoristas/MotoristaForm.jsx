@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { X, Plus, Building2 } from 'lucide-react'
 import * as motoristasApi from '../../api/motoristas'
+import * as unidadesApi from '../../api/unidades'
 import Alert from '../../components/ui/Alert'
 
 function mascaraCpf(v) {
@@ -33,9 +35,53 @@ export default function MotoristaForm({ motorista, onSuccess }) {
   })
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
+  const [painelUnidades, setPainelUnidades] = useState(false)
+  const [selecionados, setSelecionados] = useState([])
+  const [erroUnidade, setErroUnidade] = useState('')
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
   const setMask = (k, fn) => (e) => setForm(f => ({ ...f, [k]: fn(e.target.value) }))
+
+  // Dados do motorista com unidades (apenas em modo edição)
+  const { data: motoristaAtual, refetch: refetchUnidades } = useQuery({
+    queryKey: ['motorista', motorista?.id, 'detalhes'],
+    queryFn: () => motoristasApi.buscar(motorista.id).then(r => r.data.data ?? r.data),
+    enabled: !!motorista?.id,
+  })
+
+  const { data: todasUnidades = [] } = useQuery({
+    queryKey: ['unidades'],
+    queryFn: () => unidadesApi.listar().then(r => r.data ?? []),
+    enabled: !!motorista?.id,
+  })
+
+  const unidadesVinculadas = motoristaAtual?.unidades ?? motorista?.unidades ?? []
+  const vinculadasIds = new Set(unidadesVinculadas.map(u => u.id))
+  const disponiveis = todasUnidades.filter(u => !vinculadasIds.has(u.id))
+
+  const vincular = useMutation({
+    mutationFn: async () => {
+      for (const unidadeId of selecionados) {
+        await unidadesApi.vincularMotoristas(unidadeId, [motorista.id])
+      }
+    },
+    onSuccess: () => {
+      refetchUnidades()
+      setSelecionados([])
+      setPainelUnidades(false)
+      setErroUnidade('')
+    },
+    onError: (e) => setErroUnidade(e.response?.data?.message ?? 'Erro ao vincular'),
+  })
+
+  const desvincular = useMutation({
+    mutationFn: (unidadeId) => unidadesApi.desvincularMotorista(unidadeId, motorista.id),
+    onSuccess: () => refetchUnidades(),
+    onError: (e) => setErroUnidade(e.response?.data?.message ?? 'Erro ao desvincular'),
+  })
+
+  const toggleSelecionado = (id) =>
+    setSelecionados(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
   const salvar = useMutation({
     mutationFn: (data) => motorista ? motoristasApi.atualizar(motorista.id, data) : motoristasApi.criar(data),
@@ -121,6 +167,98 @@ export default function MotoristaForm({ motorista, onSuccess }) {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
+
+      {/* Seção de Unidades — apenas em modo edição */}
+      {motorista ? (
+        <div className="border-t border-gray-100 pt-4">
+          {erroUnidade && <Alert type="error" message={erroUnidade} />}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Building2 size={14} className="text-gray-400" />
+              <span className="text-sm font-medium text-gray-700">Unidades vinculadas</span>
+            </div>
+            {!painelUnidades && disponiveis.length > 0 && (
+              <button
+                type="button"
+                onClick={() => { setPainelUnidades(true); setSelecionados([]) }}
+                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <Plus size={12} /> Vincular
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+            {unidadesVinculadas.length === 0 && !painelUnidades && (
+              <p className="text-xs text-amber-600">Este motorista não está vinculado a nenhuma unidade</p>
+            )}
+            {unidadesVinculadas.map(u => (
+              <span
+                key={u.id}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                  u.tipo === 'matriz' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                }`}
+              >
+                {u.nome}
+                <button
+                  type="button"
+                  onClick={() => desvincular.mutate(u.id)}
+                  disabled={desvincular.isPending}
+                  className="ml-0.5 hover:opacity-70"
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {painelUnidades && (
+            <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="max-h-40 overflow-y-auto divide-y divide-gray-100">
+                {disponiveis.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-gray-400">Nenhuma unidade disponível para vincular</p>
+                ) : disponiveis.map(u => (
+                  <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selecionados.includes(u.id)}
+                      onChange={() => toggleSelecionado(u.id)}
+                      className="rounded accent-blue-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {u.nome}
+                      <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                        u.tipo === 'matriz' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                      }`}>{u.tipo}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <div className="flex items-center justify-end gap-2 px-3 py-2 bg-gray-50 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => { setPainelUnidades(false); setSelecionados([]) }}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => vincular.mutate()}
+                  disabled={selecionados.length === 0 || vincular.isPending}
+                  className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
+                >
+                  {vincular.isPending ? 'Vinculando...' : `Vincular (${selecionados.length})`}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400 border-t border-gray-100 pt-4">
+          Salve o cadastro primeiro para vincular a unidades.
+        </p>
+      )}
 
       <div className="flex justify-end gap-3 pt-2">
         <button type="submit" disabled={salvar.isPending} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-60 transition-colors">

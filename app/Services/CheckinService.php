@@ -30,13 +30,14 @@ class CheckinService
             $data['checkin_at'] = now();
             $checkin = Checkin::create($data);
 
+            $kmAnterior = $veiculo->km_atual;
             $veiculo->update(['status' => 'em_uso', 'km_atual' => $data['km_saida']]);
 
             KmRegistro::create([
                 'veiculo_id'    => $veiculo->id,
                 'motorista_id'  => $data['motorista_id'],
                 'checkin_id'    => $checkin->id,
-                'km_anterior'   => $veiculo->km_atual,
+                'km_anterior'   => $kmAnterior,
                 'km_atual'      => $data['km_saida'],
                 'observacao'    => 'Check-in',
                 'registrado_at' => now(),
