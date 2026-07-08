@@ -54,4 +54,39 @@ class AbastecimentoApiTest extends TestCase
         $abastecimento = Abastecimento::first();
         Storage::disk('public')->assertExists($abastecimento->comprovante_path);
     }
+
+    public function test_resumo_exclui_abastecimentos_soft_deletados(): void
+    {
+        $this->loginGestor();
+        $veiculo = Veiculo::factory()->create();
+        $motorista = Motorista::factory()->create();
+
+        $mantido = Abastecimento::create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+            'combustivel' => 'diesel_s10',
+            'litros' => 50,
+            'valor_litro' => 5.50,
+            'km_momento' => 1000,
+            'abastecido_at' => now(),
+        ]);
+
+        $removido = Abastecimento::create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+            'combustivel' => 'diesel_s10',
+            'litros' => 30,
+            'valor_litro' => 5.50,
+            'km_momento' => 1500,
+            'abastecido_at' => now(),
+        ]);
+        $removido->delete();
+
+        $resumo = $this->getJson('/api/abastecimentos/resumo')->assertOk()->json();
+        $linha = collect($resumo)->firstWhere('veiculo_id', $veiculo->id);
+
+        $this->assertNotNull($linha);
+        $this->assertSame(1, (int) $linha['total_abastecimentos']);
+        $this->assertEquals(50.0, (float) $linha['total_litros']);
+    }
 }
