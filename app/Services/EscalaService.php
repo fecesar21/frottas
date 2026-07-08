@@ -14,18 +14,24 @@ class EscalaService
             $data = date('Y-m-d', strtotime("{$dataInicio} +{$i} days"));
 
             foreach ($motoristasdia as $motoristaId) {
-                Escala::updateOrCreate(
-                    ['motorista_id' => $motoristaId, 'data' => $data],
-                    ['turno' => 'dia']
+                $escala = Escala::withTrashed()->firstOrNew(
+                    ['motorista_id' => $motoristaId, 'data' => $data]
                 );
+                if ($escala->trashed()) {
+                    $escala->restore();
+                }
+                $escala->fill(['turno' => 'dia'])->save();
                 $inseridos++;
             }
 
             foreach ($motoristasNoite as $motoristaId) {
-                Escala::updateOrCreate(
-                    ['motorista_id' => $motoristaId, 'data' => $data],
-                    ['turno' => 'noite']
+                $escala = Escala::withTrashed()->firstOrNew(
+                    ['motorista_id' => $motoristaId, 'data' => $data]
                 );
+                if ($escala->trashed()) {
+                    $escala->restore();
+                }
+                $escala->fill(['turno' => 'noite'])->save();
                 $inseridos++;
             }
         }

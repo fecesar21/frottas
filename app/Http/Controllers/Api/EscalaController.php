@@ -44,10 +44,13 @@ class EscalaController extends Controller
             }
         }
 
-        $escala = Escala::updateOrCreate(
-            ['motorista_id' => $d['motorista_id'], 'data' => $d['data']],
-            $d
+        $escala = Escala::withTrashed()->firstOrNew(
+            ['motorista_id' => $d['motorista_id'], 'data' => $d['data']]
         );
+        if ($escala->trashed()) {
+            $escala->restore();
+        }
+        $escala->fill($d)->save();
 
         return (new EscalaResource($escala))->response()->setStatusCode(201);
     }

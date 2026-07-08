@@ -22,4 +22,31 @@ class EscalaApiTest extends TestCase
 
         $this->assertSoftDeleted('escalas', ['id' => $escala->id]);
     }
+
+    public function test_store_restaura_escala_soft_deletada_em_vez_de_colidir(): void
+    {
+        $this->loginGestor();
+        $motorista = Motorista::factory()->create();
+        $data = now()->toDateString();
+        $escala = Escala::create([
+            'motorista_id' => $motorista->id,
+            'data' => $data,
+            'turno' => 'dia',
+        ]);
+        $escala->delete();
+        $this->assertSoftDeleted('escalas', ['id' => $escala->id]);
+
+        $response = $this->postJson('/api/escalas', [
+            'motorista_id' => $motorista->id,
+            'data' => $data,
+            'turno' => 'noite',
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('escalas', [
+            'id' => $escala->id,
+            'deleted_at' => null,
+            'turno' => 'noite',
+        ]);
+    }
 }
