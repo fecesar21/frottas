@@ -1,0 +1,763 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/AbastecimentoController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>ok" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/RelatorioController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>pendencias" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/RelatorioController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/ViagemController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/ViagemController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/Abastecimento/StoreAbastecimentoRequest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/Abastecimento/StoreAbastecimentoRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$abastecido_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$checkin_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$combustivel\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$comprovante_path\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$km_momento\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$litros\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$motorista\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$nota_fiscal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$observacoes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$posto\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$valor_litro\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$veiculo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AbastecimentoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$checkin_at\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$checkout_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$escala_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$km_retorno\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$km_saida\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$motorista\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$nivel_combustivel_retorno\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$nivel_combustivel_saida\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$ocorrencias\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$turno\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$veiculo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CheckinResource\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CheckinResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$motorista\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$observacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$turno\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$veiculo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\EscalaResource\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/EscalaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$checkin_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$km_anterior\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$km_atual\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$observacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$registrado_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\KmRegistroResource\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/KmRegistroResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$checkinAtivo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$cnh_categoria\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$cnh_numero\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$cnh_validade\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$cpf\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$diasParaVencerCnh\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$nome\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$observacoes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$telefone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$turno_padrao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$unidades\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MotoristaResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MotoristaResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$finalizado_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$itens_ok\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$itens_pendencia\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$km_momento\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$motoristaEntrando\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$motoristaSaindo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$motorista_entrando_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$motorista_saindo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$nivel_combustivel\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$observacoes_gerais\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$total_itens\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$turno_entrando\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$turno_saindo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$veiculo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlantaoResource\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlantaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$ativo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$cpf\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$nome\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$perfil\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$ultimo_acesso\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$unidade_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UsuarioResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$ano\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$capacidade_tanque\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$checkinAtivo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$combustivel\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$cor\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$kmRegistros\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$km_atual\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$km_proxima_revisao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$manutencao_inicio\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$marca\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$modelo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$observacoes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$placa\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$unidades\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\VeiculoResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/VeiculoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$checkin_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$chegada_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$destino\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$km_chegada\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$km_saida\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$motorista\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$observacoes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$origem\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$saida_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$veiculo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php

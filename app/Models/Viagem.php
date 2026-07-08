@@ -2,6 +2,8 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Viagem extends Model {
     use HasUuids;
@@ -14,7 +16,7 @@ class Viagem extends Model {
         'saida_at','chegada_at','status','observacoes',
     ];
     protected $casts = ['saida_at'=>'datetime','chegada_at'=>'datetime'];
-    public function veiculo()   { return $this->belongsTo(Veiculo::class); }
-    public function motorista() { return $this->belongsTo(Motorista::class); }
-    public function pontos()    { return $this->hasMany(ViagemPonto::class)->orderBy('capturado_at'); }
+    public function veiculo(): BelongsTo   { return $this->belongsTo(Veiculo::class); }
+    public function motorista(): BelongsTo { return $this->belongsTo(Motorista::class); }
+    public function pontos(): HasMany    { return $this->hasMany(ViagemPonto::class)->orderBy('capturado_at'); }
 }

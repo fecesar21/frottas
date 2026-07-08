@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KmRegistro extends Model {
     use HasUuids;
@@ -14,6 +15,6 @@ class KmRegistro extends Model {
         'km_anterior','km_atual','observacao','registrado_at',
     ];
     protected $casts = ['registrado_at'=>'datetime'];
-    public function veiculo()   { return $this->belongsTo(Veiculo::class); }
-    public function motorista() { return $this->belongsTo(Motorista::class); }
+    public function veiculo(): BelongsTo   { return $this->belongsTo(Veiculo::class); }
+    public function motorista(): BelongsTo { return $this->belongsTo(Motorista::class); }
 }

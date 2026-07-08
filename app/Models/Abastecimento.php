@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Abastecimento extends Model
@@ -25,12 +26,12 @@ class Abastecimento extends Model
 
     protected $casts = ['abastecido_at' => 'datetime'];
 
-    public function veiculo()
+    public function veiculo(): BelongsTo
     {
         return $this->belongsTo(Veiculo::class);
     }
 
-    public function motorista()
+    public function motorista(): BelongsTo
     {
         return $this->belongsTo(Motorista::class);
     }
