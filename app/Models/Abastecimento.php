@@ -20,7 +20,7 @@ class Abastecimento extends Model
 
     protected $fillable = [
         'veiculo_id', 'motorista_id', 'checkin_id', 'posto', 'combustivel',
-        'litros', 'valor_litro', 'km_momento', 'abastecido_at', 'nota_fiscal', 'observacoes',
+        'litros', 'valor_litro', 'km_momento', 'abastecido_at', 'nota_fiscal', 'comprovante_path', 'observacoes',
     ];
 
     protected $casts = ['abastecido_at' => 'datetime'];

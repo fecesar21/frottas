@@ -29,11 +29,11 @@ class StoreAbastecimentoRequest extends FormRequest
             if ($checkin) {
                 $this->merge([
                     'motorista_id' => $usuarioLogado->motorista_id,
-                    'veiculo_id'   => $checkin->veiculo_id,
-                    'checkin_id'   => $checkin->id, // Já aproveita e vincula o ID do check-in
+                    'veiculo_id' => $checkin->veiculo_id,
+                    'checkin_id' => $checkin->id, // Já aproveita e vincula o ID do check-in
                 ]);
             }
-        } elseif ($usuarioLogado && $usuarioLogado->motorista_id && !$this->has('motorista_id')) {
+        } elseif ($usuarioLogado && $usuarioLogado->motorista_id && ! $this->has('motorista_id')) {
             // Se for outro perfil que tenha motorista vinculado e não enviou no formulário
             $this->merge([
                 'motorista_id' => $usuarioLogado->motorista_id,
@@ -44,16 +44,17 @@ class StoreAbastecimentoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'veiculo_id'   => 'required|uuid|exists:veiculos,id',
+            'veiculo_id' => 'required|uuid|exists:veiculos,id',
             'motorista_id' => 'required|uuid|exists:motoristas,id',
-            'checkin_id'   => 'nullable|uuid|exists:checkins,id',
-            'posto'        => 'nullable|string|max:100',
-            'combustivel'  => 'required|in:diesel_s10,diesel_s500,gasolina,gasolina_aditivada,etanol',
-            'litros'       => 'required|numeric|min:0.001',
-            'valor_litro'  => 'required|numeric|min:0.001',
-            'km_momento'   => 'required|integer|min:0',
-            'nota_fiscal'  => 'nullable|string|max:60',
-            'observacoes'  => 'nullable|string',
+            'checkin_id' => 'nullable|uuid|exists:checkins,id',
+            'posto' => 'nullable|string|max:100',
+            'combustivel' => 'required|in:diesel_s10,diesel_s500,gasolina,gasolina_aditivada,etanol',
+            'litros' => 'required|numeric|min:0.001',
+            'valor_litro' => 'required|numeric|min:0.001',
+            'km_momento' => 'required|integer|min:0',
+            'nota_fiscal' => 'nullable|string|max:60',
+            'comprovante' => 'nullable|file|image|max:5120',
+            'observacoes' => 'nullable|string',
         ];
     }
 }

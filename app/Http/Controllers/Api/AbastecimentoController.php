@@ -47,6 +47,10 @@ class AbastecimentoController extends Controller
 
         $data['abastecido_at'] = $data['abastecido_at'] ?? now();
 
+        if ($request->hasFile('comprovante')) {
+            $data['comprovante_path'] = $request->file('comprovante')->store('abastecimentos/comprovantes', 'public');
+        }
+
         return (new AbastecimentoResource(Abastecimento::create($data)))->response()->setStatusCode(201);
     }
 
