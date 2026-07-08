@@ -42,13 +42,13 @@ class ViagemController extends Controller
             $motorista = Motorista::with('checkinAtivo')->find(auth()->user()->motorista_id);
             $checkin = $motorista?->checkinAtivo;
 
-            if (!$checkin) {
+            if (! $checkin) {
                 return response()->json(['error' => 'Realize o check-in antes de registrar uma viagem.'], 403);
             }
 
             $data['motorista_id'] = auth()->user()->motorista_id;
-            $data['veiculo_id']   = $checkin->veiculo_id;
-            $data['checkin_id']   = $checkin->id;
+            $data['veiculo_id'] = $checkin->getAttribute('veiculo_id');
+            $data['checkin_id'] = $checkin->getAttribute('id');
         }
 
         $viagem = $this->service->store($data);

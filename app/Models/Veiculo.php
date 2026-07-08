@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Veiculo extends Model
 {
@@ -26,27 +28,27 @@ class Veiculo extends Model
     ];
 
     // Relações
-    public function checkinAtivo()
+    public function checkinAtivo(): HasOne
     {
         return $this->hasOne(Checkin::class, 'veiculo_id')->where('status', 'ativo');
     }
 
-    public function checkins()
+    public function checkins(): HasMany
     {
         return $this->hasMany(Checkin::class, 'veiculo_id');
     }
 
-    public function kmRegistros()
+    public function kmRegistros(): HasMany
     {
         return $this->hasMany(KmRegistro::class, 'veiculo_id');
     }
 
-    public function abastecimentos()
+    public function abastecimentos(): HasMany
     {
         return $this->hasMany(Abastecimento::class, 'veiculo_id');
     }
 
-    public function viagens()
+    public function viagens(): HasMany
     {
         return $this->hasMany(Viagem::class, 'veiculo_id');
     }

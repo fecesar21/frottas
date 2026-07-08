@@ -29,8 +29,8 @@ class StoreAbastecimentoRequest extends FormRequest
             if ($checkin) {
                 $this->merge([
                     'motorista_id' => $usuarioLogado->motorista_id,
-                    'veiculo_id' => $checkin->veiculo_id,
-                    'checkin_id' => $checkin->id, // Já aproveita e vincula o ID do check-in
+                    'veiculo_id' => $checkin->getAttribute('veiculo_id'),
+                    'checkin_id' => $checkin->getAttribute('id'), // Já aproveita e vincula o ID do check-in
                 ]);
             }
         } elseif ($usuarioLogado && $usuarioLogado->motorista_id && ! $this->has('motorista_id')) {

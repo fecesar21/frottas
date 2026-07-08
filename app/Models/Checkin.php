@@ -3,6 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Checkin extends Model {
     use HasFactory, HasUuids;
@@ -15,7 +16,7 @@ class Checkin extends Model {
         'checkin_at','checkout_at','status','ocorrencias',
     ];
     protected $casts = ['checkin_at'=>'datetime','checkout_at'=>'datetime'];
-    public function motorista() { return $this->belongsTo(Motorista::class); }
-    public function veiculo()   { return $this->belongsTo(Veiculo::class); }
-    public function escala()    { return $this->belongsTo(Escala::class); }
+    public function motorista(): BelongsTo { return $this->belongsTo(Motorista::class); }
+    public function veiculo(): BelongsTo   { return $this->belongsTo(Veiculo::class); }
+    public function escala(): BelongsTo    { return $this->belongsTo(Escala::class); }
 }

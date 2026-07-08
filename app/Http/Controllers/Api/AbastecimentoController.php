@@ -42,7 +42,7 @@ class AbastecimentoController extends Controller
             }
 
             $data['motorista_id'] = auth()->user()->motorista_id;
-            $data['veiculo_id'] = $checkin->veiculo_id;
+            $data['veiculo_id'] = $checkin->getAttribute('veiculo_id');
         }
 
         $data['abastecido_at'] = $data['abastecido_at'] ?? now();
