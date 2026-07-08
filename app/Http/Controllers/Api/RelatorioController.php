@@ -101,6 +101,8 @@ class RelatorioController extends Controller
     }
 
     // ── RELATÓRIO: VIAGENS ────────────────────────────────────────
+    // BUG CONHECIDO: usa TIMESTAMPDIFF/IF() (raw SQL exclusivo do MySQL) — quebra em SQLite.
+    // Sem cobertura de teste por esse motivo. Ver plano "Fundação de Qualidade".
     public function viagens(Request $r)
     {
         $de = $r->de ?? now()->startOfMonth()->toDateString();
@@ -192,6 +194,8 @@ class RelatorioController extends Controller
     }
 
     // ── RELATÓRIO: MOTORISTAS ─────────────────────────────────────
+    // BUG CONHECIDO: usa IF()/CURDATE()/DATE_ADD (raw SQL exclusivo do MySQL) — quebra em SQLite.
+    // Sem cobertura de teste por esse motivo. Ver plano "Fundação de Qualidade".
     public function motoristas(Request $r)
     {
         $rows = DB::table('motoristas as m')
