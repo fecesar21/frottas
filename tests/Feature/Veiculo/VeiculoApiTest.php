@@ -17,15 +17,28 @@ class VeiculoApiTest extends TestCase
             ->assertJsonStructure(['data' => [['id', 'placa', 'modelo', 'status']]]);
     }
 
+    public function test_lista_veiculos_paginada(): void
+    {
+        $this->loginAdmin();
+        Veiculo::factory()->count(30)->create();
+
+        $response = $this->getJson('/api/veiculos?per_page=10')
+            ->assertOk()
+            ->assertJsonStructure(['data', 'links', 'meta']);
+
+        $this->assertCount(10, $response->json('data'));
+        $this->assertSame(30, $response->json('meta.total'));
+    }
+
     public function test_cria_veiculo(): void
     {
         $this->loginGestor();
 
         $response = $this->postJson('/api/veiculos', [
-            'placa'       => 'TST-1234',
-            'modelo'      => 'Sprinter',
-            'marca'       => 'Mercedes-Benz',
-            'ano'         => 2022,
+            'placa' => 'TST-1234',
+            'modelo' => 'Sprinter',
+            'marca' => 'Mercedes-Benz',
+            'ano' => 2022,
             'combustivel' => 'diesel_s10',
         ]);
 
@@ -39,9 +52,9 @@ class VeiculoApiTest extends TestCase
         Veiculo::factory()->create(['placa' => 'DUP-0001']);
 
         $this->postJson('/api/veiculos', [
-            'placa'  => 'DUP-0001',
+            'placa' => 'DUP-0001',
             'modelo' => 'Qualquer',
-            'ano'    => 2022,
+            'ano' => 2022,
         ])->assertUnprocessable();
     }
 

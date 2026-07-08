@@ -10,7 +10,6 @@ use App\Models\Escala;
 use App\Models\Motorista;
 use App\Models\Veiculo;
 use App\Services\EscalaService;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 
 class EscalaController extends Controller
@@ -19,7 +18,7 @@ class EscalaController extends Controller
 
     public function index(Request $r)
     {
-        $de  = $r->get('de',  now()->toDateString());
+        $de = $r->get('de', now()->toDateString());
         $ate = $r->get('ate', now()->toDateString());
         $unidadeId = $r->unidade_efetiva;
 
@@ -28,7 +27,7 @@ class EscalaController extends Controller
             ->when($unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('data')
             ->orderBy('turno')
-            ->get();
+            ->paginate(min((int) $r->integer('per_page', 25), 100));
 
         return EscalaResource::collection($escalas);
     }
@@ -40,7 +39,7 @@ class EscalaController extends Controller
 
         if ($unidadeId) {
             $this->validarMotoristaUnidade($d['motorista_id'], $unidadeId);
-            if (!empty($d['veiculo_id'])) {
+            if (! empty($d['veiculo_id'])) {
                 $this->validarVeiculoUnidade($d['veiculo_id'], $unidadeId);
             }
         }

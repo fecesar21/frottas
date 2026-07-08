@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -13,11 +14,12 @@ class AbastecimentoController extends Controller
 {
     public function index(Request $r)
     {
+        $perPage = min((int) $r->integer('per_page', 25), 100);
+
         $abastecimentos = Abastecimento::with(['veiculo', 'motorista'])
             ->when($r->veiculo_id, fn ($q, $id) => $q->where('veiculo_id', $id))
             ->latest('abastecido_at')
-            ->limit(200)
-            ->get();
+            ->paginate($perPage);
 
         return AbastecimentoResource::collection($abastecimentos);
     }
@@ -35,12 +37,12 @@ class AbastecimentoController extends Controller
             $motorista = Motorista::with('checkinAtivo')->find(auth()->user()->motorista_id);
             $checkin = $motorista?->checkinAtivo;
 
-            if (!$checkin) {
+            if (! $checkin) {
                 return response()->json(['error' => 'Realize o check-in antes de registrar um abastecimento.'], 403);
             }
 
             $data['motorista_id'] = auth()->user()->motorista_id;
-            $data['veiculo_id']   = $checkin->veiculo_id;
+            $data['veiculo_id'] = $checkin->veiculo_id;
         }
 
         $data['abastecido_at'] = $data['abastecido_at'] ?? now();

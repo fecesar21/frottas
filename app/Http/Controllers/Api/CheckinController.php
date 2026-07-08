@@ -17,14 +17,14 @@ class CheckinController extends Controller
     public function index(Request $request)
     {
         $unidadeId = $request->unidade_efetiva;
+        $perPage = min((int) $request->integer('per_page', 25), 100);
 
         $checkins = Checkin::with(['motorista', 'veiculo'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($request->data,   fn ($q, $d) => $q->whereDate('checkin_at', $d))
+            ->when($request->data, fn ($q, $d) => $q->whereDate('checkin_at', $d))
             ->when($unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->latest('checkin_at')
-            ->limit(100)
-            ->get();
+            ->paginate($perPage);
 
         return CheckinResource::collection($checkins);
     }

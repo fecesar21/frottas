@@ -14,13 +14,14 @@ class VeiculoController extends Controller
     public function index(Request $request)
     {
         $unidadeId = $request->unidade_efetiva;
+        $perPage = min((int) $request->integer('per_page', 25), 100);
 
         $veiculos = Veiculo::query()
             ->with(['checkinAtivo.motorista'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('placa')
-            ->get();
+            ->paginate($perPage);
 
         return VeiculoResource::collection($veiculos);
     }
