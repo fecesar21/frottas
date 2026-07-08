@@ -14,7 +14,7 @@ class AbastecimentoController extends Controller
 {
     public function index(Request $r)
     {
-        $perPage = min((int) $r->integer('per_page', 25), 100);
+        $perPage = max(1, min((int) $r->integer('per_page', 25), 100));
 
         $abastecimentos = Abastecimento::with(['veiculo', 'motorista'])
             ->when($r->veiculo_id, fn ($q, $id) => $q->where('veiculo_id', $id))

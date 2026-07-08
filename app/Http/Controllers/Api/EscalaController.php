@@ -21,13 +21,14 @@ class EscalaController extends Controller
         $de = $r->get('de', now()->toDateString());
         $ate = $r->get('ate', now()->toDateString());
         $unidadeId = $r->unidade_efetiva;
+        $perPage = max(1, min((int) $r->integer('per_page', 25), 100));
 
         $escalas = Escala::with(['motorista', 'veiculo'])
             ->whereBetween('data', [$de, $ate])
             ->when($unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('data')
             ->orderBy('turno')
-            ->paginate(min((int) $r->integer('per_page', 25), 100));
+            ->paginate($perPage);
 
         return EscalaResource::collection($escalas);
     }

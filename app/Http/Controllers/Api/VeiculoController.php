@@ -14,7 +14,7 @@ class VeiculoController extends Controller
     public function index(Request $request)
     {
         $unidadeId = $request->unidade_efetiva;
-        $perPage = min((int) $request->integer('per_page', 25), 100);
+        $perPage = max(1, min((int) $request->integer('per_page', 25), 100));
 
         $veiculos = Veiculo::query()
             ->with(['checkinAtivo.motorista'])

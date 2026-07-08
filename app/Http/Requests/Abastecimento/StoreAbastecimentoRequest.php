@@ -53,7 +53,7 @@ class StoreAbastecimentoRequest extends FormRequest
             'valor_litro' => 'required|numeric|min:0.001',
             'km_momento' => 'required|integer|min:0',
             'nota_fiscal' => 'nullable|string|max:60',
-            'comprovante' => 'nullable|file|image|max:5120',
+            'comprovante' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             'observacoes' => 'nullable|string',
         ];
     }

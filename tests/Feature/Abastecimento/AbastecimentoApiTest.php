@@ -55,6 +55,26 @@ class AbastecimentoApiTest extends TestCase
         Storage::disk('public')->assertExists($abastecimento->comprovante_path);
     }
 
+    public function test_comprovante_svg_e_rejeitado(): void
+    {
+        Storage::fake('public');
+        $this->loginGestor();
+        $veiculo = Veiculo::factory()->create();
+        $motorista = Motorista::factory()->create();
+
+        $response = $this->postJson('/api/abastecimentos', [
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+            'combustivel' => 'diesel_s10',
+            'litros' => 40,
+            'valor_litro' => 5.80,
+            'km_momento' => 2000,
+            'comprovante' => UploadedFile::fake()->create('malicioso.svg', 10, 'image/svg+xml'),
+        ]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors('comprovante');
+    }
+
     public function test_resumo_exclui_abastecimentos_soft_deletados(): void
     {
         $this->loginGestor();

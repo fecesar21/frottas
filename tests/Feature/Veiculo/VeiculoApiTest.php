@@ -30,6 +30,19 @@ class VeiculoApiTest extends TestCase
         $this->assertSame(30, $response->json('meta.total'));
     }
 
+    public function test_per_page_invalido_usa_minimo_de_um(): void
+    {
+        $this->loginAdmin();
+        Veiculo::factory()->count(3)->create();
+
+        $response = $this->getJson('/api/veiculos?per_page=0')
+            ->assertOk()
+            ->assertJsonStructure(['data', 'links', 'meta']);
+
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame(1, $response->json('meta.per_page'));
+    }
+
     public function test_cria_veiculo(): void
     {
         $this->loginGestor();
