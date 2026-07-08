@@ -11,17 +11,6 @@ use Illuminate\Http\Request;
 
 class VeiculoController extends Controller
 {
-   // public function index(Request $request)
-   // {
-   //     $query = Veiculo::query()
-   //         ->with(['checkinAtivo.motorista'])
-   //         ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-   //         ->when(!$request->has('status'), fn($q) => $q->where('status', '!=', 'inativo'))
-   //         ->orderBy('placa');
-//
-//        return response()->json($query->get());
-//    }
-
     public function index(Request $request)
     {
         $unidadeId = $request->unidade_efetiva;
@@ -51,7 +40,7 @@ class VeiculoController extends Controller
     {
         $data = $request->validated();
         $data['combustivel'] ??= 'diesel_s10';
-        $data['km_atual']    ??= 0;
+        $data['km_atual'] ??= 0;
 
         return (new VeiculoResource(Veiculo::create($data)))->response()->setStatusCode(201);
     }
