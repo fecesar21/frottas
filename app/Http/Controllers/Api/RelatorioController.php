@@ -219,6 +219,68 @@ class RelatorioController extends Controller
         return response()->json($rows);
     }
 
+    // ── RELATÓRIO: EFICIÊNCIA (custo/km, consumo, ranking de motoristas) ─
+    // Nota: em vez de um único SELECT com dois LEFT JOIN independentes
+    // (abastecimentos + viagens) — que produziria um produto cartesiano
+    // (N abastecimentos × M viagens por veículo) — agregamos cada tabela
+    // em subqueries separadas e as unimos por veiculo_id. Isso evita
+    // qualquer duplicação/undercount de litros ou km, sem precisar de
+    // truques como SUM(DISTINCT ...) que falham quando há valores repetidos
+    // (ex.: dois abastecimentos com exatamente os mesmos litros).
+    public function eficiencia(Request $r)
+    {
+        $de = $r->de ?? now()->startOfMonth()->toDateString();
+        $ate = $r->ate ?? now()->toDateString();
+
+        $abastecimentosPorVeiculo = DB::table('abastecimentos')
+            ->whereRaw('DATE(COALESCE(abastecido_at, created_at)) BETWEEN ? AND ?', [$de, $ate])
+            ->groupBy('veiculo_id')
+            ->select(
+                'veiculo_id',
+                DB::raw('SUM(litros) as total_litros'),
+                DB::raw('SUM(litros * valor_litro) as custo_total')
+            );
+
+        $viagensPorVeiculo = DB::table('viagens')
+            ->whereNotNull('km_chegada')
+            ->whereRaw('DATE(saida_at) BETWEEN ? AND ?', [$de, $ate])
+            ->groupBy('veiculo_id')
+            ->select(
+                'veiculo_id',
+                DB::raw('SUM(km_chegada - km_saida) as km_total')
+            );
+
+        $porVeiculo = DB::table('veiculos as v')
+            ->leftJoinSub($abastecimentosPorVeiculo, 'a', 'a.veiculo_id', '=', 'v.id')
+            ->leftJoinSub($viagensPorVeiculo, 'vg', 'vg.veiculo_id', '=', 'v.id')
+            ->select(
+                'v.id as veiculo_id', 'v.placa', 'v.modelo',
+                DB::raw('COALESCE(a.total_litros, 0) as total_litros'),
+                DB::raw('COALESCE(a.custo_total, 0) as custo_total'),
+                DB::raw('COALESCE(vg.km_total, 0) as km_total')
+            )
+            ->get()
+            ->map(function ($row) {
+                $row->custo_por_km = $row->km_total > 0 ? round($row->custo_total / $row->km_total, 3) : null;
+                $row->consumo_km_por_litro = $row->total_litros > 0 ? round($row->km_total / $row->total_litros, 2) : null;
+
+                return $row;
+            });
+
+        $rankingMotoristas = DB::table('motoristas as m')
+            ->leftJoin('viagens as vg', function ($j) use ($de, $ate) {
+                $j->on('vg.motorista_id', '=', 'm.id')
+                    ->whereNotNull('vg.km_chegada')
+                    ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$de, $ate]);
+            })
+            ->groupBy('m.id', 'm.nome')
+            ->select('m.id as motorista_id', 'm.nome', DB::raw('COALESCE(SUM(vg.km_chegada - vg.km_saida), 0) as km_total'))
+            ->orderByDesc('km_total')
+            ->get();
+
+        return response()->json(compact('porVeiculo', 'rankingMotoristas'));
+    }
+
     // ── RELATÓRIO: CHECKINS (para dashboard) ─────────────────────
     public function checkins(Request $r)
     {
