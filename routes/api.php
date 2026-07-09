@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CheckinController;
 use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\MotoristaController;
+use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
 use App\Http\Controllers\Api\RelatorioController;
 use App\Http\Controllers\Api\UnidadeController;
@@ -93,6 +94,10 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
     Route::delete('unidades/{unidade}/motoristas/{motorista}', [UnidadeController::class, 'desvincularMotorista']);
     Route::post('unidades/{unidade}/veiculos', [UnidadeController::class, 'vincularVeiculos']);
     Route::delete('unidades/{unidade}/veiculos/{veiculo}', [UnidadeController::class, 'desvincularVeiculo']);
+
+    // Notificações
+    Route::get('notificacoes', [NotificacaoController::class, 'index']);
+    Route::patch('notificacoes/{id}/lida', [NotificacaoController::class, 'marcarLida']);
 
     // Usuários — somente admin
     Route::middleware('admin')->apiResource('usuarios', UsuarioController::class)

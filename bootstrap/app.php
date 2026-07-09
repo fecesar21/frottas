@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Middleware\EscopoUnidade;
+use App\Http\Middleware\SomenteAdmin;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -8,7 +12,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -26,21 +29,24 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'admin'        => \App\Http\Middleware\SomenteAdmin::class,
-            'throttle'     => ThrottleRequests::class,
-            'escopo.unidade' => \App\Http\Middleware\EscopoUnidade::class,
+            'admin' => SomenteAdmin::class,
+            'throttle' => ThrottleRequests::class,
+            'escopo.unidade' => EscopoUnidade::class,
         ]);
 
         $middleware->appendToGroup('api', [
-            ThrottleRequests::class . ':api',
+            ThrottleRequests::class.':api',
         ]);
+    })
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('alertas:verificar')->daily();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Dados inválidos.',
-                    'errors'  => $e->errors(),
+                    'errors' => $e->errors(),
                 ], 422);
             }
         });

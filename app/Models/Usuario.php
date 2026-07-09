@@ -1,23 +1,29 @@
 <?php
+
 // ============================================================
 //  app/Models/Usuario.php
 // ============================================================
+
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasUuids;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable;
 
-    protected $table      = 'usuarios';
+    protected $table = 'usuarios';
+
     protected $primaryKey = 'id';
-    public    $incrementing = false;
-    protected $keyType    = 'string';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     protected $fillable = [
         'nome', 'cpf', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id', 'unidade_id',
@@ -26,7 +32,10 @@ class Usuario extends Authenticatable
     protected $hidden = ['senha_hash'];
 
     // Sanctum usa a coluna senha_hash como password
-    public function getAuthPassword() { return $this->senha_hash; }
+    public function getAuthPassword()
+    {
+        return $this->senha_hash;
+    }
 
     public function motorista(): BelongsTo
     {

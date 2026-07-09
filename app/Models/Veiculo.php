@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -14,7 +14,9 @@ class Veiculo extends Model
     use HasFactory, HasUuids;
 
     protected $table = 'veiculos';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -56,5 +58,10 @@ class Veiculo extends Model
     public function unidades(): BelongsToMany
     {
         return $this->belongsToMany(Unidade::class, 'veiculo_unidade');
+    }
+
+    public function getPrecisaManutencaoAttribute(): bool
+    {
+        return $this->km_proxima_revisao !== null && $this->km_atual >= $this->km_proxima_revisao;
     }
 }
