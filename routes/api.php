@@ -38,6 +38,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
 
     // Veículos
+    Route::get('veiculos/posicoes', [VeiculoController::class, 'posicoes']);
     Route::apiResource('veiculos', VeiculoController::class);
 
     // Motoristas

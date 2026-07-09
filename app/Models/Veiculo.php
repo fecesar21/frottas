@@ -50,6 +50,9 @@ class Veiculo extends Model
         return $this->hasMany(Abastecimento::class, 'veiculo_id');
     }
 
+    /**
+     * @return HasMany<Viagem, $this>
+     */
     public function viagens(): HasMany
     {
         return $this->hasMany(Viagem::class, 'veiculo_id');

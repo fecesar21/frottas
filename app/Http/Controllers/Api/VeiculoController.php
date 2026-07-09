@@ -69,4 +69,46 @@ class VeiculoController extends Controller
 
         return response()->json(['message' => 'Veículo desativado']);
     }
+
+    public function posicoes(Request $request)
+    {
+        $unidadeId = $request->unidade_efetiva;
+
+        $veiculos = Veiculo::query()
+            ->whereHas('viagens', fn ($q) => $q->where('status', 'em_andamento'))
+            ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
+            ->with(['viagens' => fn ($q) => $q->where('status', 'em_andamento')->with([
+                'motorista:id,nome',
+                'pontos' => fn ($p) => $p->latest('capturado_at')->limit(1),
+            ])])
+            ->get();
+
+        $posicoes = [];
+
+        foreach ($veiculos as $veiculo) {
+            $viagem = $veiculo->viagens->first();
+
+            if ($viagem === null) {
+                continue;
+            }
+
+            $ultimoPonto = $viagem->pontos->first();
+
+            if ($ultimoPonto === null) {
+                continue;
+            }
+
+            $posicoes[] = [
+                'veiculo_id' => $veiculo->id,
+                'placa' => $veiculo->placa,
+                'viagem_id' => $viagem->id,
+                'motorista' => $viagem->motorista?->nome,
+                'latitude' => $ultimoPonto->latitude,
+                'longitude' => $ultimoPonto->longitude,
+                'capturado_at' => $ultimoPonto->capturado_at,
+            ];
+        }
+
+        return response()->json($posicoes);
+    }
 }

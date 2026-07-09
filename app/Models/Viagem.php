@@ -26,16 +26,25 @@ class Viagem extends Model
 
     protected $casts = ['saida_at' => 'datetime', 'chegada_at' => 'datetime'];
 
+    /**
+     * @return BelongsTo<Veiculo, $this>
+     */
     public function veiculo(): BelongsTo
     {
         return $this->belongsTo(Veiculo::class);
     }
 
+    /**
+     * @return BelongsTo<Motorista, $this>
+     */
     public function motorista(): BelongsTo
     {
         return $this->belongsTo(Motorista::class);
     }
 
+    /**
+     * @return HasMany<ViagemPonto, $this>
+     */
     public function pontos(): HasMany
     {
         return $this->hasMany(ViagemPonto::class)->orderBy('capturado_at');
