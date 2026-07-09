@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 return Limit::perMinute((int) env('API_RATE_LIMIT', 60))
                     ->by($request->user()?->id ?: $request->ip());
             });
+
+            RateLimiter::for('login', function (Request $request) {
+                return Limit::perMinute(5)->by($request->ip());
+            });
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
