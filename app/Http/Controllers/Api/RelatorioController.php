@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class RelatorioController extends Controller
@@ -11,48 +12,52 @@ class RelatorioController extends Controller
     // ── DASHBOARD (KPIs gerais) ──────────────────────────────────
     public function dashboard(Request $r)
     {
-        $inicio = now()->startOfMonth();
-        $fim = now()->endOfMonth();
+        $dados = Cache::remember('relatorio.dashboard', now()->addMinutes(5), function () {
+            $inicio = now()->startOfMonth();
+            $fim = now()->endOfMonth();
 
-        $veiculos = DB::table('veiculos')->selectRaw("
-            COUNT(*) as total,
-            SUM(status='disponivel') as disponiveis,
-            SUM(status='em_uso') as em_uso,
-            SUM(status='manutencao') as manutencao,
-            SUM(status='inativo') as inativos
-        ")->first();
+            $veiculos = DB::table('veiculos')->selectRaw("
+                COUNT(*) as total,
+                SUM(status='disponivel') as disponiveis,
+                SUM(status='em_uso') as em_uso,
+                SUM(status='manutencao') as manutencao,
+                SUM(status='inativo') as inativos
+            ")->first();
 
-        $checkins_ativos = DB::table('checkins')
-            ->whereNull('checkout_at')->count();
+            $checkins_ativos = DB::table('checkins')
+                ->whereNull('checkout_at')->count();
 
-        $km_mes = DB::table('viagens')
-            ->whereNotNull('km_chegada')
-            ->whereBetween('saida_at', [$inicio, $fim])
-            ->selectRaw('SUM(km_chegada - km_saida) as total')
-            ->value('total') ?? 0;
+            $km_mes = DB::table('viagens')
+                ->whereNotNull('km_chegada')
+                ->whereBetween('saida_at', [$inicio, $fim])
+                ->selectRaw('SUM(km_chegada - km_saida) as total')
+                ->value('total') ?? 0;
 
-        $custo_mes = DB::table('abastecimentos')
-            ->whereBetween(DB::raw('COALESCE(abastecido_at, created_at)'), [$inicio, $fim])
-            ->selectRaw('SUM(litros * valor_litro) as total')
-            ->value('total') ?? 0;
+            $custo_mes = DB::table('abastecimentos')
+                ->whereBetween(DB::raw('COALESCE(abastecido_at, created_at)'), [$inicio, $fim])
+                ->selectRaw('SUM(litros * valor_litro) as total')
+                ->value('total') ?? 0;
 
-        $motoristas = DB::table('motoristas')
-            ->selectRaw("COUNT(*) as total, SUM(status='ativo') as ativos")
-            ->first();
+            $motoristas = DB::table('motoristas')
+                ->selectRaw("COUNT(*) as total, SUM(status='ativo') as ativos")
+                ->first();
 
-        $cnh_vencendo = DB::table('motoristas')
-            ->where('status', 'ativo')
-            ->whereBetween('cnh_validade', [now(), now()->addDays(30)])
-            ->pluck('nome');
+            $cnh_vencendo = DB::table('motoristas')
+                ->where('status', 'ativo')
+                ->whereBetween('cnh_validade', [now(), now()->addDays(30)])
+                ->pluck('nome');
 
-        return response()->json([
-            'veiculos' => $veiculos,
-            'checkins_ativos' => $checkins_ativos,
-            'km_mes' => $km_mes,
-            'custo_combustivel_mes' => $custo_mes,
-            'motoristas' => $motoristas,
-            'cnh_vencendo' => $cnh_vencendo,
-        ]);
+            return [
+                'veiculos' => $veiculos,
+                'checkins_ativos' => $checkins_ativos,
+                'km_mes' => $km_mes,
+                'custo_combustivel_mes' => $custo_mes,
+                'motoristas' => $motoristas,
+                'cnh_vencendo' => $cnh_vencendo,
+            ];
+        });
+
+        return response()->json($dados);
     }
 
     // ── RELATÓRIO: ABASTECIMENTOS ─────────────────────────────────
@@ -232,53 +237,57 @@ class RelatorioController extends Controller
         $de = $r->de ?? now()->startOfMonth()->toDateString();
         $ate = $r->ate ?? now()->toDateString();
 
-        $abastecimentosPorVeiculo = DB::table('abastecimentos')
-            ->whereRaw('DATE(COALESCE(abastecido_at, created_at)) BETWEEN ? AND ?', [$de, $ate])
-            ->groupBy('veiculo_id')
-            ->select(
-                'veiculo_id',
-                DB::raw('SUM(litros) as total_litros'),
-                DB::raw('SUM(litros * valor_litro) as custo_total')
-            );
+        $dados = Cache::remember("relatorio.eficiencia.{$de}.{$ate}", now()->addMinutes(5), function () use ($de, $ate) {
+            $abastecimentosPorVeiculo = DB::table('abastecimentos')
+                ->whereRaw('DATE(COALESCE(abastecido_at, created_at)) BETWEEN ? AND ?', [$de, $ate])
+                ->groupBy('veiculo_id')
+                ->select(
+                    'veiculo_id',
+                    DB::raw('SUM(litros) as total_litros'),
+                    DB::raw('SUM(litros * valor_litro) as custo_total')
+                );
 
-        $viagensPorVeiculo = DB::table('viagens')
-            ->whereNotNull('km_chegada')
-            ->whereRaw('DATE(saida_at) BETWEEN ? AND ?', [$de, $ate])
-            ->groupBy('veiculo_id')
-            ->select(
-                'veiculo_id',
-                DB::raw('SUM(km_chegada - km_saida) as km_total')
-            );
+            $viagensPorVeiculo = DB::table('viagens')
+                ->whereNotNull('km_chegada')
+                ->whereRaw('DATE(saida_at) BETWEEN ? AND ?', [$de, $ate])
+                ->groupBy('veiculo_id')
+                ->select(
+                    'veiculo_id',
+                    DB::raw('SUM(km_chegada - km_saida) as km_total')
+                );
 
-        $porVeiculo = DB::table('veiculos as v')
-            ->leftJoinSub($abastecimentosPorVeiculo, 'a', 'a.veiculo_id', '=', 'v.id')
-            ->leftJoinSub($viagensPorVeiculo, 'vg', 'vg.veiculo_id', '=', 'v.id')
-            ->select(
-                'v.id as veiculo_id', 'v.placa', 'v.modelo',
-                DB::raw('COALESCE(a.total_litros, 0) as total_litros'),
-                DB::raw('COALESCE(a.custo_total, 0) as custo_total'),
-                DB::raw('COALESCE(vg.km_total, 0) as km_total')
-            )
-            ->get()
-            ->map(function ($row) {
-                $row->custo_por_km = $row->km_total > 0 ? round($row->custo_total / $row->km_total, 3) : null;
-                $row->consumo_km_por_litro = $row->total_litros > 0 ? round($row->km_total / $row->total_litros, 2) : null;
+            $porVeiculo = DB::table('veiculos as v')
+                ->leftJoinSub($abastecimentosPorVeiculo, 'a', 'a.veiculo_id', '=', 'v.id')
+                ->leftJoinSub($viagensPorVeiculo, 'vg', 'vg.veiculo_id', '=', 'v.id')
+                ->select(
+                    'v.id as veiculo_id', 'v.placa', 'v.modelo',
+                    DB::raw('COALESCE(a.total_litros, 0) as total_litros'),
+                    DB::raw('COALESCE(a.custo_total, 0) as custo_total'),
+                    DB::raw('COALESCE(vg.km_total, 0) as km_total')
+                )
+                ->get()
+                ->map(function ($row) {
+                    $row->custo_por_km = $row->km_total > 0 ? round($row->custo_total / $row->km_total, 3) : null;
+                    $row->consumo_km_por_litro = $row->total_litros > 0 ? round($row->km_total / $row->total_litros, 2) : null;
 
-                return $row;
-            });
+                    return $row;
+                });
 
-        $rankingMotoristas = DB::table('motoristas as m')
-            ->leftJoin('viagens as vg', function ($j) use ($de, $ate) {
-                $j->on('vg.motorista_id', '=', 'm.id')
-                    ->whereNotNull('vg.km_chegada')
-                    ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$de, $ate]);
-            })
-            ->groupBy('m.id', 'm.nome')
-            ->select('m.id as motorista_id', 'm.nome', DB::raw('COALESCE(SUM(vg.km_chegada - vg.km_saida), 0) as km_total'))
-            ->orderByDesc('km_total')
-            ->get();
+            $rankingMotoristas = DB::table('motoristas as m')
+                ->leftJoin('viagens as vg', function ($j) use ($de, $ate) {
+                    $j->on('vg.motorista_id', '=', 'm.id')
+                        ->whereNotNull('vg.km_chegada')
+                        ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$de, $ate]);
+                })
+                ->groupBy('m.id', 'm.nome')
+                ->select('m.id as motorista_id', 'm.nome', DB::raw('COALESCE(SUM(vg.km_chegada - vg.km_saida), 0) as km_total'))
+                ->orderByDesc('km_total')
+                ->get();
 
-        return response()->json(compact('porVeiculo', 'rankingMotoristas'));
+            return compact('porVeiculo', 'rankingMotoristas');
+        });
+
+        return response()->json($dados);
     }
 
     // ── RELATÓRIO: CHECKINS (para dashboard) ─────────────────────
