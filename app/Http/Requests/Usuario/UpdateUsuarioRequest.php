@@ -49,5 +49,9 @@ class UpdateUsuarioRequest extends FormRequest
         if ($this->email) {
             $this->merge(['email' => strtolower($this->email)]);
         }
+
+        if ($this->cpf) {
+            $this->merge(['cpf' => preg_replace('/\D/', '', $this->cpf)]);
+        }
     }
 }

@@ -12,7 +12,9 @@ class ViagemPontoController extends Controller
     public function store(Request $r, Viagem $viagem)
     {
         if ($viagem->status !== 'em_andamento') {
-            return response()->json(['message' => 'Viagem não está em andamento'], 422);
+            return response()->json([
+                'message' => "Viagem não está em andamento (status atual: {$viagem->status})",
+            ], 422);
         }
 
         $data = $r->validate([

@@ -69,25 +69,54 @@ export default function CheckinsList() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Cards — telas pequenas */}
+      <div className="md:hidden space-y-3">
+        {checkinsFiltrados.map((c) => (
+          <div key={c.id} className="bg-white border border-gray-200 rounded-xl p-4 text-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-gray-800">{c.motorista?.nome ?? '—'}</p>
+              <Badge value={c.status} />
+            </div>
+            <p className="font-mono text-gray-600">{c.veiculo?.placa ?? '—'} <span className="text-gray-400 capitalize">· {c.turno}</span></p>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-gray-500 text-xs">
+              <p>KM saída: <span className="text-gray-700">{fmtKm(c.km_saida)}</span></p>
+              <p>KM retorno: <span className="text-gray-700">{c.km_retorno ? fmtKm(c.km_retorno) : '—'}</span></p>
+              <p>Check-in: <span className="text-gray-700">{fmtDt(c.checkin_at)}</span></p>
+              <p>Check-out: <span className="text-gray-700">{fmtDt(c.checkout_at)}</span></p>
+            </div>
+            {c.status === 'ativo' && (
+              <button onClick={() => { setCheckoutTarget(c); setCheckoutForm({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' }) }}
+                className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
+                <LogOut size={12} /> Checkout
+              </button>
+            )}
+          </div>
+        ))}
+        {checkinsFiltrados.length === 0 && (
+          <p className="text-center text-gray-400 py-8 text-sm">Nenhum check-in encontrado</p>
+        )}
+      </div>
+
+      {/* Tabela — telas médias e maiores */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
               {['Motorista', 'Veículo', 'Turno', 'KM saída', 'KM retorno', 'Check-in', 'Check-out', 'Status', ''].map(h => (
-                <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {checkinsFiltrados.map((c) => (
               <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 font-medium text-gray-800">{c.motorista?.nome ?? '—'}</td>
-                <td className="px-4 py-3 font-mono text-gray-600">{c.veiculo?.placa ?? '—'}</td>
-                <td className="px-4 py-3 capitalize text-gray-500">{c.turno}</td>
-                <td className="px-4 py-3 text-gray-700">{fmtKm(c.km_saida)}</td>
-                <td className="px-4 py-3 text-gray-700">{c.km_retorno ? fmtKm(c.km_retorno) : '—'}</td>
-                <td className="px-4 py-3 text-gray-500">{fmtDt(c.checkin_at)}</td>
-                <td className="px-4 py-3 text-gray-500">{fmtDt(c.checkout_at)}</td>
+                <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{c.motorista?.nome ?? '—'}</td>
+                <td className="px-4 py-3 font-mono text-gray-600 whitespace-nowrap">{c.veiculo?.placa ?? '—'}</td>
+                <td className="px-4 py-3 capitalize text-gray-500 whitespace-nowrap">{c.turno}</td>
+                <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(c.km_saida)}</td>
+                <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{c.km_retorno ? fmtKm(c.km_retorno) : '—'}</td>
+                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(c.checkin_at)}</td>
+                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(c.checkout_at)}</td>
                 <td className="px-4 py-3"><Badge value={c.status} /></td>
                 <td className="px-4 py-3">
                   {c.status === 'ativo' && (

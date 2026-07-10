@@ -28,4 +28,7 @@ class Motorista extends Model {
     public function getDiasParaVencerCnhAttribute() {
         return now()->diffInDays($this->cnh_validade, false);
     }
+    public function setCpfAttribute($value) {
+        $this->attributes['cpf'] = $value !== null ? preg_replace('/\D/', '', $value) : $value;
+    }
 }

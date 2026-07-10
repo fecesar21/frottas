@@ -25,4 +25,11 @@ class StoreMotoristaRequest extends FormRequest
             'observacoes'   => 'nullable|string',
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->cpf) {
+            $this->merge(['cpf' => preg_replace('/\D/', '', $this->cpf)]);
+        }
+    }
 }

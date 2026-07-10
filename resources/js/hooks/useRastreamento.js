@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { registrarPonto } from '../api/viagens'
+
+const DISTANCIA_MINIMA_M = 40
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371000
@@ -14,9 +16,19 @@ function haversine(lat1, lon1, lat2, lon2) {
 
 export function useRastreamento(viagemId) {
   const ultimaPosRef = useRef(null)
+  const [erro, setErro] = useState(null)
+  const [falhasEnvio, setFalhasEnvio] = useState(0)
 
   useEffect(() => {
-    if (!viagemId || !navigator.geolocation) return
+    setErro(null)
+    setFalhasEnvio(0)
+
+    if (!viagemId) return
+
+    if (!navigator.geolocation) {
+      setErro('Geolocalização não suportada neste navegador/contexto (verifique se o acesso é via HTTPS).')
+      return
+    }
 
     let watchId = null
     let wakeLock = null
@@ -25,10 +37,11 @@ export function useRastreamento(viagemId) {
 
     watchId = navigator.geolocation.watchPosition(
       ({ coords }) => {
+        setErro(null)
         const { latitude, longitude, accuracy } = coords
         const ultima = ultimaPosRef.current
 
-        if (ultima && haversine(ultima.latitude, ultima.longitude, latitude, longitude) < 100) {
+        if (ultima && haversine(ultima.latitude, ultima.longitude, latitude, longitude) < DISTANCIA_MINIMA_M) {
           return
         }
 
@@ -39,9 +52,23 @@ export function useRastreamento(viagemId) {
           longitude,
           accuracy,
           capturado_at: new Date().toISOString(),
-        }).catch(() => {})
+        })
+          .then(() => setFalhasEnvio(0))
+          .catch((e) => {
+            setFalhasEnvio(n => n + 1)
+            setErro(e.response?.data?.message ?? 'Falha ao sincronizar ponto de GPS com o servidor.')
+            console.error('Falha ao registrar ponto de GPS', e)
+          })
       },
-      () => {},
+      (geoErr) => {
+        const mensagens = {
+          1: 'Permissão de localização negada pelo motorista.',
+          2: 'Localização indisponível no momento.',
+          3: 'Tempo esgotado ao obter a localização.',
+        }
+        setErro(mensagens[geoErr.code] ?? 'Erro ao obter localização.')
+        console.error('Erro de geolocalização', geoErr)
+      },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 },
     )
 
@@ -51,4 +78,6 @@ export function useRastreamento(viagemId) {
       ultimaPosRef.current = null
     }
   }, [viagemId])
+
+  return { erro, falhasEnvio }
 }

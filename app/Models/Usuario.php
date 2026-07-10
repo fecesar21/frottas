@@ -46,4 +46,9 @@ class Usuario extends Authenticatable
     {
         return $this->belongsTo(Unidade::class, 'unidade_id');
     }
+
+    public function setCpfAttribute($value)
+    {
+        $this->attributes['cpf'] = $value !== null ? preg_replace('/\D/', '', $value) : $value;
+    }
 }

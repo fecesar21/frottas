@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../contexts/AuthContext'
+import { useRastreamento } from '../../hooks/useRastreamento'
+import * as viagensApi from '../../api/viagens'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
@@ -45,17 +48,37 @@ export function AdminRoute({ children }) {
   return children
 }
 
+function useRastreamentoGlobal() {
+  const { isOperador } = useAuth()
+
+  const { data } = useQuery({
+    queryKey: ['viagens', 'em_andamento'],
+    queryFn: () => viagensApi.listar({ status: 'em_andamento' }).then(r => r.data.data ?? r.data),
+    enabled: isOperador,
+    refetchInterval: 30000,
+  })
+
+  const activeTrip = isOperador ? (data ?? [])[0] : null
+  return useRastreamento(activeTrip?.id ?? null)
+}
+
 export default function Layout() {
   const location = useLocation()
   const base = '/' + location.pathname.split('/')[1]
   const title = pageTitles[base] ?? 'Health Drive'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { erro: erroRastreamento } = useRastreamentoGlobal()
 
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
+        {erroRastreamento && (
+          <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs px-4 py-2">
+            GPS: {erroRastreamento}
+          </div>
+        )}
         <main className="flex-1 p-5 md:p-6 overflow-auto animate-fade-in">
           <Outlet />
         </main>
