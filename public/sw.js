@@ -1,6 +1,6 @@
-const CACHE_NAME = 'fleetcore-v1';
+const CACHE_NAME = 'fleetcore-v2';
 const STATIC_ASSETS = [
-  '/frota.html',
+  '/',
   '/manifest.json',
   'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap',
 ];
@@ -56,9 +56,9 @@ self.addEventListener('fetch', event => {
         }
         return response;
       }).catch(() => {
-        // Offline fallback: retorna o frota.html do cache
+        // Offline fallback: retorna a shell do app a partir do cache
         if (event.request.mode === 'navigate') {
-          return caches.match('/frota.html');
+          return caches.match('/');
         }
       });
     })
@@ -68,4 +68,19 @@ self.addEventListener('fetch', event => {
 // Recebe mensagem para forçar atualização do cache
 self.addEventListener('message', event => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// Reforço de reenvio dos pontos de GPS pendentes quando o SO permitir
+// (Background Sync API — suportado em Chrome/Android; ignorado graciosamente
+// em navegadores sem suporte, ex. Safari/iOS). A fila real fica em IndexedDB,
+// mantida pelo app (useRastreamento.js); aqui só avisamos os clients abertos
+// para tentarem esvaziá-la assim que houver oportunidade.
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-viagem-pontos') {
+    event.waitUntil(
+      self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
+        clients.forEach(client => client.postMessage('FLUSH_PONTOS_PENDENTES'));
+      })
+    );
+  }
 });

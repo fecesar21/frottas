@@ -2,7 +2,7 @@
   "name": "FleetCore — Controle de Frotas",
   "short_name": "FleetCore",
   "description": "Sistema de controle de frotas e passagem de plantão",
-  "start_url": "/frota.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f1117",
   "theme_color": "#4d8ef5",
@@ -22,13 +22,13 @@
     {
       "name": "Passagem de Plantão",
       "short_name": "Plantão",
-      "url": "/frota.html#plantao",
+      "url": "/plantao",
       "description": "Abrir passagem de plantão"
     },
     {
       "name": "Nova Viagem",
       "short_name": "Viagem",
-      "url": "/frota.html#viagens",
+      "url": "/viagens",
       "description": "Registrar nova viagem"
     }
   ],

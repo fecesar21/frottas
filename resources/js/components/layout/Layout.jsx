@@ -59,7 +59,8 @@ function useRastreamentoGlobal() {
   })
 
   const activeTrip = isOperador ? (data ?? [])[0] : null
-  return useRastreamento(activeTrip?.id ?? null)
+  const rastreamento = useRastreamento(activeTrip?.id ?? null)
+  return { ...rastreamento, rastreando: Boolean(activeTrip?.id) }
 }
 
 export default function Layout() {
@@ -67,16 +68,22 @@ export default function Layout() {
   const base = '/' + location.pathname.split('/')[1]
   const title = pageTitles[base] ?? 'Health Drive'
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { erro: erroRastreamento } = useRastreamentoGlobal()
+  const { erro: erroRastreamento, pendentes, rastreando } = useRastreamentoGlobal()
 
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
+        {rastreando && !erroRastreamento && (
+          <div className="bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-4 py-2 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Rastreando viagem{pendentes > 0 ? ` — ${pendentes} ponto(s) pendente(s) de envio` : ''}
+          </div>
+        )}
         {erroRastreamento && (
           <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs px-4 py-2">
-            GPS: {erroRastreamento}
+            GPS: {erroRastreamento}{pendentes > 0 ? ` (${pendentes} ponto(s) pendente(s) de envio)` : ''}
           </div>
         )}
         <main className="flex-1 p-5 md:p-6 overflow-auto animate-fade-in">
