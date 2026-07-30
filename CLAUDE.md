@@ -31,7 +31,12 @@ php artisan test tests/Feature/ExampleTest.php
 
 # Interactive REPL
 php artisan tinker
+
+# Deploy to production (pulls, installs deps, builds frontend, migrates, caches)
+bash scripts/deploy.sh
 ```
+
+> **Important:** the frontend is built by Vite into `public/build/` and served via the `@vite` Blade directive — it is NOT served from source. A `git pull` alone does **not** update what the browser loads; `npm run build` must be run afterwards (handled automatically by `scripts/deploy.sh`), or frontend changes will silently not take effect in production.
 
 ## Architecture
 
