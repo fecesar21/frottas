@@ -16,6 +16,8 @@ class ViagemResource extends JsonResource
             'checkin_id'   => $this->checkin_id,
             'origem'       => $this->origem,
             'destino'      => $this->destino,
+            'motivo_viagem'      => $this->motivo_viagem,
+            'numero_atendimento' => $this->numero_atendimento,
             'km_saida'     => $this->km_saida,
             'km_chegada'   => $this->km_chegada,
             'km_percorrido'=> $this->when($this->km_chegada, fn () => $this->km_chegada - $this->km_saida),

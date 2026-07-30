@@ -14,6 +14,8 @@ export default function ViagemForm({ onSuccess }) {
     veiculo_id:   isOperador ? (checkinAtivo?.veiculo_id ?? '') : '',
     origem: '',
     destino: '',
+    motivo_viagem: '',
+    numero_atendimento: '',
     km_saida: '',
   })
   const [error, setError] = useState('')
@@ -32,7 +34,11 @@ export default function ViagemForm({ onSuccess }) {
     e.preventDefault()
     setError('')
     setFieldErrors({})
-    criar.mutate({ ...form, km_saida: Number(form.km_saida) })
+    criar.mutate({
+      ...form,
+      km_saida: Number(form.km_saida),
+      numero_atendimento: form.numero_atendimento ? Number(form.numero_atendimento) : null,
+    })
   }
 
   const fe = (k) => fieldErrors[k] && <p className="text-red-500 text-xs mt-1">{fieldErrors[k][0]}</p>
@@ -78,6 +84,32 @@ export default function ViagemForm({ onSuccess }) {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           {fe('destino')}
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Motivo da Viagem *</label>
+        <select required value={form.motivo_viagem}
+          onChange={e => setForm(f => ({ ...f, motivo_viagem: e.target.value, numero_atendimento: e.target.value === 'transferencia_paciente' ? f.numero_atendimento : '' }))}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Selecione...</option>
+          <option value="transferencia_paciente">Transferência de Paciente</option>
+          <option value="buscar_medico">Buscar médico em outra cidade</option>
+        </select>
+        {fe('motivo_viagem')}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Número do Atendimento {form.motivo_viagem === 'transferencia_paciente' && '*'}
+        </label>
+        <input type="number" min={0} max={999999} required={form.motivo_viagem === 'transferencia_paciente'}
+          value={form.numero_atendimento}
+          onChange={e => {
+            const v = e.target.value.slice(0, 6)
+            setForm(f => ({ ...f, numero_atendimento: v }))
+          }}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        {fe('numero_atendimento')}
       </div>
 
       <div>

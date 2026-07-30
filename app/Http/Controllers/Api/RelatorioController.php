@@ -123,6 +123,7 @@ class RelatorioController extends Controller
                 'v.placa', 'v.modelo',
                 'm.nome as motorista_nome',
                 'vg.origem', 'vg.destino',
+                'vg.motivo_viagem', 'vg.numero_atendimento',
                 'vg.km_saida', 'vg.km_chegada', 'vg.status',
                 DB::raw('IF(vg.km_chegada IS NOT NULL, vg.km_chegada - vg.km_saida, NULL) as km_percorrido'),
                 DB::raw('IF(vg.chegada_at IS NOT NULL AND vg.saida_at IS NOT NULL, TIMESTAMPDIFF(MINUTE, vg.saida_at, vg.chegada_at), NULL) as duracao_min')
