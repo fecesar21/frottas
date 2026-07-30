@@ -79,9 +79,13 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
     Route::prefix('relatorios')->group(function () {
         Route::get('dashboard', [RelatorioController::class, 'dashboard']);
         Route::get('abastecimentos', [RelatorioController::class, 'abastecimentos']);
+        Route::get('abastecimentos/pdf', [RelatorioController::class, 'abastecimentosPdf']);
         Route::get('viagens', [RelatorioController::class, 'viagens']);
+        Route::get('viagens/pdf', [RelatorioController::class, 'viagensPdf']);
         Route::get('plantao', [RelatorioController::class, 'plantao']);
+        Route::get('plantao/pdf', [RelatorioController::class, 'plantaoPdf']);
         Route::get('motoristas', [RelatorioController::class, 'motoristas']);
+        Route::get('motoristas/pdf', [RelatorioController::class, 'motoristasPdf']);
         Route::get('eficiencia', [RelatorioController::class, 'eficiencia']);
         Route::get('checkins', [RelatorioController::class, 'checkins']);
     });

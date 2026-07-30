@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -61,7 +62,7 @@ class RelatorioController extends Controller
     }
 
     // ── RELATÓRIO: ABASTECIMENTOS ─────────────────────────────────
-    public function abastecimentos(Request $r)
+    private function abastecimentosData(Request $r): array
     {
         $de = $r->de ?? now()->startOfMonth()->toDateString();
         $ate = $r->ate ?? now()->toDateString();
@@ -102,13 +103,26 @@ class RelatorioController extends Controller
             'abastecimentos' => $g->count(),
         ])->values();
 
-        return response()->json(compact('rows', 'totais', 'por_veiculo'));
+        return compact('rows', 'totais', 'por_veiculo', 'de', 'ate');
+    }
+
+    public function abastecimentos(Request $r)
+    {
+        return response()->json($this->abastecimentosData($r));
+    }
+
+    public function abastecimentosPdf(Request $r)
+    {
+        $dados = $this->abastecimentosData($r);
+
+        return Pdf::loadView('relatorios.pdf.abastecimentos', $dados)
+            ->download('relatorio-abastecimentos.pdf');
     }
 
     // ── RELATÓRIO: VIAGENS ────────────────────────────────────────
     // BUG CONHECIDO: usa TIMESTAMPDIFF/IF() (raw SQL exclusivo do MySQL) — quebra em SQLite.
     // Sem cobertura de teste por esse motivo. Ver plano "Fundação de Qualidade".
-    public function viagens(Request $r)
+    private function viagensData(Request $r): array
     {
         $de = $r->de ?? now()->startOfMonth()->toDateString();
         $ate = $r->ate ?? now()->toDateString();
@@ -143,11 +157,24 @@ class RelatorioController extends Controller
             'km_total' => $g->sum('km_percorrido'),
         ])->values()->sortByDesc('km_total')->values();
 
-        return response()->json(compact('rows', 'totais', 'por_motorista'));
+        return compact('rows', 'totais', 'por_motorista', 'de', 'ate');
+    }
+
+    public function viagens(Request $r)
+    {
+        return response()->json($this->viagensData($r));
+    }
+
+    public function viagensPdf(Request $r)
+    {
+        $dados = $this->viagensData($r);
+
+        return Pdf::loadView('relatorios.pdf.viagens', $dados)
+            ->download('relatorio-viagens.pdf');
     }
 
     // ── RELATÓRIO: PASSAGENS DE PLANTÃO ──────────────────────────
-    public function plantao(Request $r)
+    private function plantaoData(Request $r): array
     {
         $de = $r->de ?? now()->startOfMonth()->toDateString();
         $ate = $r->ate ?? now()->toDateString();
@@ -196,15 +223,28 @@ class RelatorioController extends Controller
             'duracao_media_min' => $rows->whereNotNull('duracao_min')->avg('duracao_min'),
         ];
 
-        return response()->json(compact('rows', 'totais'));
+        return compact('rows', 'totais', 'de', 'ate');
+    }
+
+    public function plantao(Request $r)
+    {
+        return response()->json($this->plantaoData($r));
+    }
+
+    public function plantaoPdf(Request $r)
+    {
+        $dados = $this->plantaoData($r);
+
+        return Pdf::loadView('relatorios.pdf.plantao', $dados)
+            ->download('relatorio-plantao.pdf');
     }
 
     // ── RELATÓRIO: MOTORISTAS ─────────────────────────────────────
     // BUG CONHECIDO: usa IF()/CURDATE()/DATE_ADD (raw SQL exclusivo do MySQL) — quebra em SQLite.
     // Sem cobertura de teste por esse motivo. Ver plano "Fundação de Qualidade".
-    public function motoristas(Request $r)
+    private function motoristasData(Request $r)
     {
-        $rows = DB::table('motoristas as m')
+        return DB::table('motoristas as m')
             ->leftJoin('viagens as vg', 'm.id', '=', 'vg.motorista_id')
             ->leftJoin('abastecimentos as ab', 'm.id', '=', 'ab.motorista_id')
             ->leftJoin('passagens_plantao as pp', 'm.id', '=', 'pp.motorista_entrando_id')
@@ -221,8 +261,19 @@ class RelatorioController extends Controller
             )
             ->orderBy('m.nome')
             ->get();
+    }
 
-        return response()->json($rows);
+    public function motoristas(Request $r)
+    {
+        return response()->json($this->motoristasData($r));
+    }
+
+    public function motoristasPdf(Request $r)
+    {
+        $rows = $this->motoristasData($r);
+
+        return Pdf::loadView('relatorios.pdf.motoristas', compact('rows'))
+            ->download('relatorio-motoristas.pdf');
     }
 
     // ── RELATÓRIO: EFICIÊNCIA (custo/km, consumo, ranking de motoristas) ─

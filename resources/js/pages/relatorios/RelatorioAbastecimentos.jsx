@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { format, startOfMonth } from 'date-fns'
 import * as relatoriosApi from '../../api/relatorios'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import { downloadBlob } from '../../utils/downloadBlob'
 
 const fmtBrl = (n) => Number(n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm') : '—'
@@ -10,11 +11,22 @@ const fmtDt = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm') : '—'
 export default function RelatorioAbastecimentos() {
   const [de, setDe] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
   const [ate, setAte] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [exportando, setExportando] = useState(false)
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['relatorio-abastecimentos', de, ate],
     queryFn: () => relatoriosApi.abastecimentos({ de, ate }).then(r => r.data),
   })
+
+  const exportarPdf = async () => {
+    setExportando(true)
+    try {
+      const { data: blob } = await relatoriosApi.abastecimentosPdf({ de, ate })
+      downloadBlob(blob, 'relatorio-abastecimentos.pdf')
+    } finally {
+      setExportando(false)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -24,6 +36,9 @@ export default function RelatorioAbastecimentos() {
         <label className="text-sm text-gray-600">Até:</label>
         <input type="date" value={ate} onChange={e => setAte(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
         <button onClick={() => refetch()} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">Filtrar</button>
+        <button onClick={exportarPdf} disabled={exportando} className="ml-auto bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50">
+          {exportando ? 'Exportando...' : 'Exportar PDF'}
+        </button>
       </div>
 
       {isLoading && <LoadingSpinner />}

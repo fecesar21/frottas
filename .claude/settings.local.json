@@ -10,7 +10,13 @@
       "PowerShell(winget install *)",
       "PowerShell(wsl --version 2>&1)",
       "PowerShell(wsl -l -v 2>&1)",
-      "PowerShell(wsl --install -d Ubuntu 2>&1)"
+      "PowerShell(wsl --install -d Ubuntu 2>&1)",
+      "Bash(python -c ' *)",
+      "Bash(where sqlite3 *)",
+      "Bash(php -v)",
+      "Bash(composer require *)",
+      "Bash(./vendor/bin/pint app/Http/Controllers/Api/RelatorioController.php routes/api.php)",
+      "Bash(git stash *)"
     ]
   }
 }

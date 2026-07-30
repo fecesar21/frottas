@@ -1,20 +1,40 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import * as relatoriosApi from '../../api/relatorios'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Badge from '../../components/ui/Badge'
+import { downloadBlob } from '../../utils/downloadBlob'
 
 const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
 
 export default function RelatorioMotoristas() {
+  const [exportando, setExportando] = useState(false)
+
   const { data, isLoading } = useQuery({
     queryKey: ['relatorio-motoristas'],
     queryFn: () => relatoriosApi.motoristas().then(r => r.data),
   })
 
+  const exportarPdf = async () => {
+    setExportando(true)
+    try {
+      const { data: blob } = await relatoriosApi.motoristasPdf()
+      downloadBlob(blob, 'relatorio-motoristas.pdf')
+    } finally {
+      setExportando(false)
+    }
+  }
+
   if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <button onClick={exportarPdf} disabled={exportando} className="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50">
+          {exportando ? 'Exportando...' : 'Exportar PDF'}
+        </button>
+      </div>
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <table className="w-full text-sm">
         <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
           <tr>
@@ -44,6 +64,7 @@ export default function RelatorioMotoristas() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

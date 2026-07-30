@@ -4,17 +4,29 @@ import { format, startOfMonth } from 'date-fns'
 import * as relatoriosApi from '../../api/relatorios'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Badge from '../../components/ui/Badge'
+import { downloadBlob } from '../../utils/downloadBlob'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 
 export default function RelatorioPlantao() {
   const [de, setDe] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
   const [ate, setAte] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [exportando, setExportando] = useState(false)
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['relatorio-plantao', de, ate],
     queryFn: () => relatoriosApi.plantao({ de, ate }).then(r => r.data),
   })
+
+  const exportarPdf = async () => {
+    setExportando(true)
+    try {
+      const { data: blob } = await relatoriosApi.plantaoPdf({ de, ate })
+      downloadBlob(blob, 'relatorio-plantao.pdf')
+    } finally {
+      setExportando(false)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -24,6 +36,9 @@ export default function RelatorioPlantao() {
         <label className="text-sm text-gray-600">Até:</label>
         <input type="date" value={ate} onChange={e => setAte(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
         <button onClick={() => refetch()} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">Filtrar</button>
+        <button onClick={exportarPdf} disabled={exportando} className="ml-auto bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50">
+          {exportando ? 'Exportando...' : 'Exportar PDF'}
+        </button>
       </div>
 
       {isLoading && <LoadingSpinner />}
