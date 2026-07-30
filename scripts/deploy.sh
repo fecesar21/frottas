@@ -27,4 +27,7 @@ echo "==> Limpando e reconstruindo caches..."
 php artisan optimize:clear
 php artisan optimize
 
+echo "==> Reiniciando workers de fila..."
+php artisan queue:restart
+
 echo "==> Deploy concluído."

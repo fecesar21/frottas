@@ -32,11 +32,19 @@ php artisan test tests/Feature/ExampleTest.php
 # Interactive REPL
 php artisan tinker
 
-# Deploy to production (pulls, installs deps, builds frontend, migrates, caches)
+# First-time server provisioning (root, once): Nginx, HTTPS, Supervisor queue worker, cron scheduler
+sudo DOMAIN=api.healthdrive.com.br CERTBOT_EMAIL=admin@healthdrive.com.br bash scripts/provision-server.sh
+
+# Initial production install (one-time app setup: .env, key:generate, first build, permissions)
+bash scripts/install.sh
+
+# Deploy to production (pulls, installs deps, builds frontend, migrates, caches, restarts queue workers)
 bash scripts/deploy.sh
 ```
 
 > **Important:** the frontend is built by Vite into `public/build/` and served via the `@vite` Blade directive — it is NOT served from source. A `git pull` alone does **not** update what the browser loads; `npm run build` must be run afterwards (handled automatically by `scripts/deploy.sh`), or frontend changes will silently not take effect in production.
+
+> **Queue workers:** production uses `QUEUE_CONNECTION=redis` with a Supervisor-managed `queue:work` process. `scripts/deploy.sh` runs `php artisan queue:restart` at the end so workers pick up new code after each deploy — Supervisor's `autorestart` then respawns them.
 
 ## Architecture
 
