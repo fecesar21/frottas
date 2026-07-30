@@ -11,8 +11,8 @@ class VeiculoFactory extends Factory
 
     public function definition(): array
     {
-        $marcas  = ['Volkswagen', 'Ford', 'Chevrolet', 'Fiat', 'Mercedes-Benz', 'Iveco', 'Scania'];
-        $modelos = ['Sprinter', 'Transit', 'Ducato', 'Daily', 'Accelo', 'Gol', 'Kombi'];
+        $marcas  = ['Volkswagen', 'Ford', 'Chevrolet', 'Fiat', 'Mercedes-Benz', 'Iveco', 'Scania', 'Volvo', 'Renault', 'Toyota'];
+        $modelos = ['Sprinter', 'Transit', 'Ducato', 'Daily', 'Accelo', 'Gol', 'Kombi', 'Fiorino', 'S10', 'Hilux', 'Ranger', 'Master', 'Boxer', 'Duster', 'Ambulância'];
 
         return [
             'placa'              => strtoupper(fake()->unique()->bothify('???-####')),

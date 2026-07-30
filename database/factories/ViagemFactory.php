@@ -13,7 +13,7 @@ class ViagemFactory extends Factory
 
     public function definition(): array
     {
-        $cidades = ['São Paulo', 'Campinas', 'Santos', 'Sorocaba', 'Ribeirão Preto', 'Bauru', 'Piracicaba'];
+        $cidades = ['Araguaína', 'Palmas', 'Imperatriz', 'Marabá', 'Sorocaba', 'Ribeirão Preto', 'Bauru', 'Piracicaba', 'São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Curitiba', 'Porto Alegre', 'Florianópolis', 'Brasília', 'Salvador', 'Fortaleza', 'Recife', 'Manaus', 'Belém'];
         $kmSaida = fake()->numberBetween(1000, 100000);
 
         return [

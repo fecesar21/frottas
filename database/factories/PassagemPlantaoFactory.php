@@ -19,7 +19,7 @@ class PassagemPlantaoFactory extends Factory
             'motorista_entrando_id' => Motorista::factory(),
             'turno_saindo' => 'dia',
             'turno_entrando' => 'noite',
-            'km_momento' => fake()->numberBetween(1000, 100000),
+            'km_momento' => fake()->numberBetween(1, 100000),
             'nivel_combustivel' => fake()->numberBetween(0, 100),
         ];
     }
