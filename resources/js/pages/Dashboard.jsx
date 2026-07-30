@@ -1,9 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Truck, Users, LogIn, Fuel, Route, AlertTriangle, Activity } from 'lucide-react'
 import * as relatoriosApi from '../api/relatorios'
 import Card from '../components/ui/Card'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { useAuth } from '../contexts/AuthContext'
+import MonthYearFilter from '../components/charts/MonthYearFilter'
+import LineChartCard from '../components/charts/LineChartCard'
+import BarChartCard from '../components/charts/BarChartCard'
+import PieChartCard from '../components/charts/PieChartCard'
+import { fmtBrl as fmtBrlChart, fmtNumero, fmtMinutos, CHART_COLORS } from '../components/charts/chartTheme'
 
 function fmt(n) {
   if (n == null) return '—'
@@ -15,11 +21,21 @@ function fmtBrl(n) {
   return Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+const hoje = new Date()
+
 export default function Dashboard() {
   const { user } = useAuth()
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => relatoriosApi.dashboard().then(r => r.data),
+    refetchInterval: 60_000,
+  })
+
+  const [periodo, setPeriodo] = useState({ mes: hoje.getMonth() + 1, ano: hoje.getFullYear() })
+
+  const { data: graficos, isLoading: loadingGraficos } = useQuery({
+    queryKey: ['dashboard-graficos', periodo.mes, periodo.ano],
+    queryFn: () => relatoriosApi.dashboardGraficos(periodo).then(r => r.data),
     refetchInterval: 60_000,
   })
 
@@ -67,6 +83,78 @@ export default function Dashboard() {
             sub={`Total: ${fmt(data?.motoristas?.total)}`} />
           <Card title="KM no mês"         value={fmt(data?.km_mes)}                   icon={Route}  color="gray" />
           <Card title="Combustível (mês)" value={fmtBrl(data?.custo_combustivel_mes)} icon={Fuel}   color="yellow" />
+        </div>
+      </div>
+
+      {/* Gráficos interativos */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Análise gráfica</h3>
+          <MonthYearFilter mes={periodo.mes} ano={periodo.ano} onChange={setPeriodo} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <LineChartCard
+            title="Total de Abastecimento (Mês a Mês)"
+            data={graficos?.abastecimento_mensal}
+            xKey="label"
+            valueKey="total"
+            valueFormatter={fmtBrlChart}
+            loading={loadingGraficos}
+            color={CHART_COLORS[0]}
+          />
+          <BarChartCard
+            title="Total de KM (Mês a Mês)"
+            data={graficos?.km_mensal}
+            xKey="label"
+            valueKey="total"
+            valueFormatter={fmtNumero}
+            layout="vertical"
+            loading={loadingGraficos}
+            color={CHART_COLORS[1]}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <PieChartCard
+            title="Viagens por Motivo (no mês)"
+            data={graficos?.viagens_por_motivo}
+            nameKey="motivo"
+            valueKey="total"
+            pctKey="percentual"
+            loading={loadingGraficos}
+          />
+          <PieChartCard
+            title="KM por Motorista (no mês)"
+            data={graficos?.km_por_motorista}
+            nameKey="nome"
+            valueKey="km_total"
+            pctKey="percentual"
+            loading={loadingGraficos}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <BarChartCard
+            title="Quantidade de Viagens por Motorista (no mês)"
+            data={graficos?.viagens_por_motorista}
+            xKey="nome"
+            valueKey="total"
+            valueFormatter={fmtNumero}
+            layout="horizontal"
+            loading={loadingGraficos}
+            colorByItem
+          />
+          <BarChartCard
+            title="Tempo Médio de Viagem por Motorista (no mês)"
+            data={graficos?.tempo_medio_motorista}
+            xKey="nome"
+            valueKey="tempo_medio_minutos"
+            valueFormatter={fmtMinutos}
+            layout="horizontal"
+            loading={loadingGraficos}
+            colorByItem
+          />
         </div>
       </div>
 

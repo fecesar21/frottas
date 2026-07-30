@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +60,190 @@ class RelatorioController extends Controller
         });
 
         return response()->json($dados);
+    }
+
+    // ── DASHBOARD (gráficos interativos) ─────────────────────────
+    // Todas as agregações por mês/duração são feitas em PHP com Carbon,
+    // nunca com funções SQL específicas de motor (strftime, DATE_FORMAT,
+    // TIMESTAMPDIFF, IF(), CURDATE()), para permanecer portátil entre
+    // SQLite (banco real do projeto) e MySQL. Ver bug conhecido em
+    // viagensData()/motoristasData() acima.
+    public function dashboardGraficos(Request $r)
+    {
+        $r->validate([
+            'mes' => 'nullable|integer|min:1|max:12',
+            'ano' => 'nullable|integer|min:2000|max:'.(now()->year + 1),
+        ]);
+
+        $mes = (int) ($r->mes ?? now()->month);
+        $ano = (int) ($r->ano ?? now()->year);
+
+        $dados = Cache::remember("relatorio.dashboard.graficos.{$ano}.{$mes}", now()->addMinutes(5), function () use ($mes, $ano) {
+            $refDate = Carbon::createFromDate($ano, $mes, 1);
+            $inicioMes = $refDate->copy()->startOfMonth();
+            $fimMes = $refDate->copy()->endOfMonth();
+
+            return [
+                'abastecimento_mensal' => $this->serieAbastecimentoMensal($refDate),
+                'km_mensal' => $this->serieKmMensal($refDate),
+                'viagens_por_motivo' => $this->viagensPorMotivo($inicioMes, $fimMes),
+                'km_por_motorista' => $this->kmPorMotorista($inicioMes, $fimMes),
+                'viagens_por_motorista' => $this->viagensPorMotorista($inicioMes, $fimMes),
+                'tempo_medio_motorista' => $this->tempoMedioPorMotorista($inicioMes, $fimMes),
+            ];
+        });
+
+        return response()->json($dados);
+    }
+
+    private function preencherMeses(Carbon $inicio, Carbon $fim, array $porMes): array
+    {
+        $meses = [];
+        $cursor = $inicio->copy()->startOfMonth();
+
+        while ($cursor->lte($fim)) {
+            $chave = $cursor->format('Y-m');
+            $meses[] = [
+                'mes' => $chave,
+                'label' => $cursor->translatedFormat('M/Y'),
+                'total' => round($porMes[$chave] ?? 0, 2),
+            ];
+            $cursor->addMonth();
+        }
+
+        return $meses;
+    }
+
+    private function serieAbastecimentoMensal(Carbon $refDate): array
+    {
+        $inicio = $refDate->copy()->subMonthsNoOverflow(11)->startOfMonth();
+        $fim = $refDate->copy()->endOfMonth();
+
+        $rows = DB::table('abastecimentos')
+            ->whereRaw('DATE(COALESCE(abastecido_at, created_at)) BETWEEN ? AND ?', [$inicio->toDateString(), $fim->toDateString()])
+            ->select('abastecido_at', 'created_at', 'litros', 'valor_litro')
+            ->get();
+
+        $porMes = [];
+        foreach ($rows as $row) {
+            $chave = Carbon::parse($row->abastecido_at ?? $row->created_at)->format('Y-m');
+            $porMes[$chave] = ($porMes[$chave] ?? 0) + ($row->litros * $row->valor_litro);
+        }
+
+        return $this->preencherMeses($inicio, $fim, $porMes);
+    }
+
+    private function serieKmMensal(Carbon $refDate): array
+    {
+        $inicio = $refDate->copy()->subMonthsNoOverflow(11)->startOfMonth();
+        $fim = $refDate->copy()->endOfMonth();
+
+        $rows = DB::table('viagens')
+            ->whereNotNull('km_chegada')
+            ->whereRaw('DATE(saida_at) BETWEEN ? AND ?', [$inicio->toDateString(), $fim->toDateString()])
+            ->select('saida_at', 'km_saida', 'km_chegada')
+            ->get();
+
+        $porMes = [];
+        foreach ($rows as $row) {
+            $chave = Carbon::parse($row->saida_at)->format('Y-m');
+            $porMes[$chave] = ($porMes[$chave] ?? 0) + ($row->km_chegada - $row->km_saida);
+        }
+
+        return $this->preencherMeses($inicio, $fim, $porMes);
+    }
+
+    private function viagensPorMotivo(Carbon $inicio, Carbon $fim): array
+    {
+        $rows = DB::table('viagens')
+            ->whereRaw('DATE(saida_at) BETWEEN ? AND ?', [$inicio->toDateString(), $fim->toDateString()])
+            ->select('motivo_viagem')
+            ->get();
+
+        $porMotivo = [];
+        foreach ($rows as $row) {
+            $motivo = trim((string) $row->motivo_viagem) !== '' ? $row->motivo_viagem : 'Não informado';
+            $porMotivo[$motivo] = ($porMotivo[$motivo] ?? 0) + 1;
+        }
+
+        $total = array_sum($porMotivo);
+
+        return collect($porMotivo)
+            ->map(fn ($qtd, $motivo) => [
+                'motivo' => $motivo,
+                'total' => $qtd,
+                'percentual' => $total > 0 ? round($qtd / $total * 100, 1) : 0,
+            ])
+            ->sortByDesc('total')
+            ->values()
+            ->all();
+    }
+
+    private function kmPorMotorista(Carbon $inicio, Carbon $fim): array
+    {
+        $rows = DB::table('viagens as vg')
+            ->join('motoristas as m', 'm.id', '=', 'vg.motorista_id')
+            ->whereNotNull('vg.km_chegada')
+            ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$inicio->toDateString(), $fim->toDateString()])
+            ->select('m.nome', 'vg.km_saida', 'vg.km_chegada')
+            ->get();
+
+        $porMotorista = [];
+        foreach ($rows as $row) {
+            $porMotorista[$row->nome] = ($porMotorista[$row->nome] ?? 0) + ($row->km_chegada - $row->km_saida);
+        }
+
+        $total = array_sum($porMotorista);
+
+        return collect($porMotorista)
+            ->map(fn ($km, $nome) => [
+                'nome' => $nome,
+                'km_total' => round($km, 2),
+                'percentual' => $total > 0 ? round($km / $total * 100, 1) : 0,
+            ])
+            ->sortByDesc('km_total')
+            ->values()
+            ->all();
+    }
+
+    private function viagensPorMotorista(Carbon $inicio, Carbon $fim): array
+    {
+        return DB::table('viagens as vg')
+            ->join('motoristas as m', 'm.id', '=', 'vg.motorista_id')
+            ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$inicio->toDateString(), $fim->toDateString()])
+            ->groupBy('m.id', 'm.nome')
+            ->select('m.nome', DB::raw('COUNT(*) as total'))
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($row) => ['nome' => $row->nome, 'total' => $row->total])
+            ->all();
+    }
+
+    private function tempoMedioPorMotorista(Carbon $inicio, Carbon $fim): array
+    {
+        $rows = DB::table('viagens as vg')
+            ->join('motoristas as m', 'm.id', '=', 'vg.motorista_id')
+            ->where('vg.status', 'concluida')
+            ->whereNotNull('vg.chegada_at')
+            ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$inicio->toDateString(), $fim->toDateString()])
+            ->select('m.nome', 'vg.saida_at', 'vg.chegada_at')
+            ->get();
+
+        $porMotorista = [];
+        foreach ($rows as $row) {
+            $minutos = Carbon::parse($row->saida_at)->diffInMinutes(Carbon::parse($row->chegada_at));
+            $porMotorista[$row->nome]['soma'] = ($porMotorista[$row->nome]['soma'] ?? 0) + $minutos;
+            $porMotorista[$row->nome]['qtd'] = ($porMotorista[$row->nome]['qtd'] ?? 0) + 1;
+        }
+
+        return collect($porMotorista)
+            ->map(fn ($x, $nome) => [
+                'nome' => $nome,
+                'tempo_medio_minutos' => (int) round($x['soma'] / $x['qtd']),
+            ])
+            ->sortByDesc('tempo_medio_minutos')
+            ->values()
+            ->all();
     }
 
     // ── RELATÓRIO: ABASTECIMENTOS ─────────────────────────────────
