@@ -16,7 +16,8 @@
       "Bash(php -v)",
       "Bash(composer require *)",
       "Bash(./vendor/bin/pint app/Http/Controllers/Api/RelatorioController.php routes/api.php)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(git *)"
     ]
   }
 }
