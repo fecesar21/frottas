@@ -12,6 +12,10 @@
         $motivos = [
             'transferencia_paciente' => 'Transferência de Paciente',
             'buscar_medico' => 'Buscar médico em outra cidade',
+            'material_outro_hospital' => 'Levar Material em outro Hospital',
+            'transporte_colaborador' => 'Transporte de Colaborador(es)',
+            'buscar_material_fornecedor' => 'Buscar materiais em fornecedor',
+            'tfd' => 'TFD',
         ];
     @endphp
 

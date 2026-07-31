@@ -19,7 +19,7 @@ class StoreViagemRequest extends FormRequest
             'checkin_id'   => 'nullable|uuid|exists:checkins,id',
             'origem'       => 'required|string|max:150',
             'destino'      => 'required|string|max:150',
-            'motivo_viagem'       => 'required|in:transferencia_paciente,buscar_medico',
+            'motivo_viagem'       => 'required|in:transferencia_paciente,buscar_medico,material_outro_hospital,transporte_colaborador,buscar_material_fornecedor,tfd',
             'numero_atendimento'  => 'required_if:motivo_viagem,transferencia_paciente|nullable|integer|digits_between:1,6',
             'km_saida'     => 'required|integer|min:0',
         ];

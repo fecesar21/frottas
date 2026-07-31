@@ -94,6 +94,10 @@ export default function ViagemForm({ onSuccess }) {
           <option value="">Selecione...</option>
           <option value="transferencia_paciente">Transferência de Paciente</option>
           <option value="buscar_medico">Buscar médico em outra cidade</option>
+          <option value="material_outro_hospital">Levar Material em outro Hospital</option>
+          <option value="transporte_colaborador">Transporte de Colaborador(es)</option>
+          <option value="buscar_material_fornecedor">Buscar materiais em fornecedor</option>
+          <option value="tfd">TFD</option>
         </select>
         {fe('motivo_viagem')}
       </div>
