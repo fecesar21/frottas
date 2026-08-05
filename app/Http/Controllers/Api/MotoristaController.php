@@ -72,7 +72,7 @@ class MotoristaController extends Controller
         $unidadeId = $r->unidade_efetiva;
 
         $motoristas = Motorista::where('status', 'ativo')
-            ->whereDoesNotHave('usuario')
+            ->whereDoesntHave('usuario')
             ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('nome')
             ->get(['id', 'nome', 'cpf']);
