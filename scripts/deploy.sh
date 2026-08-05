@@ -17,9 +17,9 @@ set -euo pipefail
 trap 'echo "==> Deploy falhou; limpando caches para evitar estado inconsistente..."; php artisan optimize:clear || true' ERR
 
 echo "==> Verificando árvore de trabalho..."
-if [ -n "$(git status --porcelain)" ]; then
-    echo "ERRO: há alterações não commitadas em produção. Resolva antes de continuar:"
-    git status --short
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+    echo "ERRO: há alterações não commitadas em arquivos rastreados. Resolva antes de continuar:"
+    git status --short --untracked-files=no
     exit 1
 fi
 
