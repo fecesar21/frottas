@@ -47,6 +47,7 @@ export default function NovaSolicitacao() {
       await solicitacoesApi.criar(form)
       setSucesso(true)
       setForm(INITIAL)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
       setErrors(err.response?.data?.errors ?? {})
     } finally {
