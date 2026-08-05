@@ -114,6 +114,43 @@ class SolicitacaoApiTest extends TestCase
         ]);
     }
 
+    public function test_aceitar_com_troca_de_veiculo_apos_viagem_anterior_ja_concluida_preenche_km_retorno(): void
+    {
+        $this->loginGestor();
+        $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
+        $motorista = Motorista::factory()->create();
+        $veiculoAntigo = Veiculo::factory()->create(['status' => 'em_uso', 'km_atual' => 1050]);
+        $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel', 'km_atual' => 2000]);
+
+        $checkinAntigo = Checkin::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoAntigo->id,
+            'km_saida' => 1000,
+            'status' => 'ativo',
+        ]);
+
+        Viagem::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoAntigo->id,
+            'km_saida' => 1000,
+            'km_chegada' => 1050,
+            'chegada_at' => now(),
+            'status' => 'concluida',
+        ]);
+
+        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoNovo->id,
+        ]);
+
+        $response->assertOk()->assertJsonPath('data.status', 'em_trajeto');
+        $this->assertDatabaseHas('checkins', [
+            'id' => $checkinAntigo->id,
+            'status' => 'encerrado',
+            'km_retorno' => 1050,
+        ]);
+    }
+
     public function test_aceitar_motorista_com_viagem_em_andamento_fica_aguardando_finalizacao(): void
     {
         $this->loginGestor();

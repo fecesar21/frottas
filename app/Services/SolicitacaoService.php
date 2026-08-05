@@ -50,7 +50,13 @@ class SolicitacaoService
                 return $solicitacao->fresh();
             }
 
-            return $this->efetivarAceite($solicitacao, $motoristaId, $veiculoId);
+            $kmRetornoTrajetoAnterior = Viagem::where('motorista_id', $motoristaId)
+                ->where('status', 'concluida')
+                ->whereNotNull('km_chegada')
+                ->latest('chegada_at')
+                ->value('km_chegada');
+
+            return $this->efetivarAceite($solicitacao, $motoristaId, $veiculoId, $kmRetornoTrajetoAnterior);
         });
     }
 
