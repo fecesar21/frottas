@@ -1,2 +1,9 @@
 node_modules/
+vendor/
 .env
+.phpunit.result.cache
+/public/build
+/public/hot
+/storage/*.key
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitignore
