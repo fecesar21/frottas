@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\MotoristaController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
 use App\Http\Controllers\Api\RelatorioController;
+use App\Http\Controllers\Api\SolicitacaoController;
 use App\Http\Controllers\Api\UnidadeController;
 use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\VeiculoController;
@@ -67,6 +68,11 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
     Route::get('viagens/{viagem}/pontos', [ViagemPontoController::class, 'index']);
     Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store', 'update']);
 
+    // Solicitações de Transporte
+    Route::patch('solicitacoes/{solicitacao}/aceitar', [SolicitacaoController::class, 'aceitar']);
+    Route::patch('solicitacoes/{solicitacao}/cancelar', [SolicitacaoController::class, 'cancelar']);
+    Route::apiResource('solicitacoes', SolicitacaoController::class)->only(['index', 'show', 'store']);
+
     // Abastecimentos
     Route::get('abastecimentos/resumo', [AbastecimentoController::class, 'resumo']);
     Route::apiResource('abastecimentos', AbastecimentoController::class)->only(['index', 'show', 'store']);
@@ -104,6 +110,8 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
 
     // Notificações
     Route::get('notificacoes', [NotificacaoController::class, 'index']);
+    Route::get('notificacoes/nao-lidas', [NotificacaoController::class, 'naoLidas']);
+    Route::post('notificacoes/marcar-lidas', [NotificacaoController::class, 'marcarTodasLidas']);
     Route::patch('notificacoes/{id}/lida', [NotificacaoController::class, 'marcarLida']);
 
     // Usuários — somente admin

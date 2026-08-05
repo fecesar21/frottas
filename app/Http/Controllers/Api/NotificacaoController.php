@@ -12,11 +12,28 @@ class NotificacaoController extends Controller
         return $request->user()->notifications()->latest()->paginate(15);
     }
 
+    public function naoLidas(Request $request)
+    {
+        $notificacoes = $request->user()->unreadNotifications()->latest()->limit(20)->get();
+
+        return response()->json([
+            'total' => $notificacoes->count(),
+            'notificacoes' => $notificacoes,
+        ]);
+    }
+
     public function marcarLida(string $id)
     {
         $notificacao = auth()->user()->notifications()->findOrFail($id);
         $notificacao->markAsRead();
 
         return response()->json(['message' => 'Notificação marcada como lida']);
+    }
+
+    public function marcarTodasLidas(Request $request)
+    {
+        $request->user()->unreadNotifications->markAsRead();
+
+        return response()->noContent();
     }
 }
