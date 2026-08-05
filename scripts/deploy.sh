@@ -10,8 +10,21 @@
 
 set -euo pipefail
 
+# Se qualquer passo abaixo falhar, garante que o cache de bootstrap/rotas não
+# fique em estado intermediário (código novo parcialmente aplicado com cache
+# antigo ainda ativo) — isso já causou uma indisponibilidade de login em
+# produção.
+trap 'echo "==> Deploy falhou; limpando caches para evitar estado inconsistente..."; php artisan optimize:clear || true' ERR
+
+echo "==> Verificando árvore de trabalho..."
+if [ -n "$(git status --porcelain)" ]; then
+    echo "ERRO: há alterações não commitadas em produção. Resolva antes de continuar:"
+    git status --short
+    exit 1
+fi
+
 echo "==> Atualizando código-fonte..."
-git pull
+git pull --ff-only
 
 echo "==> Instalando dependências PHP..."
 composer install --no-dev --optimize-autoloader --no-interaction
