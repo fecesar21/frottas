@@ -11,9 +11,18 @@ use Illuminate\Support\Facades\DB;
 
 class MotoristaController extends Controller
 {
+    // Admin e gestor enxergam motoristas de todas as unidades por padrão,
+    // podendo filtrar opcionalmente via ?unidade_id=. Demais perfis usam a própria unidade.
+    private function unidadeFiltro(Request $r): ?string
+    {
+        return in_array($r->user()->perfil, ['admin', 'gestor'])
+            ? $r->query('unidade_id')
+            : $r->unidade_efetiva;
+    }
+
     public function index(Request $r)
     {
-        $unidadeId = $r->unidade_efetiva;
+        $unidadeId = $this->unidadeFiltro($r);
 
         $motoristas = Motorista::with('checkinAtivo.veiculo')
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
@@ -55,7 +64,7 @@ class MotoristaController extends Controller
 
     public function disponiveis(Request $r)
     {
-        $unidadeId = $r->unidade_efetiva;
+        $unidadeId = $this->unidadeFiltro($r);
 
         $motoristas = Motorista::where('status', 'ativo')
             ->whereHas('usuario', fn ($q) => $q->where('perfil', 'operador'))
@@ -69,7 +78,7 @@ class MotoristaController extends Controller
 
     public function semUsuario(Request $r)
     {
-        $unidadeId = $r->unidade_efetiva;
+        $unidadeId = $this->unidadeFiltro($r);
 
         $motoristas = Motorista::where('status', 'ativo')
             ->whereDoesntHave('usuario')
