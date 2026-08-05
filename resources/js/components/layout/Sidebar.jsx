@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Truck, Users, CalendarDays, LogIn, GitBranch,
-  Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X, Building2
+  Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X, Building2, ClipboardList
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -28,6 +28,7 @@ const sections = [
       { to: '/plantao', label: 'Plantão', icon: GitBranch },
       { to: '/viagens', label: 'Viagens', icon: Route },
       { to: '/abastecimentos', label: 'Abastecimentos', icon: Fuel },
+      { to: '/solicitacoes', label: 'Solicitações de Transporte', icon: ClipboardList, gestorOnly: true },
     ],
   },
   {
@@ -41,7 +42,7 @@ const sections = [
 const perfil = { admin: 'Admin', gestor: 'Gestor', operador: 'Operador' }
 
 export default function Sidebar({ open, onClose }) {
-  const { user, isAdmin, isOperador, checkinAtivo, logout } = useAuth()
+  const { user, isAdmin, isGestor, isOperador, checkinAtivo, logout } = useAuth()
   const navigate = useNavigate()
 
   // Rotas visíveis para operadores dependem do estado do checkin
@@ -103,7 +104,7 @@ export default function Sidebar({ open, onClose }) {
           {sections.map((section) => {
             const itensVisiveis = rotasPermitidas
               ? section.items.filter(item => rotasPermitidas.includes(item.to))
-              : section.items
+              : section.items.filter(item => !item.gestorOnly || isGestor)
             if (itensVisiveis.length === 0) return null
             return (
               <div key={section.label}>

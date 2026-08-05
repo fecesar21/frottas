@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Checkin;
 use App\Models\KmRegistro;
 use App\Models\Veiculo;
+use App\Models\Viagem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -47,7 +48,7 @@ class CheckinService
         });
     }
 
-    public function checkout(Checkin $checkin, array $data): Checkin
+    public function checkout(Checkin $checkin, array $data, bool $iniciadoPeloOperador = false): Checkin
     {
         if ($checkin->status !== 'ativo') {
             throw ValidationException::withMessages(['checkin' => 'Check-in não está ativo.']);
@@ -55,6 +56,18 @@ class CheckinService
 
         if (isset($data['km_retorno']) && $data['km_retorno'] < $checkin->km_saida) {
             throw ValidationException::withMessages(['km_retorno' => 'KM de retorno menor que KM de saída.']);
+        }
+
+        if ($iniciadoPeloOperador) {
+            $viagemEmAndamento = Viagem::where('motorista_id', $checkin->motorista_id)
+                ->where('status', 'em_andamento')
+                ->exists();
+
+            if ($viagemEmAndamento) {
+                throw ValidationException::withMessages([
+                    'checkin' => 'Para realizar o Check-out é necessário encerrar qualquer viagem que consta em andamento antes',
+                ]);
+            }
         }
 
         return DB::transaction(function () use ($data, $checkin) {

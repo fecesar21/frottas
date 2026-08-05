@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Viagem extends Model
 {
@@ -49,5 +50,13 @@ class Viagem extends Model
     public function pontos(): HasMany
     {
         return $this->hasMany(ViagemPonto::class)->orderBy('capturado_at');
+    }
+
+    /**
+     * @return HasOne<Solicitacao, $this>
+     */
+    public function solicitacao(): HasOne
+    {
+        return $this->hasOne(Solicitacao::class);
     }
 }

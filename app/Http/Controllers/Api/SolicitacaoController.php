@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Solicitacao\StoreSolicitacaoRequest;
+use App\Http\Resources\SolicitacaoResource;
+use App\Models\Solicitacao;
+use App\Services\SolicitacaoService;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+
+class SolicitacaoController extends Controller
+{
+    public function __construct(private SolicitacaoService $service) {}
+
+    public function index(Request $r)
+    {
+        $user = $r->user();
+
+        $solicitacoes = Solicitacao::with(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
+            ->when($user->perfil === 'operador', fn ($q) => $q->where('usuario_id', $user->id))
+            ->when($user->perfil !== 'operador' && $r->unidade_efetiva, fn ($q) => $q->where('unidade_id', $r->unidade_efetiva))
+            ->when($r->status, fn ($q, $s) => $q->where('status', $s))
+            ->latest()
+            ->limit(200)
+            ->get();
+
+        return SolicitacaoResource::collection($solicitacoes);
+    }
+
+    public function show(Solicitacao $solicitacao)
+    {
+        return new SolicitacaoResource(
+            $solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
+        );
+    }
+
+    public function store(StoreSolicitacaoRequest $request)
+    {
+        $solicitacao = $this->service->store($request->validated(), $request->user());
+
+        return (new SolicitacaoResource($solicitacao))->response()->setStatusCode(201);
+    }
+
+    public function aceitar(Request $r, Solicitacao $solicitacao)
+    {
+        if (! in_array($r->user()->perfil, ['admin', 'gestor'])) {
+            return response()->json(['error' => 'Apenas gestores/admins podem aceitar solicitações.'], 403);
+        }
+
+        if ($solicitacao->status !== 'aberto') {
+            throw ValidationException::withMessages(['status' => 'Esta solicitação já foi tratada.']);
+        }
+
+        $data = $r->validate([
+            'motorista_id' => 'required|uuid|exists:motoristas,id',
+            'veiculo_id' => 'required|uuid|exists:veiculos,id',
+        ]);
+
+        $solicitacao = $this->service->aceitar($solicitacao, $data['motorista_id'], $data['veiculo_id']);
+
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+    }
+
+    public function cancelar(Request $r, Solicitacao $solicitacao)
+    {
+        $user = $r->user();
+        if ($solicitacao->usuario_id !== $user->id && ! in_array($user->perfil, ['admin', 'gestor'])) {
+            return response()->json(['error' => 'Sem permissão para cancelar esta solicitação.'], 403);
+        }
+
+        return new SolicitacaoResource($this->service->cancelar($solicitacao));
+    }
+}

@@ -18,10 +18,12 @@ class ViagemController extends Controller
     public function index(Request $r)
     {
         $unidadeId = $r->unidade_efetiva;
+        $isOperador = auth()->user()->perfil === 'operador';
 
         $viagens = Viagem::with(['veiculo', 'motorista'])
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
+            ->when($isOperador, fn ($q) => $q->where('motorista_id', auth()->user()->motorista_id))
+            ->when(! $isOperador && $unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->latest('saida_at')
             ->limit(200)
             ->get();
@@ -31,6 +33,10 @@ class ViagemController extends Controller
 
     public function show(Viagem $viagem)
     {
+        if (auth()->user()->perfil === 'operador' && $viagem->motorista_id !== auth()->user()->motorista_id) {
+            abort(403);
+        }
+
         return new ViagemResource($viagem->load(['veiculo', 'motorista']));
     }
 

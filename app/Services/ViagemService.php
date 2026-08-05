@@ -9,6 +9,8 @@ use Illuminate\Validation\ValidationException;
 
 class ViagemService
 {
+    public function __construct(private SolicitacaoService $solicitacaoService) {}
+
     public function store(array $data): Viagem
     {
         $jaEmAndamento = Viagem::where('motorista_id', $data['motorista_id'])
@@ -46,6 +48,10 @@ class ViagemService
             'km_chegada'  => $data['km_chegada'],
             'observacoes' => $data['observacoes'] ?? $viagem->observacoes,
         ]);
+
+        $viagem->solicitacao?->update(['status' => 'finalizado']);
+
+        $this->solicitacaoService->processarPendentePara($viagem->motorista_id, $viagem->km_chegada);
 
         return $viagem->fresh();
     }

@@ -18,11 +18,13 @@ class CheckinController extends Controller
     {
         $unidadeId = $request->unidade_efetiva;
         $perPage = max(1, min((int) $request->integer('per_page', 25), 100));
+        $isOperador = auth()->user()->perfil === 'operador';
 
         $checkins = Checkin::with(['motorista', 'veiculo'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->data, fn ($q, $d) => $q->whereDate('checkin_at', $d))
-            ->when($unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
+            ->when($isOperador, fn ($q) => $q->where('motorista_id', auth()->user()->motorista_id))
+            ->when(! $isOperador && $unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->latest('checkin_at')
             ->paginate($perPage);
 
@@ -31,6 +33,10 @@ class CheckinController extends Controller
 
     public function show(Checkin $checkin)
     {
+        if (auth()->user()->perfil === 'operador' && $checkin->motorista_id !== auth()->user()->motorista_id) {
+            abort(403);
+        }
+
         return new CheckinResource($checkin->load(['motorista', 'veiculo', 'escala']));
     }
 
@@ -49,7 +55,13 @@ class CheckinController extends Controller
 
     public function checkout(CheckoutRequest $request, Checkin $checkin)
     {
-        $checkin = $this->service->checkout($checkin, $request->validated());
+        $isOperador = auth()->user()->perfil === 'operador';
+
+        if ($isOperador && $checkin->motorista_id !== auth()->user()->motorista_id) {
+            abort(403);
+        }
+
+        $checkin = $this->service->checkout($checkin, $request->validated(), $isOperador);
 
         return new CheckinResource($checkin);
     }

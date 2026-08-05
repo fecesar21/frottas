@@ -9,7 +9,10 @@ export default defineConfig({
     outDir: 'public',
     emptyOutDir: false,
     rollupOptions: {
-      input: 'index.html',
+      input: {
+        main: 'index.html',
+        solicitacao: 'solicitacao.html',
+      },
     },
   },
   server: {

@@ -15,9 +15,11 @@ class AbastecimentoController extends Controller
     public function index(Request $r)
     {
         $perPage = max(1, min((int) $r->integer('per_page', 25), 100));
+        $isOperador = auth()->user()->perfil === 'operador';
 
         $abastecimentos = Abastecimento::with(['veiculo', 'motorista'])
             ->when($r->veiculo_id, fn ($q, $id) => $q->where('veiculo_id', $id))
+            ->when($isOperador, fn ($q) => $q->where('motorista_id', auth()->user()->motorista_id))
             ->latest('abastecido_at')
             ->paginate($perPage);
 
@@ -26,6 +28,10 @@ class AbastecimentoController extends Controller
 
     public function show(Abastecimento $abastecimento)
     {
+        if (auth()->user()->perfil === 'operador' && $abastecimento->motorista_id !== auth()->user()->motorista_id) {
+            abort(403);
+        }
+
         return new AbastecimentoResource($abastecimento);
     }
 

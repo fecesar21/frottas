@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Motorista;
 
+use App\Models\Checkin;
 use App\Models\Motorista;
+use App\Models\Usuario;
 use Tests\TestCase;
 
 class MotoristaApiTest extends TestCase
@@ -58,5 +60,33 @@ class MotoristaApiTest extends TestCase
 
         $this->deleteJson("/api/motoristas/{$motorista->id}")->assertOk();
         $this->assertDatabaseHas('motoristas', ['id' => $motorista->id, 'status' => 'inativo']);
+    }
+
+    public function test_disponiveis_lista_apenas_motoristas_com_operador_e_checkin_ativo(): void
+    {
+        $this->loginAdmin();
+
+        $motoristaOk = Motorista::factory()->create(['status' => 'ativo']);
+        Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motoristaOk->id]);
+        Checkin::factory()->create(['motorista_id' => $motoristaOk->id, 'status' => 'ativo']);
+
+        $motoristaSemOperador = Motorista::factory()->create(['status' => 'ativo']);
+        Checkin::factory()->create(['motorista_id' => $motoristaSemOperador->id, 'status' => 'ativo']);
+
+        $motoristaSemCheckin = Motorista::factory()->create(['status' => 'ativo']);
+        Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motoristaSemCheckin->id]);
+
+        $motoristaCheckinEncerrado = Motorista::factory()->create(['status' => 'ativo']);
+        Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motoristaCheckinEncerrado->id]);
+        Checkin::factory()->encerrado()->create(['motorista_id' => $motoristaCheckinEncerrado->id]);
+
+        $response = $this->getJson('/api/motoristas/disponiveis')->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($motoristaOk->id));
+        $this->assertFalse($ids->contains($motoristaSemOperador->id));
+        $this->assertFalse($ids->contains($motoristaSemCheckin->id));
+        $this->assertFalse($ids->contains($motoristaCheckinEncerrado->id));
     }
 }

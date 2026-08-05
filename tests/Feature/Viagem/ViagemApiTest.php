@@ -85,6 +85,35 @@ class ViagemApiTest extends TestCase
         ]);
     }
 
+    public function test_operador_nao_visualiza_viagens_de_outro_motorista(): void
+    {
+        $usuario = $this->loginOperador();
+        $meuMotorista = Motorista::factory()->create();
+        $outroMotorista = Motorista::factory()->create();
+        $usuario->update(['motorista_id' => $meuMotorista->id]);
+
+        $minhaViagem = Viagem::factory()->create(['motorista_id' => $meuMotorista->id]);
+        $viagemDeOutro = Viagem::factory()->create(['motorista_id' => $outroMotorista->id]);
+
+        $response = $this->getJson('/api/viagens')->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($minhaViagem->id));
+        $this->assertFalse($ids->contains($viagemDeOutro->id));
+    }
+
+    public function test_operador_nao_visualiza_detalhe_de_viagem_de_outro_motorista(): void
+    {
+        $usuario = $this->loginOperador();
+        $meuMotorista = Motorista::factory()->create();
+        $outroMotorista = Motorista::factory()->create();
+        $usuario->update(['motorista_id' => $meuMotorista->id]);
+
+        $viagemDeOutro = Viagem::factory()->create(['motorista_id' => $outroMotorista->id]);
+
+        $this->getJson("/api/viagens/{$viagemDeOutro->id}")->assertForbidden();
+    }
+
     public function test_registra_chegada_da_viagem(): void
     {
         $this->loginGestor();

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { PrivateRoute, AdminRoute } from './components/layout/Layout'
 
 import Login from './pages/Login'
@@ -11,11 +11,17 @@ import EscalasCalendario from './pages/escalas/EscalasCalendario'
 import CheckinsList from './pages/checkins/CheckinsList'
 import PlantaoList from './pages/plantao/PlantaoList'
 import ViagensList from './pages/viagens/ViagensList'
+import SolicitacoesList from './pages/solicitacoes/SolicitacoesList'
 import AbastecimentosList from './pages/abastecimentos/AbastecimentosList'
 import Relatorios from './pages/relatorios/Relatorios'
 import UsuariosList from './pages/usuarios/UsuariosList'
 import UnidadesList from './pages/unidades/UnidadesList'
 import UnidadeDetalhes from './pages/unidades/UnidadeDetalhes'
+
+function GestorRoute({ children }) {
+  const { isGestor } = useAuth()
+  return isGestor ? children : <Navigate to="/" replace />
+}
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -38,6 +44,9 @@ export default function App() {
               <Route path="/checkins" element={<CheckinsList />} />
               <Route path="/plantao" element={<PlantaoList />} />
               <Route path="/viagens" element={<ViagensList />} />
+              <Route path="/solicitacoes" element={
+                <GestorRoute><SolicitacoesList /></GestorRoute>
+              } />
               <Route path="/abastecimentos" element={<AbastecimentosList />} />
               <Route path="/relatorios/*" element={<Relatorios />} />
               <Route path="/usuarios" element={

@@ -75,6 +75,62 @@ class AbastecimentoApiTest extends TestCase
         $response->assertUnprocessable()->assertJsonValidationErrors('comprovante');
     }
 
+    public function test_operador_nao_visualiza_abastecimentos_de_outro_motorista(): void
+    {
+        $usuario = $this->loginOperador();
+        $veiculo = Veiculo::factory()->create();
+        $meuMotorista = Motorista::factory()->create();
+        $outroMotorista = Motorista::factory()->create();
+        $usuario->update(['motorista_id' => $meuMotorista->id]);
+
+        $meuAbastecimento = Abastecimento::create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $meuMotorista->id,
+            'combustivel' => 'diesel_s10',
+            'litros' => 50,
+            'valor_litro' => 5.50,
+            'km_momento' => 1000,
+            'abastecido_at' => now(),
+        ]);
+
+        $abastecimentoDeOutro = Abastecimento::create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $outroMotorista->id,
+            'combustivel' => 'diesel_s10',
+            'litros' => 30,
+            'valor_litro' => 5.50,
+            'km_momento' => 1500,
+            'abastecido_at' => now(),
+        ]);
+
+        $response = $this->getJson('/api/abastecimentos')->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($meuAbastecimento->id));
+        $this->assertFalse($ids->contains($abastecimentoDeOutro->id));
+    }
+
+    public function test_operador_nao_visualiza_detalhe_de_abastecimento_de_outro_motorista(): void
+    {
+        $usuario = $this->loginOperador();
+        $veiculo = Veiculo::factory()->create();
+        $meuMotorista = Motorista::factory()->create();
+        $outroMotorista = Motorista::factory()->create();
+        $usuario->update(['motorista_id' => $meuMotorista->id]);
+
+        $abastecimentoDeOutro = Abastecimento::create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $outroMotorista->id,
+            'combustivel' => 'diesel_s10',
+            'litros' => 30,
+            'valor_litro' => 5.50,
+            'km_momento' => 1500,
+            'abastecido_at' => now(),
+        ]);
+
+        $this->getJson("/api/abastecimentos/{$abastecimentoDeOutro->id}")->assertForbidden();
+    }
+
     public function test_resumo_exclui_abastecimentos_soft_deletados(): void
     {
         $this->loginGestor();

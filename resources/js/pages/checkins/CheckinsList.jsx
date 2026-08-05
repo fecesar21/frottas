@@ -15,7 +15,7 @@ const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
 
 export default function CheckinsList() {
   const qc = useQueryClient()
-  const { user, isOperador, checkinAtivo, setCheckinAtivo } = useAuth()
+  const { isOperador, checkinAtivo, setCheckinAtivo } = useAuth()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [checkoutTarget, setCheckoutTarget] = useState(null)
@@ -27,10 +27,8 @@ export default function CheckinsList() {
     queryFn: () => checkinsApi.listar(statusFilter ? { status: statusFilter } : undefined).then(r => r.data.data ?? r.data),
   })
 
-  // Operadores veem apenas seus próprios checkins
-  const checkinsFiltrados = isOperador
-    ? (data ?? []).filter(c => c.motorista?.id === user.motorista_id || c.motorista_id === user.motorista_id)
-    : (data ?? [])
+  // A API já retorna apenas os checkins do próprio operador quando aplicável
+  const checkinsFiltrados = data ?? []
 
   const doCheckout = useMutation({
     mutationFn: ({ id, data }) => checkinsApi.checkout(id, data),
@@ -40,7 +38,11 @@ export default function CheckinsList() {
       if (isOperador) setCheckinAtivo(null)
       setCheckoutTarget(null)
     },
-    onError: (e) => setError(e.response?.data?.message ?? 'Erro ao encerrar'),
+    onError: (e) => {
+      const errors = e.response?.data?.errors
+      const primeiraMensagem = errors ? Object.values(errors)[0]?.[0] : undefined
+      setError(primeiraMensagem ?? e.response?.data?.message ?? 'Erro ao encerrar')
+    },
   })
 
   if (isLoading) return <LoadingSpinner />

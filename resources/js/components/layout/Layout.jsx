@@ -15,6 +15,7 @@ const pageTitles = {
   '/checkins': 'Check-ins',
   '/plantao': 'Passagem de Plantão',
   '/viagens': 'Viagens',
+  '/solicitacoes': 'Solicitações de Transporte',
   '/abastecimentos': 'Abastecimentos',
   '/relatorios': 'Relatórios',
   '/usuarios': 'Usuários',
