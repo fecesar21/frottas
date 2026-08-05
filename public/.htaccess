@@ -15,7 +15,12 @@
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Rotas do frontend React retornam o index.html da SPA
+    # Rotas da SPA de Solicitação de Transporte (basename "/solicitar")
+    # retornam solicitacao.html
+    RewriteCond %{REQUEST_URI} ^/solicitar
+    RewriteRule ^ /solicitacao.html [L]
+
+    # Demais rotas do frontend React retornam o index.html da SPA principal
     RewriteCond %{REQUEST_URI} !^/api/
     RewriteRule ^ /index.html [L]
 </IfModule>
