@@ -34,5 +34,14 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Usado por POST /api/auth/login (routes/api.php). Precisa estar num
+        // service provider, não no callback `then` de withRouting() em
+        // bootstrap/app.php: aquele callback é pulado inteiro quando as
+        // rotas estão em cache (`php artisan route:cache`), o que deixava
+        // o rate limiter "login" indefinido em produção.
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
     }
 }
