@@ -37,7 +37,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
 
   const { data: disponiveis = [] } = useQuery({
     queryKey: ['motoristas', 'disponiveis'],
-    queryFn: () => motoristasApi.listarDisponiveis().then(r => r.data.data ?? r.data),
+    queryFn: () => motoristasApi.listarSemUsuario().then(r => r.data.data ?? r.data),
     enabled: form.perfil === 'operador',
   })
 

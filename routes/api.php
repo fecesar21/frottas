@@ -44,6 +44,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
 
     // Motoristas
     Route::get('motoristas/disponiveis', [MotoristaController::class, 'disponiveis']);
+    Route::get('motoristas/sem-usuario', [MotoristaController::class, 'semUsuario']);
     Route::get('motoristas/alertas/cnh', [MotoristaController::class, 'alertasCnh']);
     Route::apiResource('motoristas', MotoristaController::class);
 

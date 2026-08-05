@@ -67,6 +67,19 @@ class MotoristaController extends Controller
         return MotoristaResource::collection($motoristas);
     }
 
+    public function semUsuario(Request $r)
+    {
+        $unidadeId = $r->unidade_efetiva;
+
+        $motoristas = Motorista::where('status', 'ativo')
+            ->whereDoesNotHave('usuario')
+            ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'cpf']);
+
+        return MotoristaResource::collection($motoristas);
+    }
+
     public function alertasCnh()
     {
         return response()->json(DB::select('SELECT * FROM vw_cnh_vencimento'));
