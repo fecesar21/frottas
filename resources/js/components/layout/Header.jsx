@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Menu, Bell } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotificacoes } from '../../hooks/useNotificacoes'
@@ -9,6 +9,31 @@ export default function Header({ title, onMenuClick }) {
   const { user } = useAuth()
   const { total, notificacoes } = useNotificacoes()
   const [painelAberto, setPainelAberto] = useState(false)
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!painelAberto) return
+
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setPainelAberto(false)
+      }
+    }
+
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        setPainelAberto(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscapeKey)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscapeKey)
+    }
+  }, [painelAberto])
 
   return (
     <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-200/80 flex items-center justify-between px-5 shrink-0 shadow-sm sticky top-0 z-20">
@@ -24,9 +49,10 @@ export default function Header({ title, onMenuClick }) {
 
       <div className="flex items-center gap-2">
         {(user?.perfil === 'admin' || user?.perfil === 'gestor') && (
-          <div className="relative">
+          <div className="relative" ref={containerRef}>
             <button
               onClick={() => setPainelAberto(v => !v)}
+              aria-label="Notificações"
               className={`relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 ${total > 0 ? 'animate-pulse text-brand-600' : ''}`}
             >
               <Bell size={20} />
