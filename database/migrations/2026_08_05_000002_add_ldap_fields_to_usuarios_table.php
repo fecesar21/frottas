@@ -25,6 +25,10 @@ return new class extends Migration
         });
 
         Schema::table('usuarios', function (Blueprint $table) {
+            $table->dropUnique(['ldap_guid']);
+        });
+
+        Schema::table('usuarios', function (Blueprint $table) {
             $table->dropColumn(['ldap_guid', 'ldap_sync_at']);
         });
     }
