@@ -29,7 +29,7 @@ Route::get('/health', fn () => response()->json(['status' => 'ok', 'ts' => now()
 // ── Autenticação ──────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
-    Route::post('login-ad', [AuthController::class, 'loginAd'])->middleware('throttle:login');
+    Route::post('login-ad', [AuthController::class, 'loginAd'])->middleware('throttle:login-ad');
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
@@ -37,7 +37,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // ── Rotas protegidas por token Sanctum ────────────────────
-Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
+Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->group(function () {
 
     // Veículos
     Route::get('veiculos/posicoes', [VeiculoController::class, 'posicoes']);
@@ -71,8 +71,8 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
     Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store', 'update']);
 
     // Solicitações de Transporte
-    Route::patch('solicitacoes/{solicitacao}/aceitar', [SolicitacaoController::class, 'aceitar']);
-    Route::patch('solicitacoes/{solicitacao}/cancelar', [SolicitacaoController::class, 'cancelar']);
+    Route::patch('solicitacoes/{solicitacao}/aceitar', [SolicitacaoController::class, 'aceitar'])->name('solicitacoes.aceitar');
+    Route::patch('solicitacoes/{solicitacao}/cancelar', [SolicitacaoController::class, 'cancelar'])->name('solicitacoes.cancelar');
     Route::apiResource('solicitacoes', SolicitacaoController::class)->only(['index', 'show', 'store']);
 
     // Abastecimentos
@@ -100,9 +100,9 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
     });
 
     // Unidades
-    Route::get('unidades', [UnidadeController::class, 'index']);
+    Route::get('unidades', [UnidadeController::class, 'index'])->name('unidades.index');
     Route::post('unidades', [UnidadeController::class, 'store']);
-    Route::get('unidades/{unidade}', [UnidadeController::class, 'show']);
+    Route::get('unidades/{unidade}', [UnidadeController::class, 'show'])->name('unidades.show');
     Route::patch('unidades/{unidade}', [UnidadeController::class, 'update']);
     Route::delete('unidades/{unidade}', [UnidadeController::class, 'destroy']);
     Route::post('unidades/{unidade}/motoristas', [UnidadeController::class, 'vincularMotoristas']);
@@ -111,10 +111,10 @@ Route::middleware(['auth:sanctum', 'escopo.unidade'])->group(function () {
     Route::delete('unidades/{unidade}/veiculos/{veiculo}', [UnidadeController::class, 'desvincularVeiculo']);
 
     // Notificações
-    Route::get('notificacoes', [NotificacaoController::class, 'index']);
-    Route::get('notificacoes/nao-lidas', [NotificacaoController::class, 'naoLidas']);
-    Route::post('notificacoes/marcar-lidas', [NotificacaoController::class, 'marcarTodasLidas']);
-    Route::patch('notificacoes/{id}/lida', [NotificacaoController::class, 'marcarLida']);
+    Route::get('notificacoes', [NotificacaoController::class, 'index'])->name('notificacoes.index');
+    Route::get('notificacoes/nao-lidas', [NotificacaoController::class, 'naoLidas'])->name('notificacoes.nao-lidas');
+    Route::post('notificacoes/marcar-lidas', [NotificacaoController::class, 'marcarTodasLidas'])->name('notificacoes.marcar-lidas');
+    Route::patch('notificacoes/{id}/lida', [NotificacaoController::class, 'marcarLida'])->name('notificacoes.marcar-lida');
 
     // Usuários — somente admin
     Route::middleware('admin')->apiResource('usuarios', UsuarioController::class)
