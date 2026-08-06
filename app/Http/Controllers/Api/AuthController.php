@@ -77,18 +77,45 @@ class AuthController extends Controller
 
         $valorAd = $ldapUser->getFirstAttribute(config('ldap.unidade_attribute'));
         $unidadeId = UnidadeAdMapeamento::where('valor_ad', $valorAd)->first()?->unidade_id;
+        $mail = $ldapUser->getFirstAttribute('mail');
 
-        $usuario = Usuario::firstOrNew(['ldap_guid' => $guid]);
-        $novoRegistro = ! $usuario->exists;
+        $usuario = Usuario::where('ldap_guid', $guid)->first();
 
-        $usuario->fill([
-            'nome' => $ldapUser->getFirstAttribute('displayname'),
-            'email' => $ldapUser->getFirstAttribute('mail'),
-            'perfil' => 'solicitante',
-            'unidade_id' => $unidadeId,
-            'ldap_sync_at' => now(),
-            ...($novoRegistro ? ['ativo' => true] : []),
-        ]);
+        // Se ainda não há registro vinculado por ldap_guid, tenta achar uma
+        // conta pré-existente (ex.: admin/gestor cadastrado manualmente)
+        // pelo e-mail do AD, para vincular em vez de colidir na constraint
+        // de unicidade de e-mail ao tentar criar um registro novo.
+        $vinculandoContaExistente = false;
+        if (! $usuario && $mail) {
+            $usuario = Usuario::whereNull('ldap_guid')->where('email', $mail)->first();
+            $vinculandoContaExistente = (bool) $usuario;
+        }
+
+        $novoRegistro = ! $usuario;
+        $usuario = $usuario ?: new Usuario();
+
+        if ($novoRegistro) {
+            $usuario->fill([
+                'nome' => $ldapUser->getFirstAttribute('displayname'),
+                'email' => $mail,
+                'perfil' => 'solicitante',
+                'unidade_id' => $unidadeId,
+                'ativo' => true,
+            ]);
+        } elseif (! $vinculandoContaExistente) {
+            // Re-login normal de um solicitante já vinculado: mantém os
+            // dados sincronizados com o AD.
+            $usuario->fill([
+                'nome' => $ldapUser->getFirstAttribute('displayname'),
+                'email' => $mail,
+                'unidade_id' => $unidadeId,
+            ]);
+        }
+        // Se $vinculandoContaExistente: preserva perfil/unidade/nome/ativo
+        // da conta existente — só passa a aceitar login via AD também.
+
+        $usuario->ldap_guid = $guid;
+        $usuario->ldap_sync_at = now();
         $usuario->save();
 
         if ($usuario->exists && ! $usuario->ativo) {

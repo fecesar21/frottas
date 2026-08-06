@@ -154,6 +154,42 @@ class LoginAdTest extends TestCase
         $this->assertDatabaseCount('usuarios', $countAntes);
     }
 
+    public function test_login_ad_com_email_de_conta_existente_vincula_sem_alterar_perfil(): void
+    {
+        $unidadeAntiga = Unidade::factory()->create();
+        $admin = Usuario::factory()->create([
+            'nome' => 'Fernando Admin',
+            'email' => 'jsilva@empresa.com.br',
+            'perfil' => 'admin',
+            'unidade_id' => $unidadeAntiga->id,
+            'ldap_guid' => null,
+        ]);
+
+        $unidadeNovaDoAd = Unidade::factory()->create();
+        UnidadeAdMapeamento::create(['valor_ad' => 'HOSP-CENTRO', 'unidade_id' => $unidadeNovaDoAd->id]);
+        $ldapUser = $this->criarUsuarioLdap();
+
+        $response = $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'jsilva',
+            'senha' => 'senha-correta',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('user.id', $admin->id)
+            ->assertJsonPath('user.perfil', 'admin')
+            ->assertJsonPath('user.unidade_id', $unidadeAntiga->id);
+
+        $this->assertDatabaseHas('usuarios', [
+            'id' => $admin->id,
+            'nome' => 'Fernando Admin',
+            'perfil' => 'admin',
+            'unidade_id' => $unidadeAntiga->id,
+            'ldap_guid' => $ldapUser->getConvertedGuid(),
+        ]);
+
+        $this->assertDatabaseCount('usuarios', 1);
+    }
+
     public function test_login_ad_com_usuario_inativo_retorna_401_e_nao_reativa(): void
     {
         $ldapUser = $this->criarUsuarioLdap();
