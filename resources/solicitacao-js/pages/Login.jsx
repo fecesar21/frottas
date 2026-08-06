@@ -40,7 +40,7 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Usuário</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Usuário de rede</label>
                 <div className="relative">
                   <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -50,13 +50,13 @@ export default function Login() {
                     value={form.usuario}
                     onChange={(e) => setForm(f => ({ ...f, usuario: e.target.value }))}
                     className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400"
-                    placeholder="usuário ou e-mail"
+                    placeholder="mesmo usuário do computador"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Senha</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Senha de rede</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input

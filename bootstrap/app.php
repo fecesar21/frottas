@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EscopoUnidade;
+use App\Http\Middleware\RestringirSolicitante;
 use App\Http\Middleware\SomenteAdmin;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => SomenteAdmin::class,
             'throttle' => ThrottleRequests::class,
             'escopo.unidade' => EscopoUnidade::class,
+            'solicitante.restrito' => RestringirSolicitante::class,
         ]);
 
         $middleware->appendToGroup('api', [

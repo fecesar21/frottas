@@ -21,11 +21,22 @@ class EscopoUnidade
         $user = $request->user();
 
         if ($user) {
-            $request->merge([
-                'unidade_efetiva' => $user->perfil === 'admin'
-                    ? $request->query('unidade_id')
-                    : $user->unidade_id,
-            ]);
+            $naoAdmin = $user->perfil !== 'admin';
+            $unidadeId = $naoAdmin ? $user->unidade_id : $request->query('unidade_id');
+
+            // Sentinela: um usuário não-admin sem unidade_id mapeada (ex.: um
+            // solicitante recém-provisionado via AD sem mapeamento de unidade
+            // configurado) NÃO deve cair no comportamento "sem filtro" usado
+            // pelo admin. Os controllers aplicam o filtro via padrão
+            // `->when($unidadeId, ...)`, onde um valor falsy = nenhum filtro.
+            // Forçamos aqui um UUID inexistente para garantir zero resultados
+            // até que a unidade seja mapeada corretamente, em vez de expor
+            // dados de todas as unidades.
+            if ($naoAdmin && $unidadeId === null) {
+                $unidadeId = '00000000-0000-0000-0000-000000000000';
+            }
+
+            $request->merge(['unidade_efetiva' => $unidadeId]);
         }
 
         return $next($request);
