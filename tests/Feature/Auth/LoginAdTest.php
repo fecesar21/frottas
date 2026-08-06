@@ -127,4 +127,54 @@ class LoginAdTest extends TestCase
 
         $response->assertOk()->assertJsonPath('user.unidade_id', null);
     }
+
+    public function test_login_ad_com_guid_ausente_nao_cria_nem_altera_usuario(): void
+    {
+        $countAntes = Usuario::count();
+
+        $this->criarUsuarioLdap();
+
+        // O DirectoryEmulator sempre popula um GUID na criação (a partir do
+        // atributo 'objectguid' informado, ou gerando um automaticamente).
+        // Para simular um GUID ausente/vazio vindo do AD, esvaziamos o
+        // valor diretamente no registro subjacente do diretório fake após
+        // a criação — tanto na coluna dedicada `guid` quanto no atributo
+        // LDAP `objectguid` armazenado, já que ambos alimentam o resultado
+        // retornado pela consulta emulada.
+        $ldapObject = \LdapRecord\Laravel\Testing\LdapObject::query()->firstOrFail();
+        $ldapObject->update(['guid' => '']);
+        $ldapObject->attributes()->where('name', 'objectguid')->delete();
+
+        $response = $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'jsilva',
+            'senha' => 'senha-correta',
+        ]);
+
+        $response->assertStatus(503);
+        $this->assertDatabaseCount('usuarios', $countAntes);
+    }
+
+    public function test_login_ad_com_usuario_inativo_retorna_401_e_nao_reativa(): void
+    {
+        $ldapUser = $this->criarUsuarioLdap();
+        $guid = $ldapUser->getConvertedGuid();
+
+        $usuario = Usuario::factory()->create([
+            'ldap_guid' => $guid,
+            'nome' => 'Nome Antigo',
+            'perfil' => 'solicitante',
+            'ativo' => false,
+        ]);
+
+        $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'jsilva',
+            'senha' => 'senha-correta',
+        ])->assertStatus(401)
+            ->assertJson(['error' => 'Usuário ou senha inválidos']);
+
+        $this->assertDatabaseHas('usuarios', [
+            'id' => $usuario->id,
+            'ativo' => false,
+        ]);
+    }
 }

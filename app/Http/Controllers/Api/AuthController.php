@@ -68,19 +68,32 @@ class AuthController extends Controller
         }
 
         $guid = $ldapUser->getConvertedGuid();
+
+        if (blank($guid)) {
+            Log::error('AD retornou usuário sem objectGUID utilizável', ['dn' => $ldapUser->getDn()]);
+
+            return response()->json(['error' => 'Serviço de autenticação indisponível, tente novamente'], 503);
+        }
+
         $valorAd = $ldapUser->getFirstAttribute(config('ldap.unidade_attribute'));
         $unidadeId = UnidadeAdMapeamento::where('valor_ad', $valorAd)->first()?->unidade_id;
 
         $usuario = Usuario::firstOrNew(['ldap_guid' => $guid]);
+        $novoRegistro = ! $usuario->exists;
+
         $usuario->fill([
             'nome' => $ldapUser->getFirstAttribute('displayname'),
             'email' => $ldapUser->getFirstAttribute('mail'),
             'perfil' => 'solicitante',
-            'ativo' => true,
             'unidade_id' => $unidadeId,
             'ldap_sync_at' => now(),
+            ...($novoRegistro ? ['ativo' => true] : []),
         ]);
         $usuario->save();
+
+        if ($usuario->exists && ! $usuario->ativo) {
+            return response()->json(['error' => 'Usuário ou senha inválidos'], 401);
+        }
 
         $usuario->update(['ultimo_acesso' => now()]);
         $token = $usuario->createToken('app', [], now()->addHours(8))->plainTextToken;
