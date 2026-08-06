@@ -11,8 +11,8 @@ return [
             'port'     => env('LDAP_PORT', 636),
             'base_dn'  => env('LDAP_BASE_DN', ''),
             'timeout'  => env('LDAP_TIMEOUT', 5),
-            'use_ssl'  => env('LDAP_USE_SSL', true),
-            'use_tls'  => env('LDAP_USE_TLS', false),
+            'use_tls'  => env('LDAP_USE_SSL', true),
+            'use_starttls' => env('LDAP_USE_TLS', false),
         ],
     ],
 
