@@ -19,11 +19,11 @@ class SolicitacaoController extends Controller
         $user = $r->user();
 
         // Admin e gestor enxergam solicitações de todas as unidades por padrão,
-        // podendo filtrar opcionalmente via ?unidade_id=. Operador só vê as próprias.
+        // podendo filtrar opcionalmente via ?unidade_id=. Operador e solicitante só veem as próprias.
         $unidadeFiltro = in_array($user->perfil, ['admin', 'gestor']) ? $r->query('unidade_id') : null;
 
         $solicitacoes = Solicitacao::with(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
-            ->when($user->perfil === 'operador', fn ($q) => $q->where('usuario_id', $user->id))
+            ->when(in_array($user->perfil, ['operador', 'solicitante']), fn ($q) => $q->where('usuario_id', $user->id))
             ->when($unidadeFiltro, fn ($q) => $q->where('unidade_id', $unidadeFiltro))
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
             ->latest()
