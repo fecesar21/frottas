@@ -43,5 +43,14 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });
+
+        // Usado por POST /api/auth/login-ad. Chaveado por IP + usuário
+        // submetido (não só IP) porque atrás de NAT corporativo centenas de
+        // funcionários compartilham o mesmo IP — um limiter só por IP
+        // limitaria o volume de login de todo o escritório em vez de conter
+        // tentativas de credential stuffing contra uma única conta.
+        RateLimiter::for('login-ad', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip().'|'.$request->input('usuario'));
+        });
     }
 }

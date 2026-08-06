@@ -17,7 +17,7 @@ return new class extends Migration
             return;
         }
 
-        DB::statement("ALTER TABLE usuarios MODIFY perfil ENUM('admin','gestor','operador','solicitante') DEFAULT 'operador'");
+        DB::statement("ALTER TABLE usuarios MODIFY perfil ENUM('admin','gestor','operador','solicitante') NOT NULL DEFAULT 'operador'");
     }
 
     public function down(): void
@@ -26,6 +26,6 @@ return new class extends Migration
             return;
         }
 
-        DB::statement("ALTER TABLE usuarios MODIFY perfil ENUM('admin','gestor','operador') DEFAULT 'operador'");
+        DB::statement("ALTER TABLE usuarios MODIFY perfil ENUM('admin','gestor','operador') NOT NULL DEFAULT 'operador'");
     }
 };
