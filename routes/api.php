@@ -29,6 +29,7 @@ Route::get('/health', fn () => response()->json(['status' => 'ok', 'ts' => now()
 // ── Autenticação ──────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('login-ad', [AuthController::class, 'loginAd'])->middleware('throttle:login');
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
