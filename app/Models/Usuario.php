@@ -27,6 +27,7 @@ class Usuario extends Authenticatable
 
     protected $fillable = [
         'nome', 'cpf', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id', 'unidade_id',
+        'ldap_guid', 'ldap_sync_at',
     ];
 
     protected $hidden = ['senha_hash'];
