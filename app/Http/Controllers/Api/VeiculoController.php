@@ -30,7 +30,7 @@ class VeiculoController extends Controller
     {
         $veiculo->load([
             'checkinAtivo.motorista',
-            'kmRegistros' => fn ($q) => $q->latest()->limit(10),
+            'kmRegistros' => fn ($q) => $q->latest('registrado_at')->limit(10),
             'unidades',
         ]);
 
