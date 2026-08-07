@@ -4,6 +4,9 @@ vendor/
 .phpunit.result.cache
 /public/build
 /public/hot
+/public/index.html
+/public/solicitacao.html
+/public/assets/
 /storage/*.key
 /bootstrap/cache/*.php
 !/bootstrap/cache/.gitignore
