@@ -240,4 +240,25 @@ class SolicitacaoApiTest extends TestCase
         Notification::assertNotSentTo($gestorOutraUnidade, NovaSolicitacaoTransporte::class);
         Notification::assertNotSentTo($operador, NovaSolicitacaoTransporte::class);
     }
+
+    public function test_recurso_expoe_motivo_recusa(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
+        ]);
+
+        // Motorista recusa a solicitação
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        // The motoristaRecusar endpoint returns the updated solicitacao with motivo_recusa
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-recusar", [
+            'motivo' => 'Sem combustível suficiente',
+        ])->assertOk()->assertJsonPath('data.motivo_recusa', 'Sem combustível suficiente');
+    }
 }

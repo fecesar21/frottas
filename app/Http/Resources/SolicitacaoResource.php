@@ -21,6 +21,7 @@ class SolicitacaoResource extends JsonResource
             'hospital_destino' => $this->hospital_destino,
             'fornecedor_nome' => $this->fornecedor_nome,
             'status' => $this->status,
+            'motivo_recusa' => $this->motivo_recusa,
             'viagem_id' => $this->viagem_id,
             'observacoes' => $this->observacoes,
             'usuario_nome' => $this->whenLoaded('usuario', fn () => $this->usuario->nome),
