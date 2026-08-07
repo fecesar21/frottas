@@ -40,6 +40,7 @@ export default function MinhasSolicitacoes() {
         ) : solicitacoes.length === 0 ? (
           <p className="p-6 text-sm text-gray-500">Nenhuma solicitação encontrada.</p>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
               <tr>
@@ -68,6 +69,7 @@ export default function MinhasSolicitacoes() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </Layout>
