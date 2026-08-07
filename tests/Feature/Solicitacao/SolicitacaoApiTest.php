@@ -178,26 +178,34 @@ class SolicitacaoApiTest extends TestCase
 
     public function test_gestor_pode_redesignar_apos_recusa(): void
     {
-        // Setup: create a solicitacao with recusada status
+        // Part 1: Create a recusada status by having a motorista actually refuse
         $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
         $veiculo = Veiculo::factory()->create();
         $solicitacao = Solicitacao::factory()->create([
-            'status' => 'recusada',
-            'motorista_pendente_id' => null,
-            'veiculo_pendente_id' => null,
-            'motivo_recusa' => 'Veículo com problema',
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
         ]);
 
-        // Now test that a manager can redesignate
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-recusar", ['motivo' => 'Veículo com problema mecânico'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'recusada');
+
+        // Part 2: Now test that a manager can redesignate after recusal
+        $gestor = Usuario::factory()->create(['perfil' => 'gestor']);
+        $gestorToken = $gestor->createToken('test')->plainTextToken;
         $outroMotorista = Motorista::factory()->create();
         $outroVeiculo = Veiculo::factory()->create();
 
-        $this->loginGestor();
-
-        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
-            'motorista_id' => $outroMotorista->id,
-            'veiculo_id' => $outroVeiculo->id,
-        ])->assertOk()->assertJsonPath('data.status', 'pendente_motorista');
+        $this->withToken($gestorToken)
+            ->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
+                'motorista_id' => $outroMotorista->id,
+                'veiculo_id' => $outroVeiculo->id,
+            ])->assertOk()->assertJsonPath('data.status', 'pendente_motorista');
     }
 
     public function test_motorista_nao_pode_aceitar_solicitacao_de_outro_motorista(): void

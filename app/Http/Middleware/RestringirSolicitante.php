@@ -18,8 +18,6 @@ class RestringirSolicitante
         'solicitacoes.show',
         'solicitacoes.store',
         'solicitacoes.cancelar',
-        'solicitacoes.motorista-aceitar',
-        'solicitacoes.motorista-recusar',
         'unidades.index',
         'unidades.show',
         'notificacoes.index',
