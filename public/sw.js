@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fleetcore-v2';
+const CACHE_NAME = 'fleetcore-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -44,7 +44,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Assets estáticos — cache primeiro, rede como fallback
+  // Navegação (o HTML da SPA) — rede primeiro, para sempre pegar o build mais
+  // recente após um deploy; cache só como fallback offline.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then(cached => cached || caches.match('/')))
+    );
+    return;
+  }
+
+  // Assets estáticos (fingerprinted pelo Vite, nome muda a cada build) — cache
+  // primeiro, rede como fallback.
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
@@ -55,11 +71,6 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
-      }).catch(() => {
-        // Offline fallback: retorna a shell do app a partir do cache
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
       });
     })
   );
