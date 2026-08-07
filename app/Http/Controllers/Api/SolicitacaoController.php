@@ -49,15 +49,9 @@ class SolicitacaoController extends Controller
 
     public function aceitar(Request $r, Solicitacao $solicitacao)
     {
-        // Authorization check temporarily disabled due to Laravel testing framework limitation:
-        // `$r->user()->perfil` and `Auth::user()->perfil` both fail to reflect token changes within
-        // the same test method when using `withToken()` multiple times with different tokens.
-        // The endpoint WILL work in production; this is a testing-only limitation.
-        // See task-4-report.md "Fix round 1" section for details.
-
-        // if (! in_array($r->user()->perfil, ['admin', 'gestor'])) {
-        //     return response()->json(['error' => 'Apenas gestores/admins podem aceitar solicitações.'], 403);
-        // }
+        if (! in_array($r->user()->perfil, ['admin', 'gestor'])) {
+            return response()->json(['error' => 'Apenas gestores/admins podem aceitar solicitações.'], 403);
+        }
 
         if (! in_array($solicitacao->status, ['aberto', 'recusada'])) {
             throw ValidationException::withMessages(['status' => 'Esta solicitação já foi tratada.']);
