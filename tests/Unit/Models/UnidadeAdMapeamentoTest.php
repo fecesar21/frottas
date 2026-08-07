@@ -1,5 +1,4 @@
 <?php
-
 // tests/Unit/Models/UnidadeAdMapeamentoTest.php
 
 namespace Tests\Unit\Models;
@@ -18,7 +17,7 @@ class UnidadeAdMapeamentoTest extends TestCase
         $unidade = Unidade::factory()->create();
 
         UnidadeAdMapeamento::create([
-            'valor_ad' => 'HOSP-CENTRO',
+            'valor_ad'   => 'HOSP-CENTRO',
             'unidade_id' => $unidade->id,
         ]);
 

@@ -26,7 +26,7 @@ return new class extends Migration
             ORDER BY cnh_validade ASC
         ");
 
-        DB::statement('
+        DB::statement("
             CREATE VIEW vw_resumo_abastecimentos AS
             SELECT
                 v.id         AS veiculo_id,
@@ -41,7 +41,7 @@ return new class extends Migration
             LEFT JOIN abastecimentos a ON a.veiculo_id = v.id
             GROUP BY v.id, v.placa, v.modelo
             ORDER BY total_valor DESC
-        ');
+        ");
     }
 
     public function down(): void

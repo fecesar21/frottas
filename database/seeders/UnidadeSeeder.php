@@ -18,7 +18,7 @@ class UnidadeSeeder extends Seeder
 
         // Vincula todos os motoristas e veículos existentes à Matriz
         $motoristas = Motorista::pluck('id');
-        $veiculos = Veiculo::pluck('id');
+        $veiculos   = Veiculo::pluck('id');
 
         $matriz->motoristas()->syncWithoutDetaching($motoristas->toArray());
         $matriz->veiculos()->syncWithoutDetaching($veiculos->toArray());

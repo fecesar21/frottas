@@ -14,13 +14,13 @@ class StoreUsuarioRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'required|string|max:100',
-            'cpf' => 'required|string|max:14|unique:usuarios',
-            'email' => 'nullable|email|unique:usuarios',
-            'senha' => ['required', 'string', 'min:6', 'regex:/^[0-9]+$/'],
-            'perfil' => 'required|in:admin,gestor,operador',
+            'nome'         => 'required|string|max:100',
+            'cpf'          => 'required|string|max:14|unique:usuarios',
+            'email'        => 'nullable|email|unique:usuarios',
+            'senha'        => ['required', 'string', 'min:6', 'regex:/^[0-9]+$/'],
+            'perfil'       => 'required|in:admin,gestor,operador',
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',
-            'unidade_id' => 'nullable|uuid|exists:unidades,id',
+            'unidade_id'   => 'nullable|uuid|exists:unidades,id',
         ];
     }
 

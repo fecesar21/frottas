@@ -10,9 +10,7 @@ class ViagemPonto extends Model
     use HasUuids;
 
     protected $table = 'viagem_pontos';
-
     public $incrementing = false;
-
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -20,9 +18,9 @@ class ViagemPonto extends Model
     ];
 
     protected $casts = [
-        'latitude' => 'float',
-        'longitude' => 'float',
-        'accuracy' => 'float',
+        'latitude'     => 'float',
+        'longitude'    => 'float',
+        'accuracy'     => 'float',
         'capturado_at' => 'datetime',
     ];
 

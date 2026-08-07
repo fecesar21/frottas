@@ -26,9 +26,9 @@ class PlantaoService
 
             foreach ($itens as $item) {
                 ChecklistResposta::create([
-                    'passagem_id' => $passagem->id,
+                    'passagem_id'    => $passagem->id,
                     'item_modelo_id' => $item->id,
-                    'resultado' => 'nao_verificado',
+                    'resultado'      => 'nao_verificado',
                 ]);
             }
 
@@ -40,13 +40,13 @@ class PlantaoService
 
     private function validarMesmaUnidade(string $veiculoId, string $motoristaSaindoId, string $motoristaEntrandoId): void
     {
-        $veiculo = Veiculo::with('unidades')->findOrFail($veiculoId);
-        $motoristaSaindo = Motorista::with('unidades')->findOrFail($motoristaSaindoId);
+        $veiculo          = Veiculo::with('unidades')->findOrFail($veiculoId);
+        $motoristaSaindo  = Motorista::with('unidades')->findOrFail($motoristaSaindoId);
         $motoristaEntrando = Motorista::with('unidades')->findOrFail($motoristaEntrandoId);
 
-        $unidadesVeiculo = $veiculo->unidades->pluck('id');
-        $unidadesSaindo = $motoristaSaindo->unidades->pluck('id');
-        $unidadesEntrando = $motoristaEntrando->unidades->pluck('id');
+        $unidadesVeiculo   = $veiculo->unidades->pluck('id');
+        $unidadesSaindo    = $motoristaSaindo->unidades->pluck('id');
+        $unidadesEntrando  = $motoristaEntrando->unidades->pluck('id');
 
         $comum = $unidadesVeiculo->intersect($unidadesSaindo)->intersect($unidadesEntrando);
 

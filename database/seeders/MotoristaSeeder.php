@@ -24,12 +24,12 @@ class MotoristaSeeder extends Seeder
             ['nome' => 'MANOEL FILHO DE ASSIS', 'cpf' => '052.903.250-34', 'cnh_numero' => '3634519798', 'cnh_categoria' => 'D', 'cnh_validade' => '2033-11-04', 'turno_padrao' => 'noite'],
             ['nome' => 'NILSON PIRES SANTANA', 'cpf' => '465.183.450-71', 'cnh_numero' => '2889960101', 'cnh_categoria' => 'D', 'cnh_validade' => '2028-02-08', 'turno_padrao' => 'dia'],
             ['nome' => 'THIAGO ALEXANDRE DE OLIVEIRA FRANCO', 'cpf' => '685.339.480-18', 'cnh_numero' => '2404981370', 'cnh_categoria' => 'D', 'cnh_validade' => '2032-06-21', 'turno_padrao' => 'dia'],
-        ];
+       ];
 
         foreach ($motoristas as $dados) {
             Motorista::firstOrCreate(['cpf' => $dados['cpf']], array_merge($dados, [
                 'status' => 'ativo',
-                'telefone' => '(11) 9'.rand(1000, 9999).'-'.rand(1000, 9999),
+                'telefone' => '(11) 9' . rand(1000, 9999) . '-' . rand(1000, 9999),
             ]));
         }
     }

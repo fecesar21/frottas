@@ -12,7 +12,7 @@ return new class extends Migration
         $driver = DB::getDriverName();
 
         if ($driver === 'sqlite') {
-            DB::statement('
+            DB::statement("
                 CREATE VIEW vw_resumo_abastecimentos AS
                 SELECT
                     v.id            AS veiculo_id,
@@ -26,9 +26,9 @@ return new class extends Migration
                 FROM veiculos v
                 LEFT JOIN abastecimentos a ON a.veiculo_id = v.id
                 GROUP BY v.id, v.placa, v.modelo
-            ');
+            ");
         } else {
-            DB::statement('
+            DB::statement("
                 CREATE VIEW vw_resumo_abastecimentos AS
                 SELECT
                     v.id            AS veiculo_id,
@@ -42,7 +42,7 @@ return new class extends Migration
                 FROM veiculos v
                 LEFT JOIN abastecimentos a ON a.veiculo_id = v.id
                 GROUP BY v.id, v.placa, v.modelo
-            ');
+            ");
         }
     }
 

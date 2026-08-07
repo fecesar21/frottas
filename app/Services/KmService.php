@@ -17,11 +17,11 @@ class KmService
         }
 
         $registro = KmRegistro::create([
-            'veiculo_id' => $data['veiculo_id'],
-            'motorista_id' => $data['motorista_id'] ?? null,
-            'km_anterior' => $veiculo->km_atual,
-            'km_atual' => $data['km_atual'],
-            'observacao' => $data['observacao'] ?? null,
+            'veiculo_id'    => $data['veiculo_id'],
+            'motorista_id'  => $data['motorista_id'] ?? null,
+            'km_anterior'   => $veiculo->km_atual,
+            'km_atual'      => $data['km_atual'],
+            'observacao'    => $data['observacao'] ?? null,
             'registrado_at' => now(),
         ]);
 

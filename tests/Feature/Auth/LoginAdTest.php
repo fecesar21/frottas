@@ -7,7 +7,6 @@ use App\Models\UnidadeAdMapeamento;
 use App\Models\Usuario;
 use Illuminate\Support\Str;
 use LdapRecord\Laravel\Testing\DirectoryEmulator;
-use LdapRecord\Laravel\Testing\LdapObject;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 use Tests\TestCase;
 
@@ -142,7 +141,7 @@ class LoginAdTest extends TestCase
         // a criação — tanto na coluna dedicada `guid` quanto no atributo
         // LDAP `objectguid` armazenado, já que ambos alimentam o resultado
         // retornado pela consulta emulada.
-        $ldapObject = LdapObject::query()->firstOrFail();
+        $ldapObject = \LdapRecord\Laravel\Testing\LdapObject::query()->firstOrFail();
         $ldapObject->update(['guid' => '']);
         $ldapObject->attributes()->where('name', 'objectguid')->delete();
 

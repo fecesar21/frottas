@@ -10,7 +10,6 @@ use App\Models\Usuario;
 use App\Models\Veiculo;
 use App\Models\Viagem;
 use App\Notifications\NovaSolicitacaoTransporte;
-use App\Notifications\NovaViagemDesignada;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -237,11 +236,11 @@ class SolicitacaoApiTest extends TestCase
     {
         Notification::fake();
 
-        $unidade = Unidade::factory()->create();
+        $unidade = \App\Models\Unidade::factory()->create();
         $operador = Usuario::factory()->create(['perfil' => 'operador', 'unidade_id' => $unidade->id]);
         $adminGlobal = Usuario::factory()->admin()->create();
         $gestorMesmaUnidade = Usuario::factory()->create(['perfil' => 'gestor', 'unidade_id' => $unidade->id]);
-        $gestorOutraUnidade = Usuario::factory()->create(['perfil' => 'gestor', 'unidade_id' => Unidade::factory()->create()->id]);
+        $gestorOutraUnidade = Usuario::factory()->create(['perfil' => 'gestor', 'unidade_id' => \App\Models\Unidade::factory()->create()->id]);
 
         $token = $operador->createToken('test')->plainTextToken;
         $this->withToken($token);
@@ -308,7 +307,7 @@ class SolicitacaoApiTest extends TestCase
             'status' => 'aguardando_finalizacao_trajeto',
         ]);
         $this->assertDatabaseMissing('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculoNovo->id]);
-        Notification::assertSentTo($usuarioMotorista, NovaViagemDesignada::class, function ($notification) use ($solicitacaoNaFila, $usuarioMotorista) {
+        Notification::assertSentTo($usuarioMotorista, \App\Notifications\NovaViagemDesignada::class, function ($notification) use ($solicitacaoNaFila, $usuarioMotorista) {
             return $notification->toArray($usuarioMotorista)['solicitacao_id'] === $solicitacaoNaFila->id
                 && $notification->toArray($usuarioMotorista)['fila'] === true;
         });

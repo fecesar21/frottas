@@ -21,13 +21,13 @@ class UsuarioController extends Controller
         $d = $request->validated();
 
         $usuario = Usuario::create([
-            'nome' => $d['nome'],
-            'cpf' => $d['cpf'],
-            'email' => $d['email'] ?? null,
-            'senha_hash' => Hash::make($d['senha']),
-            'perfil' => $d['perfil'],
+            'nome'         => $d['nome'],
+            'cpf'          => $d['cpf'],
+            'email'        => $d['email'] ?? null,
+            'senha_hash'   => Hash::make($d['senha']),
+            'perfil'       => $d['perfil'],
             'motorista_id' => $d['motorista_id'] ?? null,
-            'ativo' => true,
+            'ativo'        => true,
         ]);
 
         return (new UsuarioResource($usuario))->response()->setStatusCode(201);
@@ -37,7 +37,7 @@ class UsuarioController extends Controller
     {
         $d = $request->validated();
 
-        if (! empty($d['senha'])) {
+        if (!empty($d['senha'])) {
             $d['senha_hash'] = Hash::make($d['senha']);
             unset($d['senha']);
         }

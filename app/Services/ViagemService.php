@@ -31,7 +31,7 @@ class ViagemService
         }
 
         $data['saida_at'] = $data['saida_at'] ?? now();
-        $data['status'] = 'em_andamento';
+        $data['status']   = 'em_andamento';
 
         return DB::transaction(fn () => Viagem::create($data));
     }
@@ -43,9 +43,9 @@ class ViagemService
         }
 
         $viagem->update([
-            'status' => 'concluida',
-            'chegada_at' => now(),
-            'km_chegada' => $data['km_chegada'],
+            'status'      => 'concluida',
+            'chegada_at'  => now(),
+            'km_chegada'  => $data['km_chegada'],
             'observacoes' => $data['observacoes'] ?? $viagem->observacoes,
         ]);
 

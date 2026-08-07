@@ -53,13 +53,13 @@ class PlantaoController extends Controller
             ->firstOrFail();
 
         $resposta->update([
-            'resultado' => $data['resultado'],
+            'resultado'  => $data['resultado'],
             'observacao' => $data['observacao'] ?? null,
         ]);
 
         // Recalcular contadores
-        $okCount = ChecklistResposta::where('passagem_id', $plantao->id)->where('resultado', 'ok')->count();
-        $pendenciaCount = ChecklistResposta::where('passagem_id', $plantao->id)->where('resultado', 'pendencia')->count();
+        $okCount         = ChecklistResposta::where('passagem_id', $plantao->id)->where('resultado', 'ok')->count();
+        $pendenciaCount  = ChecklistResposta::where('passagem_id', $plantao->id)->where('resultado', 'pendencia')->count();
         $plantao->update(['itens_ok' => $okCount, 'itens_pendencia' => $pendenciaCount]);
 
         return response()->json($resposta);
@@ -71,7 +71,7 @@ class PlantaoController extends Controller
 
         $plantao->update([
             'observacoes_gerais' => $data['observacoes_gerais'] ?? $plantao->observacoes_gerais,
-            'finalizado_at' => now(),
+            'finalizado_at'      => now(),
         ]);
 
         return new PlantaoResource($plantao->fresh());
@@ -91,7 +91,7 @@ class PlantaoController extends Controller
     public function encerrar(Request $r, PassagemPlantao $plantao)
     {
         $plantao->update([
-            'finalizado_at' => now(),
+            'finalizado_at'  => now(),
             'observacoes_gerais' => $r->observacoes_encerramento ?? $plantao->observacoes_gerais,
         ]);
 

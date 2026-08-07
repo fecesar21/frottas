@@ -13,12 +13,12 @@ class UsuarioFactory extends Factory
     public function definition(): array
     {
         return [
-            'nome' => fake()->name(),
-            'cpf' => fake()->unique()->numerify('#########'),
-            'email' => fake()->unique()->safeEmail(),
+            'nome'       => fake()->name(),
+            'cpf'        => fake()->unique()->numerify('#########'),
+            'email'      => fake()->unique()->safeEmail(),
             'senha_hash' => Hash::make('password'),
-            'perfil' => fake()->randomElement(['gestor', 'operador']),
-            'ativo' => true,
+            'perfil'     => fake()->randomElement(['gestor', 'operador']),
+            'ativo'      => true,
         ];
     }
 

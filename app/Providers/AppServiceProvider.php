@@ -10,11 +10,11 @@ use App\Policies\CheckinPolicy;
 use App\Policies\MotoristaPolicy;
 use App\Policies\UsuarioPolicy;
 use App\Policies\VeiculoPolicy;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

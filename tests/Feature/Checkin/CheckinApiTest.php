@@ -14,13 +14,13 @@ class CheckinApiTest extends TestCase
     {
         $this->loginAdmin();
         $motorista = Motorista::factory()->create();
-        $veiculo = Veiculo::factory()->create(['km_atual' => 1000, 'status' => 'disponivel']);
+        $veiculo   = Veiculo::factory()->create(['km_atual' => 1000, 'status' => 'disponivel']);
 
         $response = $this->postJson('/api/checkins', [
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo->id,
-            'turno' => 'dia',
-            'km_saida' => 1000,
+            'veiculo_id'   => $veiculo->id,
+            'turno'        => 'dia',
+            'km_saida'     => 1000,
         ]);
 
         $response->assertCreated();
@@ -32,21 +32,21 @@ class CheckinApiTest extends TestCase
     {
         $this->loginAdmin();
         $motorista = Motorista::factory()->create();
-        $veiculo1 = Veiculo::factory()->create(['km_atual' => 1000]);
-        $veiculo2 = Veiculo::factory()->create(['km_atual' => 2000]);
+        $veiculo1  = Veiculo::factory()->create(['km_atual' => 1000]);
+        $veiculo2  = Veiculo::factory()->create(['km_atual' => 2000]);
 
         Checkin::factory()->create([
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo1->id,
-            'status' => 'ativo',
-            'km_saida' => 1000,
+            'veiculo_id'   => $veiculo1->id,
+            'status'       => 'ativo',
+            'km_saida'     => 1000,
         ]);
 
         $this->postJson('/api/checkins', [
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo2->id,
-            'turno' => 'dia',
-            'km_saida' => 2000,
+            'veiculo_id'   => $veiculo2->id,
+            'turno'        => 'dia',
+            'km_saida'     => 2000,
         ])->assertUnprocessable();
     }
 
@@ -54,13 +54,13 @@ class CheckinApiTest extends TestCase
     {
         $this->loginAdmin();
         $motorista = Motorista::factory()->create();
-        $veiculo = Veiculo::factory()->create(['km_atual' => 5000]);
+        $veiculo   = Veiculo::factory()->create(['km_atual' => 5000]);
 
         $this->postJson('/api/checkins', [
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo->id,
-            'turno' => 'dia',
-            'km_saida' => 100,
+            'veiculo_id'   => $veiculo->id,
+            'turno'        => 'dia',
+            'km_saida'     => 100,
         ])->assertUnprocessable();
     }
 
@@ -97,13 +97,13 @@ class CheckinApiTest extends TestCase
     {
         $this->loginAdmin();
         $motorista = Motorista::factory()->create();
-        $veiculo = Veiculo::factory()->create(['km_atual' => 1000, 'status' => 'em_uso']);
+        $veiculo   = Veiculo::factory()->create(['km_atual' => 1000, 'status' => 'em_uso']);
 
         $checkin = Checkin::factory()->create([
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo->id,
-            'km_saida' => 1000,
-            'status' => 'ativo',
+            'veiculo_id'   => $veiculo->id,
+            'km_saida'     => 1000,
+            'status'       => 'ativo',
         ]);
 
         $this->patchJson("/api/checkins/{$checkin->id}/checkout", [
@@ -123,17 +123,17 @@ class CheckinApiTest extends TestCase
 
         $checkin = Checkin::factory()->create([
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo->id,
-            'km_saida' => 1000,
-            'status' => 'ativo',
+            'veiculo_id'   => $veiculo->id,
+            'km_saida'     => 1000,
+            'status'       => 'ativo',
         ]);
 
         Viagem::factory()->create([
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo->id,
-            'checkin_id' => $checkin->id,
-            'km_saida' => 1000,
-            'status' => 'em_andamento',
+            'veiculo_id'   => $veiculo->id,
+            'checkin_id'   => $checkin->id,
+            'km_saida'     => 1000,
+            'status'       => 'em_andamento',
         ]);
 
         $this->patchJson("/api/checkins/{$checkin->id}/checkout", [

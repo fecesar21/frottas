@@ -15,8 +15,8 @@ class AtualizarItemRequest extends FormRequest
     {
         return [
             'item_modelo_id' => 'required|integer|exists:checklist_itens_modelo,id',
-            'resultado' => 'required|in:ok,pendencia,nao_verificado',
-            'observacao' => 'nullable|string',
+            'resultado'      => 'required|in:ok,pendencia,nao_verificado',
+            'observacao'     => 'nullable|string',
         ];
     }
 }

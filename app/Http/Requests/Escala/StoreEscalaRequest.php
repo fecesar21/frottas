@@ -15,10 +15,10 @@ class StoreEscalaRequest extends FormRequest
     {
         return [
             'motorista_id' => 'required|uuid|exists:motoristas,id',
-            'data' => 'required|date',
-            'turno' => 'required|in:dia,noite,folga',
-            'veiculo_id' => 'nullable|uuid|exists:veiculos,id',
-            'observacao' => 'nullable|string',
+            'data'         => 'required|date',
+            'turno'        => 'required|in:dia,noite,folga',
+            'veiculo_id'   => 'nullable|uuid|exists:veiculos,id',
+            'observacao'   => 'nullable|string',
         ];
     }
 }

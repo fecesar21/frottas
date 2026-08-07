@@ -14,10 +14,10 @@ class StoreKmRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'veiculo_id' => 'required|uuid|exists:veiculos,id',
+            'veiculo_id'   => 'required|uuid|exists:veiculos,id',
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',
-            'km_atual' => 'required|integer|min:0',
-            'observacao' => 'nullable|string',
+            'km_atual'     => 'required|integer|min:0',
+            'observacao'   => 'nullable|string',
         ];
     }
 }
