@@ -176,6 +176,7 @@ class SolicitacaoApiTest extends TestCase
         ]);
 
         $this->loginGestor();
+        $this->app['auth']->forgetGuards();
         $outroMotorista = Motorista::factory()->create();
         $outroVeiculo = Veiculo::factory()->create();
 
