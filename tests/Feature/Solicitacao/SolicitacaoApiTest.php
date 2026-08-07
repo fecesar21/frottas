@@ -149,7 +149,7 @@ class SolicitacaoApiTest extends TestCase
             ->assertJsonValidationErrors(['km_saida']);
     }
 
-    public function test_motorista_recusa_com_motivo(): void
+    public function test_motorista_recusa_com_motivo_gestor_pode_redesignar(): void
     {
         $motorista = Motorista::factory()->create();
         $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
@@ -174,27 +174,14 @@ class SolicitacaoApiTest extends TestCase
             'motorista_pendente_id' => null,
             'veiculo_pendente_id' => null,
         ]);
-    }
 
-    public function test_gestor_pode_redesignar_apos_recusa(): void
-    {
-        // Test that a manager can redesignate a solicitacao that is in recusada status
-        // (Setup a recusada solicitacao without needing to call motoristaRecusar in same test)
-        $solicitacao = Solicitacao::factory()->create([
-            'status' => 'recusada',
-            'motorista_pendente_id' => null,
-            'veiculo_pendente_id' => null,
-            'motivo_recusa' => 'Recusada by motorista',
-        ]);
-
-        // Login as gestor and redesignate
         $this->loginGestor();
-        $motorista = Motorista::factory()->create();
-        $veiculo = Veiculo::factory()->create();
+        $outroMotorista = Motorista::factory()->create();
+        $outroVeiculo = Veiculo::factory()->create();
 
         $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $outroMotorista->id,
+            'veiculo_id' => $outroVeiculo->id,
         ])->assertOk()->assertJsonPath('data.status', 'pendente_motorista');
     }
 
