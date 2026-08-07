@@ -29,8 +29,14 @@ abstract class TestCase extends BaseTestCase
 
     protected function loginAs(string $perfil = 'admin'): Usuario
     {
+        // Create new user with specified profile
         $usuario = Usuario::factory()->create(['perfil' => $perfil]);
         $token = $usuario->createToken('test')->plainTextToken;
+
+        // Explicitly reset ALL default headers - this is critical to clear previous tokens
+        $this->defaultHeaders = [];
+
+        // Set the new authorization token
         $this->withToken($token);
 
         return $usuario;
