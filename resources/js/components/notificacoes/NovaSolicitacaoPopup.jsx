@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Bell, X } from 'lucide-react'
 
 const AUTO_FECHAR_MODAL_MS = 60_000
@@ -21,7 +22,7 @@ export default function NovaSolicitacaoPopup({ notificacao, onFechar }) {
   const titulo = notificacao.data?.solicitante_nome ?? 'Nova solicitação de transporte'
   const detalhe = notificacao.data?.detalhe
 
-  return (
+  return createPortal(
     <>
       <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
@@ -54,6 +55,7 @@ export default function NovaSolicitacaoPopup({ notificacao, onFechar }) {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   )
 }
