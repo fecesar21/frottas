@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import * as notificacoesApi from '../api/notificacoes'
 
+const MAX_IDS_ANUNCIADOS = 200
+
 function tocarBeep() {
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext
@@ -23,12 +25,33 @@ function tocarBeep() {
   }
 }
 
+function chaveAnunciados(userId) {
+  return `notificacoes_popup_anunciados_${userId}`
+}
+
+function lerAnunciados(userId) {
+  try {
+    const bruto = window.localStorage.getItem(chaveAnunciados(userId))
+    return new Set(bruto ? JSON.parse(bruto) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function salvarAnunciados(userId, idsSet) {
+  try {
+    const ids = [...idsSet].slice(-MAX_IDS_ANUNCIADOS)
+    window.localStorage.setItem(chaveAnunciados(userId), JSON.stringify(ids))
+  } catch {
+    // localStorage indisponível (ex: modo privado) — pop-up pode repetir entre sessões, aceitável.
+  }
+}
+
 export function useNotificacoes() {
   const { user } = useAuth()
   const qc = useQueryClient()
   const totalAnteriorRef = useRef(0)
-  const idsVistosRef = useRef(new Set())
-  const primeiraCargaRef = useRef(true)
+  const anunciadosRef = useRef(null)
   const [pendentes, setPendentes] = useState([])
   const habilitado = user?.perfil === 'admin' || user?.perfil === 'gestor'
 
@@ -50,20 +73,19 @@ export function useNotificacoes() {
   }, [total])
 
   useEffect(() => {
-    if (notificacoes.length === 0) return
+    if (!user?.id || notificacoes.length === 0) return
 
-    if (primeiraCargaRef.current) {
-      primeiraCargaRef.current = false
-      notificacoes.forEach(n => idsVistosRef.current.add(n.id))
-      return
+    if (!anunciadosRef.current) {
+      anunciadosRef.current = lerAnunciados(user.id)
     }
 
-    const novas = notificacoes.filter(n => !idsVistosRef.current.has(n.id))
+    const novas = notificacoes.filter(n => !anunciadosRef.current.has(n.id))
     if (novas.length === 0) return
 
-    novas.forEach(n => idsVistosRef.current.add(n.id))
+    novas.forEach(n => anunciadosRef.current.add(n.id))
+    salvarAnunciados(user.id, anunciadosRef.current)
     setPendentes(prev => [...prev, ...novas])
-  }, [notificacoes])
+  }, [notificacoes, user?.id])
 
   const removerPendente = (id) => {
     setPendentes(prev => prev.filter(n => n.id !== id))
