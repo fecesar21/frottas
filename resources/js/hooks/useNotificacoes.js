@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import * as notificacoesApi from '../api/notificacoes'
@@ -27,6 +27,9 @@ export function useNotificacoes() {
   const { user } = useAuth()
   const qc = useQueryClient()
   const totalAnteriorRef = useRef(0)
+  const idsVistosRef = useRef(new Set())
+  const primeiraCargaRef = useRef(true)
+  const [pendentes, setPendentes] = useState([])
   const habilitado = user?.perfil === 'admin' || user?.perfil === 'gestor'
 
   const { data } = useQuery({
@@ -46,11 +49,31 @@ export function useNotificacoes() {
     totalAnteriorRef.current = total
   }, [total])
 
+  useEffect(() => {
+    if (notificacoes.length === 0) return
+
+    if (primeiraCargaRef.current) {
+      primeiraCargaRef.current = false
+      notificacoes.forEach(n => idsVistosRef.current.add(n.id))
+      return
+    }
+
+    const novas = notificacoes.filter(n => !idsVistosRef.current.has(n.id))
+    if (novas.length === 0) return
+
+    novas.forEach(n => idsVistosRef.current.add(n.id))
+    setPendentes(prev => [...prev, ...novas])
+  }, [notificacoes])
+
+  const removerPendente = (id) => {
+    setPendentes(prev => prev.filter(n => n.id !== id))
+  }
+
   const marcarTodasLidas = async () => {
     await notificacoesApi.marcarTodasLidas()
     qc.setQueryData(['notificacoes', 'nao-lidas'], { total: 0, notificacoes: [] })
     totalAnteriorRef.current = 0
   }
 
-  return { total, notificacoes, marcarTodasLidas }
+  return { total, notificacoes, marcarTodasLidas, pendentes, removerPendente }
 }

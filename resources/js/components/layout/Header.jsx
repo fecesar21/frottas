@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { Menu, Bell } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotificacoes } from '../../hooks/useNotificacoes'
+import NovaSolicitacaoPopup from '../notificacoes/NovaSolicitacaoPopup'
 
 const perfilLabel = { admin: 'Administrador', gestor: 'Gestor', operador: 'Operador' }
 
 export default function Header({ title, onMenuClick }) {
   const { user } = useAuth()
-  const { total, notificacoes } = useNotificacoes()
+  const { total, notificacoes, pendentes, removerPendente } = useNotificacoes()
   const [painelAberto, setPainelAberto] = useState(false)
   const containerRef = useRef(null)
 
@@ -93,6 +94,13 @@ export default function Header({ title, onMenuClick }) {
           </span>
         </div>
       </div>
+      {pendentes[0] && (
+        <NovaSolicitacaoPopup
+          key={pendentes[0].id}
+          notificacao={pendentes[0]}
+          onFechar={() => removerPendente(pendentes[0].id)}
+        />
+      )}
     </header>
   )
 }

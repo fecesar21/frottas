@@ -25,7 +25,13 @@ class SolicitacaoService
         $solicitacao = Solicitacao::create($data);
 
         $destinatarios = Usuario::where('perfil', 'admin')
-            ->orWhere(fn ($q) => $q->where('perfil', 'gestor')->where('unidade_id', $solicitacao->unidade_id))
+            ->orWhere(function ($q) use ($solicitacao) {
+                $q->where('perfil', 'gestor')
+                    ->where(function ($q) use ($solicitacao) {
+                        $q->where('unidade_id', $solicitacao->unidade_id)
+                            ->orWhereHas('unidade', fn ($q) => $q->where('tipo', 'matriz'));
+                    });
+            })
             ->get();
 
         Notification::send($destinatarios, new NovaSolicitacaoTransporte($solicitacao));
