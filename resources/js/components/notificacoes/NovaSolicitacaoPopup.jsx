@@ -24,8 +24,9 @@ export default function NovaSolicitacaoPopup({ notificacao, onFechar }) {
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+      <div className="fixed inset-0 bg-black/40 z-[100]" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-[calc(100%-2rem)] max-w-sm">
+        <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
           <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center">
             <Bell size={24} />
           </div>
