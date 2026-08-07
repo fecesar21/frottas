@@ -100,15 +100,22 @@ export default function SolicitacoesList() {
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{detalheMotivo(s)}</td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(s.saida_at)}</td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(s.chegada_at)}</td>
-                <td className="px-4 py-3"><Badge value={s.status} /></td>
+                <td className="px-4 py-3">
+                  <Badge value={s.status} />
+                  {s.status === 'recusada' && (
+                    <p className="text-xs text-red-600 mt-1" title={s.motivo_recusa}>
+                      Recusada: {s.motivo_recusa}
+                    </p>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.motorista_nome ?? '—'}</td>
                 <td className="px-4 py-3">
-                  {s.status === 'aberto' && (
+                  {(s.status === 'aberto' || s.status === 'recusada') && (
                     <button
                       onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
                       className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors"
                     >
-                      Aceitar
+                      {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
                     </button>
                   )}
                 </td>
