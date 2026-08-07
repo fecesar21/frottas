@@ -12,15 +12,15 @@ class MotoristaFactory extends Factory
     public function definition(): array
     {
         return [
-            'nome'          => fake()->name(),
-            'cpf'           => fake()->unique()->numerify('###.###.###-##'),
-            'telefone'      => fake()->phoneNumber(),
-            'email'         => fake()->unique()->safeEmail(),
-            'cnh_numero'    => fake()->unique()->numerify('###########'),
+            'nome' => fake()->name(),
+            'cpf' => fake()->unique()->numerify('###.###.###-##'),
+            'telefone' => fake()->phoneNumber(),
+            'email' => fake()->unique()->safeEmail(),
+            'cnh_numero' => fake()->unique()->numerify('###########'),
             'cnh_categoria' => fake()->randomElement(['A', 'B', 'C', 'D', 'E', 'AB']),
-            'cnh_validade'  => fake()->dateTimeBetween('+1 month', '+5 years')->format('Y-m-d'),
-            'turno_padrao'  => fake()->randomElement(['dia', 'noite']),
-            'status'        => 'ativo',
+            'cnh_validade' => fake()->dateTimeBetween('+1 month', '+5 years')->format('Y-m-d'),
+            'turno_padrao' => fake()->randomElement(['dia', 'noite']),
+            'status' => 'ativo',
         ];
     }
 

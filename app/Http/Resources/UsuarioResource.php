@@ -10,16 +10,16 @@ class UsuarioResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'           => $this->id,
-            'nome'         => $this->nome,
-            'cpf'          => $this->cpf,
-            'email'        => $this->email,
-            'perfil'       => $this->perfil,
-            'ativo'        => $this->ativo,
+            'id' => $this->id,
+            'nome' => $this->nome,
+            'cpf' => $this->cpf,
+            'email' => $this->email,
+            'perfil' => $this->perfil,
+            'ativo' => $this->ativo,
             'motorista_id' => $this->motorista_id,
-            'unidade_id'   => $this->unidade_id,
-            'ultimo_acesso'=> $this->ultimo_acesso,
-            'criado_em'    => $this->created_at,
+            'unidade_id' => $this->unidade_id,
+            'ultimo_acesso' => $this->ultimo_acesso,
+            'criado_em' => $this->created_at,
         ];
     }
 }

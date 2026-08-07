@@ -14,10 +14,10 @@ class GerarSemanaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'data_inicio'        => 'required|date',
-            'motoristas_dia'     => 'nullable|array',
-            'motoristas_dia.*'   => 'uuid|exists:motoristas,id',
-            'motoristas_noite'   => 'nullable|array',
+            'data_inicio' => 'required|date',
+            'motoristas_dia' => 'nullable|array',
+            'motoristas_dia.*' => 'uuid|exists:motoristas,id',
+            'motoristas_noite' => 'nullable|array',
             'motoristas_noite.*' => 'uuid|exists:motoristas,id',
         ];
     }

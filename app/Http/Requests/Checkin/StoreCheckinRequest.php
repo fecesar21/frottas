@@ -14,12 +14,12 @@ class StoreCheckinRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'motorista_id'            => 'nullable|uuid|exists:motoristas,id',
-            'veiculo_id'              => 'required|uuid|exists:veiculos,id',
-            'turno'                   => 'required|in:dia,noite',
-            'km_saida'                => 'required|integer|min:0',
+            'motorista_id' => 'nullable|uuid|exists:motoristas,id',
+            'veiculo_id' => 'required|uuid|exists:veiculos,id',
+            'turno' => 'required|in:dia,noite',
+            'km_saida' => 'required|integer|min:0',
             'nivel_combustivel_saida' => 'nullable|numeric|min:0|max:100',
-            'escala_id'               => 'nullable|uuid|exists:escalas,id',
+            'escala_id' => 'nullable|uuid|exists:escalas,id',
         ];
     }
 

@@ -17,13 +17,13 @@ class ViagemFactory extends Factory
         $kmSaida = fake()->numberBetween(1000, 100000);
 
         return [
-            'veiculo_id'   => Veiculo::factory(),
+            'veiculo_id' => Veiculo::factory(),
             'motorista_id' => Motorista::factory(),
-            'origem'       => fake()->randomElement($cidades),
-            'destino'      => fake()->randomElement($cidades),
-            'km_saida'     => $kmSaida,
-            'saida_at'     => now()->subHours(fake()->numberBetween(1, 12)),
-            'status'       => 'em_andamento',
+            'origem' => fake()->randomElement($cidades),
+            'destino' => fake()->randomElement($cidades),
+            'km_saida' => $kmSaida,
+            'saida_at' => now()->subHours(fake()->numberBetween(1, 12)),
+            'status' => 'em_andamento',
         ];
     }
 
@@ -33,7 +33,7 @@ class ViagemFactory extends Factory
             return [
                 'km_chegada' => $attributes['km_saida'] + fake()->numberBetween(50, 800),
                 'chegada_at' => now(),
-                'status'     => 'concluida',
+                'status' => 'concluida',
             ];
         });
     }

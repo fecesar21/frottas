@@ -24,11 +24,11 @@ class MotoristaApiTest extends TestCase
         $this->loginGestor();
 
         $this->postJson('/api/motoristas', [
-            'nome'          => 'João Silva',
-            'cpf'           => '111.111.111-11',
-            'cnh_numero'    => '12345678901',
+            'nome' => 'João Silva',
+            'cpf' => '111.111.111-11',
+            'cnh_numero' => '12345678901',
             'cnh_categoria' => 'D',
-            'cnh_validade'  => '2028-01-01',
+            'cnh_validade' => '2028-01-01',
         ])->assertCreated()->assertJsonPath('data.nome', 'João Silva');
     }
 
@@ -38,11 +38,11 @@ class MotoristaApiTest extends TestCase
         Motorista::factory()->create(['cpf' => '999.999.999-99']);
 
         $this->postJson('/api/motoristas', [
-            'nome'          => 'Outro',
-            'cpf'           => '999.999.999-99',
-            'cnh_numero'    => '99999999999',
+            'nome' => 'Outro',
+            'cpf' => '999.999.999-99',
+            'cnh_numero' => '99999999999',
             'cnh_categoria' => 'B',
-            'cnh_validade'  => '2027-01-01',
+            'cnh_validade' => '2027-01-01',
         ])->assertUnprocessable();
     }
 

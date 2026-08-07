@@ -5,13 +5,13 @@ return [
 
     'connections' => [
         'default' => [
-            'hosts'    => [env('LDAP_HOST', '')],
+            'hosts' => [env('LDAP_HOST', '')],
             'username' => env('LDAP_USERNAME', ''),
             'password' => env('LDAP_PASSWORD', ''),
-            'port'     => env('LDAP_PORT', 636),
-            'base_dn'  => env('LDAP_BASE_DN', ''),
-            'timeout'  => env('LDAP_TIMEOUT', 5),
-            'use_tls'  => env('LDAP_USE_SSL', true),
+            'port' => env('LDAP_PORT', 636),
+            'base_dn' => env('LDAP_BASE_DN', ''),
+            'timeout' => env('LDAP_TIMEOUT', 5),
+            'use_tls' => env('LDAP_USE_SSL', true),
             'use_starttls' => env('LDAP_USE_TLS', false),
 
             // O Domain Controller usa um certificado emitido pela CA interna
@@ -28,9 +28,9 @@ return [
     ],
 
     'logging' => [
-        'enabled'  => env('LDAP_LOGGING', true),
-        'channel'  => env('LOG_CHANNEL', 'stack'),
-        'level'    => 'info',
+        'enabled' => env('LDAP_LOGGING', true),
+        'channel' => env('LOG_CHANNEL', 'stack'),
+        'level' => 'info',
     ],
 
     'cache' => [

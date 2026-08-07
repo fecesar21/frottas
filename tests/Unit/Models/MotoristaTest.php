@@ -3,6 +3,7 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Motorista;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Tests\TestCase;
 
 class MotoristaTest extends TestCase
@@ -27,10 +28,10 @@ class MotoristaTest extends TestCase
 
     public function test_motorista_tem_relacoes_definidas(): void
     {
-        $motorista = new Motorista();
+        $motorista = new Motorista;
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $motorista->checkins());
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $motorista->viagens());
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $motorista->abastecimentos());
+        $this->assertInstanceOf(HasMany::class, $motorista->checkins());
+        $this->assertInstanceOf(HasMany::class, $motorista->viagens());
+        $this->assertInstanceOf(HasMany::class, $motorista->abastecimentos());
     }
 }
