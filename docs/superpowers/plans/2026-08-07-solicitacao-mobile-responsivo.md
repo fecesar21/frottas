@@ -1,6 +1,6 @@
 # Responsividade mobile do app de solicitação Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Eliminar o corte de conteúdo em smartphone no app de solicitação de transporte (`resources/solicitacao-js`), replicando o padrão de sidebar responsiva já usado no app de motoristas (`resources/js`).
 
@@ -26,7 +26,7 @@
 - Consumes: `useAuth()` de `resources/solicitacao-js/contexts/AuthContext.jsx` (já usado, sem mudança de assinatura), `NavLink`/`Navigate`/`Outlet`/`useNavigate` de `react-router-dom`.
 - Produces: `Layout({ children })` continua com a mesma assinatura pública (usado por `NovaSolicitacao.jsx` e `MinhasSolicitacoes.jsx` como `<Layout>{...}</Layout>`) — nenhuma prop nova é exigida dos consumidores.
 
-- [ ] **Step 1: Reescrever `Layout.jsx` com sidebar em drawer + barra mobile**
+- [x] **Step 1: Reescrever `Layout.jsx` com sidebar em drawer + barra mobile**
 
 Substituir o conteúdo do arquivo por:
 
@@ -148,7 +148,7 @@ export default function Layout({ children }) {
 
 Mudanças-chave em relação ao original: `min-h-screen bg-gray-50 flex` → `min-h-screen bg-gray-50 md:flex` (evita `flex` empurrar a sidebar fixa em mobile); `<aside>` ganha `fixed`/`transform`/`md:sticky` e o botão `X`; overlay novo; `<main>` agora está dentro de um wrapper `flex-1 min-w-0 flex flex-col` que também contém a barra mobile com o botão `Menu`.
 
-- [ ] **Step 2: Verificar visualmente em mobile**
+- [x] **Step 2: Verificar visualmente em mobile**
 
 Rodar `npm run dev` (a partir da raiz do projeto) e abrir `http://localhost:5173/solicitacao.html` no navegador com o DevTools em modo responsivo, largura < 640px (ex: 375px).
 
@@ -159,13 +159,13 @@ Esperado:
 - Clicar em um item do menu navega e fecha a sidebar automaticamente.
 - Nenhum conteúdo horizontal cortado ou com scroll lateral indesejado na página.
 
-- [ ] **Step 3: Verificar visualmente em desktop**
+- [x] **Step 3: Verificar visualmente em desktop**
 
 No mesmo DevTools, mudar a largura para ≥ 768px (ex: 1024px).
 
 Esperado: sidebar aparece fixa à esquerda como antes (sem hambúrguer, sem overlay), igual ao comportamento anterior à mudança.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add resources/solicitacao-js/components/Layout.jsx
@@ -183,7 +183,7 @@ git commit -m "fix: sidebar responsiva (drawer mobile) no app de solicitação"
 - Consumes: nenhuma interface nova — só troca de classe CSS na `<div>` que envolve os campos Origem/Destino.
 - Produces: nenhuma interface nova.
 
-- [ ] **Step 1: Trocar a classe do grid Origem/Destino**
+- [x] **Step 1: Trocar a classe do grid Origem/Destino**
 
 Em `resources/solicitacao-js/pages/NovaSolicitacao.jsx:101`, trocar:
 
@@ -197,13 +197,13 @@ por:
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 ```
 
-- [ ] **Step 2: Verificar visualmente**
+- [x] **Step 2: Verificar visualmente**
 
 Com `npm run dev` rodando, abrir `http://localhost:5173/solicitacao.html`, fazer login como solicitante e selecionar o motivo "Transferência de Paciente" ou "Transporte de Colaborador(es)" (os únicos que exibem os campos Origem/Destino).
 
 Em viewport < 640px: os selects Origem e Destino aparecem empilhados (uma coluna). Em viewport ≥ 640px: aparecem lado a lado (duas colunas), como antes.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add resources/solicitacao-js/pages/NovaSolicitacao.jsx
@@ -221,7 +221,7 @@ git commit -m "fix: grid responsivo em Origem/Destino na Nova Solicitação"
 - Consumes: nenhuma interface nova — apenas envolve a `<table>` existente em um wrapper `<div>`.
 - Produces: nenhuma interface nova.
 
-- [ ] **Step 1: Envolver a tabela em um wrapper com `overflow-x-auto`**
+- [x] **Step 1: Envolver a tabela em um wrapper com `overflow-x-auto`**
 
 Em `resources/solicitacao-js/pages/MinhasSolicitacoes.jsx`, dentro do card (linha 37), trocar:
 
@@ -265,13 +265,13 @@ por:
       </div>
 ```
 
-- [ ] **Step 2: Verificar visualmente**
+- [x] **Step 2: Verificar visualmente**
 
 Com `npm run dev` rodando, abrir "Minhas Solicitações" em viewport < 640px com pelo menos uma solicitação cadastrada (criar uma pela tela "Nova Solicitação" se a lista estiver vazia).
 
 Esperado: a tabela rola horizontalmente dentro do próprio card (arrastando o dedo/mouse sobre ela), sem que a página inteira role lateralmente nem que o cabeçalho/menu se desloque.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add resources/solicitacao-js/pages/MinhasSolicitacoes.jsx
