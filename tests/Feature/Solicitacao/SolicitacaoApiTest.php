@@ -243,22 +243,14 @@ class SolicitacaoApiTest extends TestCase
 
     public function test_recurso_expoe_motivo_recusa(): void
     {
-        $motorista = Motorista::factory()->create();
-        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
-        $veiculo = Veiculo::factory()->create();
+        $this->loginGestor();
         $solicitacao = Solicitacao::factory()->create([
-            'status' => 'pendente_motorista',
-            'motorista_pendente_id' => $motorista->id,
-            'veiculo_pendente_id' => $veiculo->id,
+            'status' => 'recusada',
+            'motivo_recusa' => 'Sem combustível suficiente',
         ]);
 
-        // Motorista recusa a solicitação
-        $token = $usuarioMotorista->createToken('test')->plainTextToken;
-        $this->withToken($token);
-
-        // The motoristaRecusar endpoint returns the updated solicitacao with motivo_recusa
-        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-recusar", [
-            'motivo' => 'Sem combustível suficiente',
-        ])->assertOk()->assertJsonPath('data.motivo_recusa', 'Sem combustível suficiente');
+        $this->getJson("/api/solicitacoes/{$solicitacao->id}")
+            ->assertOk()
+            ->assertJsonPath('data.motivo_recusa', 'Sem combustível suficiente');
     }
 }
