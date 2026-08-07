@@ -55,6 +55,21 @@ class SolicitacaoApiTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
+    public function test_motorista_ve_apenas_solicitacoes_designadas_para_ele(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        Solicitacao::factory()->create(['status' => 'pendente_motorista', 'motorista_pendente_id' => $motorista->id]);
+        Solicitacao::factory()->create(['status' => 'pendente_motorista', 'motorista_pendente_id' => Motorista::factory()->create()->id]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->getJson('/api/solicitacoes')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+    }
+
     public function test_gestor_designa_motorista_e_solicitacao_fica_pendente_motorista(): void
     {
         $this->loginGestor();

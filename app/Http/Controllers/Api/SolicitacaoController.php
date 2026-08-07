@@ -23,7 +23,8 @@ class SolicitacaoController extends Controller
         $unidadeFiltro = in_array($user->perfil, ['admin', 'gestor']) ? $r->query('unidade_id') : null;
 
         $solicitacoes = Solicitacao::with(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
-            ->when(in_array($user->perfil, ['operador', 'solicitante']), fn ($q) => $q->where('usuario_id', $user->id))
+            ->when(in_array($user->perfil, ['operador', 'solicitante']) && ! $user->motorista_id, fn ($q) => $q->where('usuario_id', $user->id))
+            ->when($user->perfil === 'operador' && $user->motorista_id, fn ($q) => $q->where('motorista_pendente_id', $user->motorista_id))
             ->when($unidadeFiltro, fn ($q) => $q->where('unidade_id', $unidadeFiltro))
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
             ->latest()

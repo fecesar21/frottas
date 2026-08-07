@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-l
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import * as viagensApi from '../../api/viagens'
+import * as solicitacoesApi from '../../api/solicitacoes'
 import Badge from '../../components/ui/Badge'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
@@ -30,6 +31,13 @@ export default function ViagemDetalhe({ viagem }) {
     refetchInterval: viagem.status === 'em_andamento' ? 30_000 : false,
   })
 
+  const { data: fila } = useQuery({
+    queryKey: ['solicitacoes', 'fila-motorista'],
+    queryFn: () => solicitacoesApi.listar({ status: 'aguardando_finalizacao_trajeto' }).then(r => r.data.data ?? r.data),
+    enabled: viagem?.status === 'em_andamento',
+    refetchInterval: 30_000,
+  })
+
   const lista = pontos ?? []
   const inicio = lista[0]
   const fim    = lista[lista.length - 1]
@@ -37,6 +45,12 @@ export default function ViagemDetalhe({ viagem }) {
 
   return (
     <div className="space-y-4">
+      {(fila ?? []).length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-2">
+          Próxima viagem aguardando ({fila.length} na fila)
+        </div>
+      )}
+
       {/* Resumo da viagem */}
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div>
