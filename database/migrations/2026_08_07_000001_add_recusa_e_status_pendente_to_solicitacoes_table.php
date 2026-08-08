@@ -9,7 +9,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('solicitacoes_new', function (Blueprint $table) {
+        // Nome de tabela temporária único (não "solicitacoes_new"): a migration
+        // 2026_08_05_000001 já usou esse nome e, como o RENAME TABLE do MySQL não
+        // renomeia as constraints de FK, a tabela atual "solicitacoes" carrega
+        // constraints nomeadas "solicitacoes_new_*" — reusar o mesmo nome aqui
+        // colide com elas (MySQL exige nomes de FK únicos por schema).
+        Schema::create('solicitacoes_tmp_20260807', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('usuario_id');
             $table->uuid('unidade_id')->nullable();
@@ -37,11 +42,11 @@ return new class extends Migration
             $table->foreign('veiculo_pendente_id')->references('id')->on('veiculos')->nullOnDelete();
         });
 
-        DB::statement('INSERT INTO solicitacoes_new (id, usuario_id, unidade_id, motivo, origem_unidade_id, destino_unidade_id, numero_atendimento, cidade, hospital_destino, fornecedor_nome, status, viagem_id, motorista_pendente_id, veiculo_pendente_id, observacoes, created_at, updated_at)
+        DB::statement('INSERT INTO solicitacoes_tmp_20260807 (id, usuario_id, unidade_id, motivo, origem_unidade_id, destino_unidade_id, numero_atendimento, cidade, hospital_destino, fornecedor_nome, status, viagem_id, motorista_pendente_id, veiculo_pendente_id, observacoes, created_at, updated_at)
             SELECT id, usuario_id, unidade_id, motivo, origem_unidade_id, destino_unidade_id, numero_atendimento, cidade, hospital_destino, fornecedor_nome, status, viagem_id, motorista_pendente_id, veiculo_pendente_id, observacoes, created_at, updated_at FROM solicitacoes');
 
         Schema::drop('solicitacoes');
-        Schema::rename('solicitacoes_new', 'solicitacoes');
+        Schema::rename('solicitacoes_tmp_20260807', 'solicitacoes');
     }
 
     public function down(): void
