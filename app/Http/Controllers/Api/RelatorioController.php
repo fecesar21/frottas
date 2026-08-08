@@ -540,4 +540,35 @@ class RelatorioController extends Controller
 
         return response()->json($rows);
     }
+
+    // ── RELATÓRIO: CHECKLIST DE VEÍCULO ──────────────────────────
+    public function checklistVeiculo(Request $r)
+    {
+        $rows = DB::table('checklists_veiculo as cv')
+            ->leftJoin('veiculos as v', 'cv.veiculo_id', '=', 'v.id')
+            ->leftJoin('motoristas as m', 'cv.motorista_id', '=', 'm.id')
+            ->when($r->veiculo_id, fn ($q, $id) => $q->where('cv.veiculo_id', $id))
+            ->when($r->data, fn ($q, $d) => $q->where('cv.data_referencia', $d))
+            ->when($r->status, fn ($q, $s) => $q->where('cv.status', $s))
+            ->orderByDesc('cv.data_referencia')
+            ->select('cv.*', 'v.placa as veiculo_placa', 'v.modelo as veiculo_modelo', 'm.nome as motorista_nome')
+            ->limit(200)
+            ->get();
+
+        $itensNaoConforme = DB::table('checklist_veiculo_respostas as r')
+            ->join('checklist_veiculo_itens_modelo as im', 'r.item_modelo_id', '=', 'im.id')
+            ->whereIn('r.checklist_veiculo_id', $rows->pluck('id'))
+            ->where('r.conforme', false)
+            ->select('r.checklist_veiculo_id', 'im.label', 'r.observacao', 'r.foto_path')
+            ->get()
+            ->groupBy('checklist_veiculo_id');
+
+        $rows = $rows->map(function ($row) use ($itensNaoConforme) {
+            $row->itens_nao_conforme_detalhe = $itensNaoConforme->get($row->id, collect())->values();
+
+            return $row;
+        });
+
+        return response()->json($rows);
+    }
 }

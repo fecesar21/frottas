@@ -8,12 +8,16 @@ use App\Http\Requests\Viagem\UpdateViagemRequest;
 use App\Http\Resources\ViagemResource;
 use App\Models\Motorista;
 use App\Models\Viagem;
+use App\Services\ChecklistVeiculoService;
 use App\Services\ViagemService;
 use Illuminate\Http\Request;
 
 class ViagemController extends Controller
 {
-    public function __construct(private ViagemService $service) {}
+    public function __construct(
+        private ViagemService $service,
+        private ChecklistVeiculoService $checklistService,
+    ) {}
 
     public function index(Request $r)
     {
@@ -55,6 +59,10 @@ class ViagemController extends Controller
             $data['motorista_id'] = auth()->user()->motorista_id;
             $data['veiculo_id'] = $checkin->getAttribute('veiculo_id');
             $data['checkin_id'] = $checkin->getAttribute('id');
+        }
+
+        if ($this->checklistService->bloqueiaOperacao($data['veiculo_id'])) {
+            return response()->json(['error' => 'Checklist do veículo pendente. Realize o checklist antes de iniciar a viagem.'], 403);
         }
 
         $viagem = $this->service->store($data);

@@ -63,6 +63,16 @@ class Veiculo extends Model
         return $this->belongsToMany(Unidade::class, 'veiculo_unidade');
     }
 
+    public function checklistsVeiculo(): HasMany
+    {
+        return $this->hasMany(ChecklistVeiculo::class, 'veiculo_id');
+    }
+
+    public function checklistHoje(): HasOne
+    {
+        return $this->hasOne(ChecklistVeiculo::class, 'veiculo_id')->whereDate('data_referencia', now()->toDateString());
+    }
+
     public function getPrecisaManutencaoAttribute(): bool
     {
         return $this->km_proxima_revisao !== null && $this->km_atual >= $this->km_proxima_revisao;

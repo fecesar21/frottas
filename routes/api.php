@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AbastecimentoController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckinController;
+use App\Http\Controllers\Api\ChecklistVeiculoController;
 use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\MotoristaController;
@@ -57,6 +58,13 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::patch('checkins/{checkin}/checkout', [CheckinController::class, 'checkout']);
     Route::apiResource('checkins', CheckinController::class)->only(['index', 'show', 'store']);
 
+    // Checklist de Veículo
+    Route::get('checklist-veiculo/modelo/itens', [ChecklistVeiculoController::class, 'itensModelo']);
+    Route::get('checklist-veiculo/pendente', [ChecklistVeiculoController::class, 'pendente']);
+    Route::patch('checklist-veiculo/{checklistVeiculo}/item', [ChecklistVeiculoController::class, 'atualizarItem']);
+    Route::patch('checklist-veiculo/{checklistVeiculo}/enviar', [ChecklistVeiculoController::class, 'enviar']);
+    Route::apiResource('checklist-veiculo', ChecklistVeiculoController::class)->only(['index', 'show']);
+
     // Passagem de Plantão
     Route::get('plantao/modelo/itens', [PlantaoController::class, 'modeloItens']);
     Route::patch('plantao/{plantao}/item', [PlantaoController::class, 'atualizarItem']);
@@ -99,6 +107,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
         Route::get('motoristas/pdf', [RelatorioController::class, 'motoristasPdf']);
         Route::get('eficiencia', [RelatorioController::class, 'eficiencia']);
         Route::get('checkins', [RelatorioController::class, 'checkins']);
+        Route::get('checklist-veiculo', [RelatorioController::class, 'checklistVeiculo']);
     });
 
     // Unidades

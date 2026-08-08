@@ -4,6 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Checkin extends Model {
     use HasFactory, HasUuids;
@@ -19,4 +20,5 @@ class Checkin extends Model {
     public function motorista(): BelongsTo { return $this->belongsTo(Motorista::class); }
     public function veiculo(): BelongsTo   { return $this->belongsTo(Veiculo::class); }
     public function escala(): BelongsTo    { return $this->belongsTo(Escala::class); }
+    public function checklistVeiculo(): HasOne { return $this->hasOne(ChecklistVeiculo::class, 'checkin_id'); }
 }

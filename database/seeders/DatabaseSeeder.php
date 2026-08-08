@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             MotoristaSeeder::class,
             VeiculoSeeder::class,
             ChecklistSeeder::class,
+            ChecklistVeiculoSeeder::class,
             UnidadeSeeder::class,
         ]);
     }

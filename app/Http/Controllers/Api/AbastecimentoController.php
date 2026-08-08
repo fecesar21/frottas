@@ -7,11 +7,14 @@ use App\Http\Requests\Abastecimento\StoreAbastecimentoRequest;
 use App\Http\Resources\AbastecimentoResource;
 use App\Models\Abastecimento;
 use App\Models\Motorista;
+use App\Services\ChecklistVeiculoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AbastecimentoController extends Controller
 {
+    public function __construct(private ChecklistVeiculoService $checklistService) {}
+
     public function index(Request $r)
     {
         $perPage = max(1, min((int) $r->integer('per_page', 25), 100));
@@ -49,6 +52,10 @@ class AbastecimentoController extends Controller
 
             $data['motorista_id'] = auth()->user()->motorista_id;
             $data['veiculo_id'] = $checkin->getAttribute('veiculo_id');
+        }
+
+        if ($this->checklistService->bloqueiaOperacao($data['veiculo_id'])) {
+            return response()->json(['error' => 'Checklist do veículo pendente. Realize o checklist antes de registrar o abastecimento.'], 403);
         }
 
         $data['abastecido_at'] = $data['abastecido_at'] ?? now();
