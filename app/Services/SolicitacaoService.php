@@ -9,8 +9,11 @@ use App\Models\Usuario;
 use App\Models\Veiculo;
 use App\Models\Viagem;
 use App\Notifications\NovaSolicitacaoTransporte;
+use App\Notifications\NovaViagemDesignada;
+use App\Notifications\SolicitacaoRecusadaPeloMotorista;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 
 class SolicitacaoService
 {
@@ -39,36 +42,95 @@ class SolicitacaoService
         return $solicitacao;
     }
 
+    /**
+     * Gestor designa motorista/veículo. Não cria mais a Viagem aqui — apenas
+     * marca a solicitação como pendente da confirmação do motorista.
+     */
     public function aceitar(Solicitacao $solicitacao, string $motoristaId, string $veiculoId): Solicitacao
     {
-        return DB::transaction(function () use ($solicitacao, $motoristaId, $veiculoId) {
+        $solicitacao->update([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motoristaId,
+            'veiculo_pendente_id' => $veiculoId,
+            'motivo_recusa' => null,
+        ]);
+
+        $motorista = Motorista::with('usuario')->findOrFail($motoristaId);
+        if ($motorista->usuario) {
+            Notification::send($motorista->usuario, new NovaViagemDesignada($solicitacao->fresh()));
+        }
+
+        return $solicitacao->fresh();
+    }
+
+    /**
+     * Motorista aceita a designação. Sem viagem ativa, exige km_saida e cria a Viagem.
+     * Com viagem ativa, entra/permanece na fila (aguardando_finalizacao_trajeto).
+     */
+    public function motoristaAceitar(Solicitacao $solicitacao, string $motoristaId, ?int $kmSaida = null): Solicitacao
+    {
+        return DB::transaction(function () use ($solicitacao, $motoristaId, $kmSaida) {
+            /** @var Solicitacao $solicitacao */
+            $solicitacao = Solicitacao::whereKey($solicitacao->id)->lockForUpdate()->firstOrFail();
+
+            if (! in_array($solicitacao->status, ['pendente_motorista', 'aguardando_finalizacao_trajeto'])) {
+                throw ValidationException::withMessages([
+                    'status' => 'Esta solicitação já foi tratada.',
+                ]);
+            }
+
             $emViagem = Viagem::where('motorista_id', $motoristaId)
                 ->where('status', 'em_andamento')
                 ->exists();
 
             if ($emViagem) {
-                $solicitacao->update([
-                    'status' => 'aguardando_finalizacao_trajeto',
-                    'motorista_pendente_id' => $motoristaId,
-                    'veiculo_pendente_id' => $veiculoId,
-                ]);
+                // Nunca pode existir uma segunda Viagem em_andamento para o mesmo
+                // motorista — mesmo que o client tenha informado km_saida (estado
+                // desatualizado ou aceites concorrentes), a solicitação vai para a fila.
+                $solicitacao->update(['status' => 'aguardando_finalizacao_trajeto']);
 
                 return $solicitacao->fresh();
             }
 
-            $kmRetornoTrajetoAnterior = Viagem::where('motorista_id', $motoristaId)
-                ->where('status', 'concluida')
-                ->whereNotNull('km_chegada')
-                ->latest('chegada_at')
-                ->value('km_chegada');
+            if ($kmSaida === null) {
+                throw ValidationException::withMessages([
+                    'km_saida' => 'Informe o KM de saída para iniciar a viagem.',
+                ]);
+            }
 
-            return $this->efetivarAceite($solicitacao, $motoristaId, $veiculoId, $kmRetornoTrajetoAnterior);
+            return $this->efetivarAceite($solicitacao, $motoristaId, $solicitacao->veiculo_pendente_id, $kmSaida);
         });
     }
 
+    public function motoristaRecusar(Solicitacao $solicitacao, string $motoristaId, string $motivo): Solicitacao
+    {
+        $motorista = Motorista::findOrFail($motoristaId);
+
+        $solicitacao->update([
+            'status' => 'recusada',
+            'motivo_recusa' => $motivo,
+            'motorista_pendente_id' => null,
+            'veiculo_pendente_id' => null,
+        ]);
+
+        $destinatarios = Usuario::where('perfil', 'admin')
+            ->orWhere(function ($q) use ($solicitacao) {
+                $q->where('perfil', 'gestor')
+                    ->where(function ($q) use ($solicitacao) {
+                        $q->where('unidade_id', $solicitacao->unidade_id)
+                            ->orWhereHas('unidade', fn ($q) => $q->where('tipo', 'matriz'));
+                    });
+            })
+            ->get();
+
+        Notification::send($destinatarios, new SolicitacaoRecusadaPeloMotorista($solicitacao->fresh(), $motorista->nome, $motivo));
+
+        return $solicitacao->fresh();
+    }
+
     /**
-     * Processa a solicitação que ficava aguardando o motorista finalizar o trajeto em curso.
-     * Chamado após a conclusão de uma viagem, permitindo então o checkout/check-in do motorista.
+     * Chamado após a conclusão de uma viagem: avisa o motorista para informar
+     * o KM de saída da próxima da fila (FIFO). Não cria a Viagem sozinha.
      */
     public function processarPendentePara(string $motoristaId, ?int $kmRetornoTrajetoAnterior = null): ?Solicitacao
     {
@@ -81,12 +143,12 @@ class SolicitacaoService
             return null;
         }
 
-        return DB::transaction(fn () => $this->efetivarAceite(
-            $solicitacao,
-            $solicitacao->motorista_pendente_id,
-            $solicitacao->veiculo_pendente_id,
-            $kmRetornoTrajetoAnterior
-        ));
+        $motorista = Motorista::with('usuario')->find($motoristaId);
+        if ($motorista?->usuario) {
+            Notification::send($motorista->usuario, new NovaViagemDesignada($solicitacao, fila: true));
+        }
+
+        return $solicitacao;
     }
 
     public function cancelar(Solicitacao $solicitacao): Solicitacao
@@ -96,12 +158,18 @@ class SolicitacaoService
         return $solicitacao->fresh();
     }
 
-    private function efetivarAceite(Solicitacao $solicitacao, string $motoristaId, string $veiculoId, ?int $kmRetornoTrajetoAnterior = null): Solicitacao
+    private function efetivarAceite(Solicitacao $solicitacao, string $motoristaId, string $veiculoId, int $kmSaida): Solicitacao
     {
         $motorista = Motorista::with('checkinAtivo')->findOrFail($motoristaId);
         $checkin = $motorista->checkinAtivo;
 
         if ($checkin && $checkin->veiculo_id !== $veiculoId) {
+            $kmRetornoTrajetoAnterior = Viagem::where('motorista_id', $motoristaId)
+                ->where('status', 'concluida')
+                ->whereNotNull('km_chegada')
+                ->latest('chegada_at')
+                ->value('km_chegada');
+
             $checkin = $this->trocarVeiculoDoCheckin($checkin, $veiculoId, $kmRetornoTrajetoAnterior);
         }
 
@@ -113,7 +181,7 @@ class SolicitacaoService
             'destino' => $solicitacao->destinoUnidade?->nome ?? $solicitacao->hospital_destino ?? '',
             'motivo_viagem' => $solicitacao->motivo,
             'numero_atendimento' => $solicitacao->numero_atendimento,
-            'km_saida' => 0,
+            'km_saida' => $kmSaida,
             'saida_at' => now(),
             'status' => 'em_andamento',
         ]);

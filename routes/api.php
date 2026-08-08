@@ -73,7 +73,9 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     // Solicitações de Transporte
     Route::patch('solicitacoes/{solicitacao}/aceitar', [SolicitacaoController::class, 'aceitar'])->name('solicitacoes.aceitar');
     Route::patch('solicitacoes/{solicitacao}/cancelar', [SolicitacaoController::class, 'cancelar'])->name('solicitacoes.cancelar');
-    Route::apiResource('solicitacoes', SolicitacaoController::class)->only(['index', 'show', 'store']);
+    Route::patch('solicitacoes/{solicitacao}/motorista-aceitar', [SolicitacaoController::class, 'motoristaAceitar'])->name('solicitacoes.motorista-aceitar');
+    Route::patch('solicitacoes/{solicitacao}/motorista-recusar', [SolicitacaoController::class, 'motoristaRecusar'])->name('solicitacoes.motorista-recusar');
+    Route::apiResource('solicitacoes', SolicitacaoController::class)->parameters(['solicitacoes' => 'solicitacao'])->only(['index', 'show', 'store']);
 
     // Abastecimentos
     Route::get('abastecimentos/resumo', [AbastecimentoController::class, 'resumo']);

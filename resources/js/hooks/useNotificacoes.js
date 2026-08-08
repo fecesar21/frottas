@@ -53,7 +53,7 @@ export function useNotificacoes() {
   const totalAnteriorRef = useRef(0)
   const anunciadosRef = useRef(null)
   const [pendentes, setPendentes] = useState([])
-  const habilitado = user?.perfil === 'admin' || user?.perfil === 'gestor'
+  const habilitado = user?.perfil === 'admin' || user?.perfil === 'gestor' || (user?.perfil === 'operador' && !!user?.motorista_id)
 
   const { data } = useQuery({
     queryKey: ['notificacoes', 'nao-lidas'],

@@ -21,7 +21,7 @@ class Solicitacao extends Model
         'usuario_id', 'unidade_id', 'motivo',
         'origem_unidade_id', 'destino_unidade_id', 'numero_atendimento',
         'cidade', 'hospital_destino', 'fornecedor_nome',
-        'status', 'viagem_id', 'motorista_pendente_id', 'veiculo_pendente_id', 'observacoes',
+        'status', 'viagem_id', 'motorista_pendente_id', 'veiculo_pendente_id', 'motivo_recusa', 'observacoes',
     ];
 
     /**

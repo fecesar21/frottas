@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Menu, Bell } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotificacoes } from '../../hooks/useNotificacoes'
 import NovaSolicitacaoPopup from '../notificacoes/NovaSolicitacaoPopup'
+import NovaViagemDesignadaPopup from '../notificacoes/NovaViagemDesignadaPopup'
+import * as viagensApi from '../../api/viagens'
 
 const perfilLabel = { admin: 'Administrador', gestor: 'Gestor', operador: 'Operador' }
 
@@ -11,6 +14,14 @@ export default function Header({ title, onMenuClick }) {
   const { total, notificacoes, pendentes, removerPendente } = useNotificacoes()
   const [painelAberto, setPainelAberto] = useState(false)
   const containerRef = useRef(null)
+
+  const ehMotorista = user?.perfil === 'operador' && !!user?.motorista_id
+  const { data: viagensAtivas } = useQuery({
+    queryKey: ['viagens', 'ativa-motorista'],
+    queryFn: () => viagensApi.listar({ status: 'em_andamento' }).then(r => r.data.data ?? r.data),
+    enabled: ehMotorista,
+  })
+  const temViagemAtiva = (viagensAtivas ?? []).length > 0
 
   useEffect(() => {
     if (!painelAberto) return
@@ -94,7 +105,15 @@ export default function Header({ title, onMenuClick }) {
           </span>
         </div>
       </div>
-      {pendentes[0] && (
+      {pendentes[0] && pendentes[0].type?.endsWith('NovaViagemDesignada') && (
+        <NovaViagemDesignadaPopup
+          key={pendentes[0].id}
+          notificacao={pendentes[0]}
+          temViagemAtiva={temViagemAtiva}
+          onFechar={() => removerPendente(pendentes[0].id)}
+        />
+      )}
+      {pendentes[0] && !pendentes[0].type?.endsWith('NovaViagemDesignada') && (
         <NovaSolicitacaoPopup
           key={pendentes[0].id}
           notificacao={pendentes[0]}

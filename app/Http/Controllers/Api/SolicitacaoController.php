@@ -23,7 +23,16 @@ class SolicitacaoController extends Controller
         $unidadeFiltro = in_array($user->perfil, ['admin', 'gestor']) ? $r->query('unidade_id') : null;
 
         $solicitacoes = Solicitacao::with(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
-            ->when(in_array($user->perfil, ['operador', 'solicitante']), fn ($q) => $q->where('usuario_id', $user->id))
+            ->when(! in_array($user->perfil, ['admin', 'gestor']), function ($q) use ($user) {
+                if ($user->motorista_id) {
+                    $q->where(function ($q) use ($user) {
+                        $q->where('usuario_id', $user->id)
+                            ->orWhere('motorista_pendente_id', $user->motorista_id);
+                    });
+                } else {
+                    $q->where('usuario_id', $user->id);
+                }
+            })
             ->when($unidadeFiltro, fn ($q) => $q->where('unidade_id', $unidadeFiltro))
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
             ->latest()
@@ -33,8 +42,18 @@ class SolicitacaoController extends Controller
         return SolicitacaoResource::collection($solicitacoes);
     }
 
-    public function show(Solicitacao $solicitacao)
+    public function show(Request $r, Solicitacao $solicitacao)
     {
+        $user = $r->user();
+
+        $podeVer = in_array($user->perfil, ['admin', 'gestor'])
+            || $solicitacao->usuario_id === $user->id
+            || ($user->motorista_id && $solicitacao->motorista_pendente_id === $user->motorista_id);
+
+        if (! $podeVer) {
+            return response()->json(['error' => 'Sem permissão para visualizar esta solicitação.'], 403);
+        }
+
         return new SolicitacaoResource(
             $solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
         );
@@ -53,7 +72,7 @@ class SolicitacaoController extends Controller
             return response()->json(['error' => 'Apenas gestores/admins podem aceitar solicitações.'], 403);
         }
 
-        if ($solicitacao->status !== 'aberto') {
+        if (! in_array($solicitacao->status, ['aberto', 'recusada'])) {
             throw ValidationException::withMessages(['status' => 'Esta solicitação já foi tratada.']);
         }
 
@@ -63,6 +82,42 @@ class SolicitacaoController extends Controller
         ]);
 
         $solicitacao = $this->service->aceitar($solicitacao, $data['motorista_id'], $data['veiculo_id']);
+
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+    }
+
+    public function motoristaAceitar(Request $r, Solicitacao $solicitacao)
+    {
+        $user = $r->user();
+        if (! $user->motorista_id || $solicitacao->motorista_pendente_id !== $user->motorista_id) {
+            return response()->json(['error' => 'Esta viagem não está designada para você.'], 403);
+        }
+
+        if (! in_array($solicitacao->status, ['pendente_motorista', 'aguardando_finalizacao_trajeto'])) {
+            throw ValidationException::withMessages(['status' => 'Esta solicitação já foi tratada.']);
+        }
+
+        $data = $r->validate(['km_saida' => 'nullable|integer|min:0']);
+
+        $solicitacao = $this->service->motoristaAceitar($solicitacao, $user->motorista_id, $data['km_saida'] ?? null);
+
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+    }
+
+    public function motoristaRecusar(Request $r, Solicitacao $solicitacao)
+    {
+        $user = $r->user();
+        if (! $user->motorista_id || $solicitacao->motorista_pendente_id !== $user->motorista_id) {
+            return response()->json(['error' => 'Esta viagem não está designada para você.'], 403);
+        }
+
+        if (! in_array($solicitacao->status, ['pendente_motorista', 'aguardando_finalizacao_trajeto'])) {
+            throw ValidationException::withMessages(['status' => 'Esta solicitação já foi tratada.']);
+        }
+
+        $data = $r->validate(['motivo' => 'required|string|max:500']);
+
+        $solicitacao = $this->service->motoristaRecusar($solicitacao, $user->motorista_id, $data['motivo']);
 
         return new SolicitacaoResource($solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
     }

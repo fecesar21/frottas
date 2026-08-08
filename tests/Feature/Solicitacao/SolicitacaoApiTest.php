@@ -10,6 +10,7 @@ use App\Models\Usuario;
 use App\Models\Veiculo;
 use App\Models\Viagem;
 use App\Notifications\NovaSolicitacaoTransporte;
+use App\Notifications\NovaViagemDesignada;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -55,7 +56,22 @@ class SolicitacaoApiTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
-    public function test_gestor_aceita_solicitacao_e_cria_viagem_vinculada(): void
+    public function test_motorista_ve_apenas_solicitacoes_designadas_para_ele(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        Solicitacao::factory()->create(['status' => 'pendente_motorista', 'motorista_pendente_id' => $motorista->id]);
+        Solicitacao::factory()->create(['status' => 'pendente_motorista', 'motorista_pendente_id' => Motorista::factory()->create()->id]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->getJson('/api/solicitacoes')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+    }
+
+    public function test_gestor_designa_motorista_e_solicitacao_fica_pendente_motorista(): void
     {
         $this->loginGestor();
         $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
@@ -67,95 +83,45 @@ class SolicitacaoApiTest extends TestCase
             'veiculo_id' => $veiculo->id,
         ]);
 
-        $response->assertOk()->assertJsonPath('data.status', 'em_trajeto');
-        $this->assertDatabaseHas('solicitacoes', ['id' => $solicitacao->id, 'status' => 'em_trajeto']);
-        $this->assertDatabaseHas('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculo->id]);
+        $response->assertOk()->assertJsonPath('data.status', 'pendente_motorista');
+        $this->assertDatabaseHas('solicitacoes', [
+            'id' => $solicitacao->id,
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
+        ]);
+        $this->assertDatabaseMissing('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculo->id]);
     }
 
-    public function test_aceitar_com_motorista_em_outro_veiculo_troca_checkin_automaticamente(): void
+    public function test_motorista_aceita_sem_viagem_ativa_informando_km_saida_cria_viagem(): void
     {
-        $this->loginGestor();
-        $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
         $motorista = Motorista::factory()->create();
-        $veiculoAntigo = Veiculo::factory()->create(['status' => 'em_uso', 'km_atual' => 1000]);
-        $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel', 'km_atual' => 2000]);
-
-        $checkinAntigo = Checkin::factory()->create([
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoAntigo->id,
-            'km_saida' => 1000,
-            'status' => 'ativo',
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
         ]);
 
-        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-        ]);
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 1500]);
 
         $response->assertOk()->assertJsonPath('data.status', 'em_trajeto');
-
-        $this->assertDatabaseHas('checkins', [
-            'id' => $checkinAntigo->id,
-            'status' => 'encerrado',
-        ]);
-        $this->assertDatabaseHas('checkins', [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-            'status' => 'ativo',
-        ]);
-        $this->assertDatabaseHas('veiculos', ['id' => $veiculoAntigo->id, 'status' => 'disponivel']);
-        $this->assertDatabaseHas('veiculos', ['id' => $veiculoNovo->id, 'status' => 'em_uso']);
-
-        $novoCheckin = Checkin::where('motorista_id', $motorista->id)->where('status', 'ativo')->first();
         $this->assertDatabaseHas('viagens', [
             'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-            'checkin_id' => $novoCheckin->id,
+            'veiculo_id' => $veiculo->id,
+            'km_saida' => 1500,
+            'status' => 'em_andamento',
         ]);
     }
 
-    public function test_aceitar_com_troca_de_veiculo_apos_viagem_anterior_ja_concluida_preenche_km_retorno(): void
+    public function test_motorista_aceita_com_viagem_ativa_fica_aguardando_sem_km(): void
     {
-        $this->loginGestor();
-        $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
         $motorista = Motorista::factory()->create();
-        $veiculoAntigo = Veiculo::factory()->create(['status' => 'em_uso', 'km_atual' => 1050]);
-        $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel', 'km_atual' => 2000]);
-
-        $checkinAntigo = Checkin::factory()->create([
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoAntigo->id,
-            'km_saida' => 1000,
-            'status' => 'ativo',
-        ]);
-
-        Viagem::factory()->create([
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoAntigo->id,
-            'km_saida' => 1000,
-            'km_chegada' => 1050,
-            'chegada_at' => now(),
-            'status' => 'concluida',
-        ]);
-
-        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-        ]);
-
-        $response->assertOk()->assertJsonPath('data.status', 'em_trajeto');
-        $this->assertDatabaseHas('checkins', [
-            'id' => $checkinAntigo->id,
-            'status' => 'encerrado',
-            'km_retorno' => 1050,
-        ]);
-    }
-
-    public function test_aceitar_motorista_com_viagem_em_andamento_fica_aguardando_finalizacao(): void
-    {
-        $this->loginGestor();
-        $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
-        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
         $veiculoAtual = Veiculo::factory()->create(['status' => 'em_uso']);
         $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel']);
 
@@ -165,70 +131,161 @@ class SolicitacaoApiTest extends TestCase
             'status' => 'em_andamento',
         ]);
 
-        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-        ]);
-
-        $response->assertOk()->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
-        $this->assertDatabaseHas('solicitacoes', [
-            'id' => $solicitacao->id,
-            'status' => 'aguardando_finalizacao_trajeto',
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
             'motorista_pendente_id' => $motorista->id,
             'veiculo_pendente_id' => $veiculoNovo->id,
         ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", []);
+
+        $response->assertOk()->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
         $this->assertDatabaseMissing('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculoNovo->id]);
     }
 
-    public function test_finalizar_trajeto_efetiva_solicitacao_pendente_com_troca_de_veiculo(): void
+    public function test_motorista_aceita_com_viagem_ativa_e_km_informado_nao_cria_segunda_viagem(): void
     {
-        $this->loginGestor();
-        $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
+        // Regressão do finding Critical 1: mesmo que o client informe km_saida
+        // (estado desatualizado / corrida), nunca pode nascer uma segunda Viagem
+        // em_andamento para o mesmo motorista — a solicitação deve ir para a fila.
         $motorista = Motorista::factory()->create();
-        $veiculoAtual = Veiculo::factory()->create(['status' => 'em_uso', 'km_atual' => 1000]);
-        $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel', 'km_atual' => 500]);
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculoAtual = Veiculo::factory()->create(['status' => 'em_uso']);
+        $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel']);
 
-        $checkinAtual = Checkin::factory()->create([
+        Viagem::factory()->create([
             'motorista_id' => $motorista->id,
             'veiculo_id' => $veiculoAtual->id,
-            'km_saida' => 1000,
-            'status' => 'ativo',
-        ]);
-
-        $viagemEmAndamento = Viagem::factory()->create([
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoAtual->id,
-            'km_saida' => 1000,
             'status' => 'em_andamento',
         ]);
 
-        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-        ])->assertOk()->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculoNovo->id,
+        ]);
 
-        $this->patchJson("/api/viagens/{$viagemEmAndamento->id}/chegada", ['km_chegada' => 1050])
-            ->assertOk();
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 999]);
+
+        $response->assertOk()->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
+        $this->assertSame(1, Viagem::where('motorista_id', $motorista->id)->where('status', 'em_andamento')->count());
+        $this->assertDatabaseMissing('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculoNovo->id]);
+    }
+
+    public function test_duas_tentativas_de_aceite_para_o_mesmo_motorista_nunca_duplicam_viagem_em_andamento(): void
+    {
+        // Regressão do finding Critical 1: duas chamadas motorista-aceitar em
+        // sequência rápida para o mesmo motorista (ex.: duplo clique / retry de
+        // rede) nunca podem resultar em duas Viagens em_andamento simultâneas.
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitacao1 = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
+        ]);
+        $solicitacao2 = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => Veiculo::factory()->create()->id,
+        ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao1->id}/motorista-aceitar", ['km_saida' => 1000])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'em_trajeto');
+
+        // Segunda solicitação chega logo em seguida, motorista já em viagem —
+        // mesmo informando km_saida, deve ser enfileirada, nunca criar outra viagem.
+        $this->patchJson("/api/solicitacoes/{$solicitacao2->id}/motorista-aceitar", ['km_saida' => 1100])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
+
+        $this->assertSame(1, Viagem::where('motorista_id', $motorista->id)->where('status', 'em_andamento')->count());
+    }
+
+    public function test_motorista_aceita_sem_viagem_ativa_e_sem_km_falha_422(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
+        ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['km_saida']);
+    }
+
+    public function test_motorista_recusa_com_motivo_gestor_pode_redesignar(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
+        ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-recusar", ['motivo' => 'Veículo com problema mecânico'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'recusada');
 
         $this->assertDatabaseHas('solicitacoes', [
             'id' => $solicitacao->id,
-            'status' => 'em_trajeto',
+            'status' => 'recusada',
+            'motivo_recusa' => 'Veículo com problema mecânico',
             'motorista_pendente_id' => null,
             'veiculo_pendente_id' => null,
         ]);
 
-        $this->assertDatabaseHas('checkins', ['id' => $checkinAtual->id, 'status' => 'encerrado', 'km_retorno' => 1050]);
-        $this->assertDatabaseHas('checkins', [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-            'status' => 'ativo',
+        $this->loginGestor();
+        $this->app['auth']->forgetGuards();
+        $outroMotorista = Motorista::factory()->create();
+        $outroVeiculo = Veiculo::factory()->create();
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
+            'motorista_id' => $outroMotorista->id,
+            'veiculo_id' => $outroVeiculo->id,
+        ])->assertOk()->assertJsonPath('data.status', 'pendente_motorista');
+    }
+
+    public function test_motorista_nao_pode_aceitar_solicitacao_de_outro_motorista(): void
+    {
+        $motoristaDesignado = Motorista::factory()->create();
+        $outroMotorista = Motorista::factory()->create();
+        $usuarioOutroMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $outroMotorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motoristaDesignado->id,
+            'veiculo_pendente_id' => $veiculo->id,
         ]);
 
-        $this->assertDatabaseHas('viagens', [
-            'motorista_id' => $motorista->id,
-            'veiculo_id' => $veiculoNovo->id,
-            'status' => 'em_andamento',
-        ]);
+        $token = $usuarioOutroMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 100])
+            ->assertForbidden();
     }
 
     public function test_finalizar_viagem_finaliza_solicitacao_vinculada(): void
@@ -247,11 +304,11 @@ class SolicitacaoApiTest extends TestCase
     {
         Notification::fake();
 
-        $unidade = \App\Models\Unidade::factory()->create();
+        $unidade = Unidade::factory()->create();
         $operador = Usuario::factory()->create(['perfil' => 'operador', 'unidade_id' => $unidade->id]);
         $adminGlobal = Usuario::factory()->admin()->create();
         $gestorMesmaUnidade = Usuario::factory()->create(['perfil' => 'gestor', 'unidade_id' => $unidade->id]);
-        $gestorOutraUnidade = Usuario::factory()->create(['perfil' => 'gestor', 'unidade_id' => \App\Models\Unidade::factory()->create()->id]);
+        $gestorOutraUnidade = Usuario::factory()->create(['perfil' => 'gestor', 'unidade_id' => Unidade::factory()->create()->id]);
 
         $token = $operador->createToken('test')->plainTextToken;
         $this->withToken($token);
@@ -265,5 +322,130 @@ class SolicitacaoApiTest extends TestCase
         Notification::assertSentTo($gestorMesmaUnidade, NovaSolicitacaoTransporte::class);
         Notification::assertNotSentTo($gestorOutraUnidade, NovaSolicitacaoTransporte::class);
         Notification::assertNotSentTo($operador, NovaSolicitacaoTransporte::class);
+    }
+
+    public function test_recurso_expoe_motivo_recusa_para_gestor(): void
+    {
+        $this->loginGestor();
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'recusada',
+            'motivo_recusa' => 'Sem combustível suficiente',
+        ]);
+
+        $this->getJson("/api/solicitacoes/{$solicitacao->id}")
+            ->assertOk()
+            ->assertJsonPath('data.motivo_recusa', 'Sem combustível suficiente');
+    }
+
+    public function test_solicitante_nao_ve_motivo_recusa_de_solicitacao_propria(): void
+    {
+        // Regressão do finding Critical 2a: o motivo de recusa nunca pode
+        // vazar para o solicitante original.
+        $usuario = $this->loginOperador();
+        $solicitacao = Solicitacao::factory()->create([
+            'usuario_id' => $usuario->id,
+            'status' => 'recusada',
+            'motivo_recusa' => 'Sem combustível suficiente',
+        ]);
+
+        $response = $this->getJson("/api/solicitacoes/{$solicitacao->id}")->assertOk();
+
+        $this->assertArrayNotHasKey('motivo_recusa', $response->json('data'));
+    }
+
+    public function test_usuario_sem_relacao_com_a_solicitacao_recebe_403_no_show(): void
+    {
+        // Regressão do finding Critical 2b: show() precisa checar propriedade.
+        $this->loginOperador();
+        $solicitacao = Solicitacao::factory()->create([
+            'usuario_id' => Usuario::factory()->create()->id,
+            'status' => 'aberto',
+        ]);
+
+        $this->getJson("/api/solicitacoes/{$solicitacao->id}")->assertForbidden();
+    }
+
+    public function test_motorista_designado_pode_ver_a_solicitacao_no_show(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => Veiculo::factory()->create()->id,
+        ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->getJson("/api/solicitacoes/{$solicitacao->id}")->assertOk();
+    }
+
+    public function test_conclusao_de_viagem_notifica_motorista_para_informar_km_da_fila_sem_criar_viagem(): void
+    {
+        Notification::fake();
+
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculoAtual = Veiculo::factory()->create(['status' => 'em_uso', 'km_atual' => 1000]);
+        $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel', 'km_atual' => 500]);
+
+        Checkin::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoAtual->id,
+            'km_saida' => 1000,
+            'status' => 'ativo',
+        ]);
+
+        $viagemEmAndamento = Viagem::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoAtual->id,
+            'km_saida' => 1000,
+            'status' => 'em_andamento',
+        ]);
+
+        $solicitacaoNaFila = Solicitacao::factory()->create([
+            'status' => 'aguardando_finalizacao_trajeto',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculoNovo->id,
+        ]);
+
+        $this->loginGestor();
+        $this->patchJson("/api/viagens/{$viagemEmAndamento->id}/chegada", ['km_chegada' => 1050])
+            ->assertOk();
+
+        $this->assertDatabaseHas('solicitacoes', [
+            'id' => $solicitacaoNaFila->id,
+            'status' => 'aguardando_finalizacao_trajeto',
+        ]);
+        $this->assertDatabaseMissing('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculoNovo->id]);
+        Notification::assertSentTo($usuarioMotorista, NovaViagemDesignada::class, function ($notification) use ($solicitacaoNaFila, $usuarioMotorista) {
+            return $notification->toArray($usuarioMotorista)['solicitacao_id'] === $solicitacaoNaFila->id
+                && $notification->toArray($usuarioMotorista)['fila'] === true;
+        });
+
+        $this->app['auth']->forgetGuards();
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        // km_chegada da viagem anterior (1050) e km_saida informado pelo motorista
+        // para a NOVA viagem (1200) são valores DIFERENTES — prova que cada um vai
+        // para o campo certo (regressão do finding Important 3, que misturava os dois).
+        $this->patchJson("/api/solicitacoes/{$solicitacaoNaFila->id}/motorista-aceitar", ['km_saida' => 1200])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'em_trajeto');
+
+        $this->assertDatabaseHas('viagens', [
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoNovo->id,
+            'km_saida' => 1200,
+            'status' => 'em_andamento',
+        ]);
+        $this->assertDatabaseHas('checkins', [
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoAtual->id,
+            'status' => 'encerrado',
+            'km_retorno' => 1050,
+        ]);
     }
 }

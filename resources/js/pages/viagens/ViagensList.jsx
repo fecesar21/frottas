@@ -9,13 +9,15 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import ViagemForm from './ViagemForm'
 import ViagemDetalhe from './ViagemDetalhe'
+import FilaMotoristaCard from '../../components/notificacoes/FilaMotoristaCard'
 import { useAuth } from '../../contexts/AuthContext'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 const fmtKm = (n) => n != null ? Number(n).toLocaleString('pt-BR') : '—'
 
 export default function ViagensList() {
-  const { isGestor, isOperador } = useAuth()
+  const { user, isGestor, isOperador } = useAuth()
+  const ehMotorista = isOperador && !!user?.motorista_id
   const qc = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
@@ -42,6 +44,8 @@ export default function ViagensList() {
 
   return (
     <div className="space-y-4">
+      <FilaMotoristaCard ehMotorista={ehMotorista} />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {[{ v: '', l: 'Todas' }, { v: 'em_andamento', l: 'Em andamento' }, { v: 'concluida', l: 'Concluídas' }, { v: 'cancelada', l: 'Canceladas' }].map(({ v, l }) => (
