@@ -70,11 +70,23 @@ class SolicitacaoService
     public function motoristaAceitar(Solicitacao $solicitacao, string $motoristaId, ?int $kmSaida = null): Solicitacao
     {
         return DB::transaction(function () use ($solicitacao, $motoristaId, $kmSaida) {
+            /** @var Solicitacao $solicitacao */
+            $solicitacao = Solicitacao::whereKey($solicitacao->id)->lockForUpdate()->firstOrFail();
+
+            if (! in_array($solicitacao->status, ['pendente_motorista', 'aguardando_finalizacao_trajeto'])) {
+                throw ValidationException::withMessages([
+                    'status' => 'Esta solicitação já foi tratada.',
+                ]);
+            }
+
             $emViagem = Viagem::where('motorista_id', $motoristaId)
                 ->where('status', 'em_andamento')
                 ->exists();
 
-            if ($emViagem && $kmSaida === null) {
+            if ($emViagem) {
+                // Nunca pode existir uma segunda Viagem em_andamento para o mesmo
+                // motorista — mesmo que o client tenha informado km_saida (estado
+                // desatualizado ou aceites concorrentes), a solicitação vai para a fila.
                 $solicitacao->update(['status' => 'aguardando_finalizacao_trajeto']);
 
                 return $solicitacao->fresh();
@@ -152,7 +164,13 @@ class SolicitacaoService
         $checkin = $motorista->checkinAtivo;
 
         if ($checkin && $checkin->veiculo_id !== $veiculoId) {
-            $checkin = $this->trocarVeiculoDoCheckin($checkin, $veiculoId, $kmSaida);
+            $kmRetornoTrajetoAnterior = Viagem::where('motorista_id', $motoristaId)
+                ->where('status', 'concluida')
+                ->whereNotNull('km_chegada')
+                ->latest('chegada_at')
+                ->value('km_chegada');
+
+            $checkin = $this->trocarVeiculoDoCheckin($checkin, $veiculoId, $kmRetornoTrajetoAnterior);
         }
 
         $viagem = Viagem::create([

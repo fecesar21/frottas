@@ -146,6 +146,73 @@ class SolicitacaoApiTest extends TestCase
         $this->assertDatabaseMissing('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculoNovo->id]);
     }
 
+    public function test_motorista_aceita_com_viagem_ativa_e_km_informado_nao_cria_segunda_viagem(): void
+    {
+        // Regressão do finding Critical 1: mesmo que o client informe km_saida
+        // (estado desatualizado / corrida), nunca pode nascer uma segunda Viagem
+        // em_andamento para o mesmo motorista — a solicitação deve ir para a fila.
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculoAtual = Veiculo::factory()->create(['status' => 'em_uso']);
+        $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel']);
+
+        Viagem::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoAtual->id,
+            'status' => 'em_andamento',
+        ]);
+
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculoNovo->id,
+        ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 999]);
+
+        $response->assertOk()->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
+        $this->assertSame(1, Viagem::where('motorista_id', $motorista->id)->where('status', 'em_andamento')->count());
+        $this->assertDatabaseMissing('viagens', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculoNovo->id]);
+    }
+
+    public function test_duas_tentativas_de_aceite_para_o_mesmo_motorista_nunca_duplicam_viagem_em_andamento(): void
+    {
+        // Regressão do finding Critical 1: duas chamadas motorista-aceitar em
+        // sequência rápida para o mesmo motorista (ex.: duplo clique / retry de
+        // rede) nunca podem resultar em duas Viagens em_andamento simultâneas.
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitacao1 = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
+        ]);
+        $solicitacao2 = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => Veiculo::factory()->create()->id,
+        ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao1->id}/motorista-aceitar", ['km_saida' => 1000])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'em_trajeto');
+
+        // Segunda solicitação chega logo em seguida, motorista já em viagem —
+        // mesmo informando km_saida, deve ser enfileirada, nunca criar outra viagem.
+        $this->patchJson("/api/solicitacoes/{$solicitacao2->id}/motorista-aceitar", ['km_saida' => 1100])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
+
+        $this->assertSame(1, Viagem::where('motorista_id', $motorista->id)->where('status', 'em_andamento')->count());
+    }
+
     public function test_motorista_aceita_sem_viagem_ativa_e_sem_km_falha_422(): void
     {
         $motorista = Motorista::factory()->create();
@@ -257,7 +324,7 @@ class SolicitacaoApiTest extends TestCase
         Notification::assertNotSentTo($operador, NovaSolicitacaoTransporte::class);
     }
 
-    public function test_recurso_expoe_motivo_recusa(): void
+    public function test_recurso_expoe_motivo_recusa_para_gestor(): void
     {
         $this->loginGestor();
         $solicitacao = Solicitacao::factory()->create([
@@ -268,6 +335,50 @@ class SolicitacaoApiTest extends TestCase
         $this->getJson("/api/solicitacoes/{$solicitacao->id}")
             ->assertOk()
             ->assertJsonPath('data.motivo_recusa', 'Sem combustível suficiente');
+    }
+
+    public function test_solicitante_nao_ve_motivo_recusa_de_solicitacao_propria(): void
+    {
+        // Regressão do finding Critical 2a: o motivo de recusa nunca pode
+        // vazar para o solicitante original.
+        $usuario = $this->loginOperador();
+        $solicitacao = Solicitacao::factory()->create([
+            'usuario_id' => $usuario->id,
+            'status' => 'recusada',
+            'motivo_recusa' => 'Sem combustível suficiente',
+        ]);
+
+        $response = $this->getJson("/api/solicitacoes/{$solicitacao->id}")->assertOk();
+
+        $this->assertArrayNotHasKey('motivo_recusa', $response->json('data'));
+    }
+
+    public function test_usuario_sem_relacao_com_a_solicitacao_recebe_403_no_show(): void
+    {
+        // Regressão do finding Critical 2b: show() precisa checar propriedade.
+        $this->loginOperador();
+        $solicitacao = Solicitacao::factory()->create([
+            'usuario_id' => Usuario::factory()->create()->id,
+            'status' => 'aberto',
+        ]);
+
+        $this->getJson("/api/solicitacoes/{$solicitacao->id}")->assertForbidden();
+    }
+
+    public function test_motorista_designado_pode_ver_a_solicitacao_no_show(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => Veiculo::factory()->create()->id,
+        ]);
+
+        $token = $usuarioMotorista->createToken('test')->plainTextToken;
+        $this->withToken($token);
+
+        $this->getJson("/api/solicitacoes/{$solicitacao->id}")->assertOk();
     }
 
     public function test_conclusao_de_viagem_notifica_motorista_para_informar_km_da_fila_sem_criar_viagem(): void
@@ -317,14 +428,17 @@ class SolicitacaoApiTest extends TestCase
         $token = $usuarioMotorista->createToken('test')->plainTextToken;
         $this->withToken($token);
 
-        $this->patchJson("/api/solicitacoes/{$solicitacaoNaFila->id}/motorista-aceitar", ['km_saida' => 1050])
+        // km_chegada da viagem anterior (1050) e km_saida informado pelo motorista
+        // para a NOVA viagem (1200) são valores DIFERENTES — prova que cada um vai
+        // para o campo certo (regressão do finding Important 3, que misturava os dois).
+        $this->patchJson("/api/solicitacoes/{$solicitacaoNaFila->id}/motorista-aceitar", ['km_saida' => 1200])
             ->assertOk()
             ->assertJsonPath('data.status', 'em_trajeto');
 
         $this->assertDatabaseHas('viagens', [
             'motorista_id' => $motorista->id,
             'veiculo_id' => $veiculoNovo->id,
-            'km_saida' => 1050,
+            'km_saida' => 1200,
             'status' => 'em_andamento',
         ]);
         $this->assertDatabaseHas('checkins', [
