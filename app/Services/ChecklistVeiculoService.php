@@ -35,7 +35,7 @@ class ChecklistVeiculoService
             ->first();
 
         if ($existente) {
-            return $existente->load('respostas.itemModelo.categoria');
+            return $existente->load(['veiculo', 'respostas.itemModelo.categoria']);
         }
 
         try {
@@ -58,13 +58,13 @@ class ChecklistVeiculoService
                     ]);
                 }
 
-                return $checklist->load('respostas.itemModelo.categoria');
+                return $checklist->load(['veiculo', 'respostas.itemModelo.categoria']);
             });
         } catch (QueryException) {
             return ChecklistVeiculo::where('veiculo_id', $checkin->veiculo_id)
                 ->whereDate('data_referencia', $hoje)
                 ->firstOrFail()
-                ->load('respostas.itemModelo.categoria');
+                ->load(['veiculo', 'respostas.itemModelo.categoria']);
         }
     }
 
@@ -120,6 +120,6 @@ class ChecklistVeiculoService
             'observacoes_gerais' => $data['observacoes_gerais'] ?? $checklist->observacoes_gerais,
         ]);
 
-        return $checklist->fresh()->load('respostas.itemModelo.categoria');
+        return $checklist->fresh()->load(['veiculo', 'respostas.itemModelo.categoria']);
     }
 }
