@@ -3,11 +3,13 @@ import RelatorioAbastecimentos from './RelatorioAbastecimentos'
 import RelatorioViagens from './RelatorioViagens'
 import RelatorioPlantao from './RelatorioPlantao'
 import RelatorioMotoristas from './RelatorioMotoristas'
+import RelatorioChecklistVeiculo from './RelatorioChecklistVeiculo'
 
 const tabs = [
   { to: 'abastecimentos', label: 'Abastecimentos' },
   { to: 'viagens', label: 'Viagens' },
   { to: 'plantao', label: 'Plantão' },
+  { to: 'checklist-veiculo', label: 'Checklist de Veículo' },
   { to: 'motoristas', label: 'Motoristas' },
 ]
 
@@ -32,6 +34,7 @@ export default function Relatorios() {
         <Route path="abastecimentos" element={<RelatorioAbastecimentos />} />
         <Route path="viagens" element={<RelatorioViagens />} />
         <Route path="plantao" element={<RelatorioPlantao />} />
+        <Route path="checklist-veiculo" element={<RelatorioChecklistVeiculo />} />
         <Route path="motoristas" element={<RelatorioMotoristas />} />
       </Routes>
     </div>

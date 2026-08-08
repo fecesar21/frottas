@@ -11,3 +11,4 @@ export const plantaoPdf = (params) => api.get('/relatorios/plantao/pdf', { param
 export const motoristas = () => api.get('/relatorios/motoristas')
 export const motoristasPdf = () => api.get('/relatorios/motoristas/pdf', { responseType: 'blob' })
 export const checkins = () => api.get('/relatorios/checkins')
+export const checklistVeiculo = (params) => api.get('/relatorios/checklist-veiculo', { params })
