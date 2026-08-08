@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreign('checklist_veiculo_id')->references('id')->on('checklists_veiculo')->cascadeOnDelete();
             $table->foreign('item_modelo_id')->references('id')->on('checklist_veiculo_itens_modelo');
 
-            $table->unique(['checklist_veiculo_id', 'item_modelo_id']);
+            $table->unique(['checklist_veiculo_id', 'item_modelo_id'], 'cv_respostas_checklist_item_unique');
         });
     }
 
