@@ -8,6 +8,7 @@ import * as viagensApi from '../../api/viagens'
 import * as solicitacoesApi from '../../api/solicitacoes'
 import Badge from '../../components/ui/Badge'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import { useAuth } from '../../contexts/AuthContext'
 
 const fmtDt  = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '—'
 const fmtKm  = (n) => n != null ? Number(n).toLocaleString('pt-BR') + ' km' : '—'
@@ -25,16 +26,22 @@ function AjustarMapa({ pontos }) {
 }
 
 export default function ViagemDetalhe({ viagem }) {
+  const { user } = useAuth()
+  const ehMotorista = user?.perfil === 'operador' && !!user?.motorista_id && user.motorista_id === viagem.motorista_id
+
   const { data: pontos, isLoading } = useQuery({
     queryKey: ['viagem-pontos', viagem.id],
     queryFn: () => viagensApi.buscarPontos(viagem.id).then(r => r.data),
     refetchInterval: viagem.status === 'em_andamento' ? 30_000 : false,
   })
 
+  // Backend já escopa por motorista_pendente_id do usuário autenticado — só
+  // dispara essa query quando o próprio motorista da viagem está vendo a tela,
+  // para não vazar a fila de outros motoristas para gestores/admins.
   const { data: fila } = useQuery({
     queryKey: ['solicitacoes', 'fila-motorista'],
     queryFn: () => solicitacoesApi.listar({ status: 'aguardando_finalizacao_trajeto' }).then(r => r.data.data ?? r.data),
-    enabled: viagem?.status === 'em_andamento',
+    enabled: ehMotorista && viagem?.status === 'em_andamento',
     refetchInterval: 30_000,
   })
 
