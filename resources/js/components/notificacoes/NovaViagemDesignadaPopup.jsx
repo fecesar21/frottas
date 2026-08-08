@@ -9,25 +9,34 @@ import MotivoRecusaModal from './MotivoRecusaModal'
 export default function NovaViagemDesignadaPopup({ notificacao, temViagemAtiva, onFechar }) {
   const qc = useQueryClient()
   const [tela, setTela] = useState('inicial')
+  const [erro, setErro] = useState('')
   const ehFila = !!notificacao.data?.fila
+
+  const extrairErro = (e) => e.response?.data?.message
+    ?? Object.values(e.response?.data?.errors ?? {}).flat()[0]
+    ?? 'Ocorreu um erro. Tente novamente.'
 
   const aceitarMutation = useMutation({
     mutationFn: (kmSaida) => solicitacoesApi.motoristaAceitar(notificacao.data.solicitacao_id, kmSaida),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['viagens'] })
+      qc.invalidateQueries({ queryKey: ['solicitacoes'] })
       onFechar()
     },
+    onError: (e) => setErro(extrairErro(e)),
   })
 
   const recusarMutation = useMutation({
     mutationFn: (motivo) => solicitacoesApi.motoristaRecusar(notificacao.data.solicitacao_id, motivo),
     onSuccess: onFechar,
+    onError: (e) => setErro(extrairErro(e)),
   })
 
   if (tela === 'km' || (ehFila && tela !== 'recusar')) {
     return (
       <KmSaidaModal
         loading={aceitarMutation.isPending}
+        erro={erro}
         onCancelar={ehFila ? undefined : () => setTela('inicial')}
         onConfirmar={(km) => aceitarMutation.mutate(km)}
       />
@@ -38,6 +47,7 @@ export default function NovaViagemDesignadaPopup({ notificacao, temViagemAtiva, 
     return (
       <MotivoRecusaModal
         loading={recusarMutation.isPending}
+        erro={erro}
         onCancelar={() => setTela('inicial')}
         onConfirmar={(motivo) => recusarMutation.mutate(motivo)}
       />
@@ -56,6 +66,7 @@ export default function NovaViagemDesignadaPopup({ notificacao, temViagemAtiva, 
           </div>
           <h2 className="text-base font-semibold text-navy-900 mb-1">Nova Viagem Designada pelo Gestor</h2>
           {detalhe && <p className="text-sm text-gray-500 mt-1">{detalhe}</p>}
+          {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
           <div className="flex gap-2 mt-5">
             <button
               onClick={() => setTela('recusar')}

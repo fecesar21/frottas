@@ -1,8 +1,9 @@
 import { useState } from 'react'
 
-export default function MotivoRecusaModal({ onConfirmar, onCancelar, loading }) {
+export default function MotivoRecusaModal({ onConfirmar, onCancelar, loading, erro: erroExterno }) {
   const [motivo, setMotivo] = useState('')
   const [erro, setErro] = useState('')
+  const erroExibido = erro || erroExterno
 
   const submeter = (e) => {
     e.preventDefault()
@@ -25,7 +26,7 @@ export default function MotivoRecusaModal({ onConfirmar, onCancelar, loading }) 
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           placeholder="Descreva o motivo..."
         />
-        {erro && <p className="text-xs text-red-600 mt-1">{erro}</p>}
+        {erroExibido && <p className="text-xs text-red-600 mt-1">{erroExibido}</p>}
         <div className="flex gap-2 mt-5">
           <button type="button" onClick={onCancelar} className="flex-1 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">
             Voltar
