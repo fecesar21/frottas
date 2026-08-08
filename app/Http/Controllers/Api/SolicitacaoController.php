@@ -23,8 +23,16 @@ class SolicitacaoController extends Controller
         $unidadeFiltro = in_array($user->perfil, ['admin', 'gestor']) ? $r->query('unidade_id') : null;
 
         $solicitacoes = Solicitacao::with(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
-            ->when(in_array($user->perfil, ['operador', 'solicitante']) && ! $user->motorista_id, fn ($q) => $q->where('usuario_id', $user->id))
-            ->when($user->perfil === 'operador' && $user->motorista_id, fn ($q) => $q->where('motorista_pendente_id', $user->motorista_id))
+            ->when(! in_array($user->perfil, ['admin', 'gestor']), function ($q) use ($user) {
+                if ($user->motorista_id) {
+                    $q->where(function ($q) use ($user) {
+                        $q->where('usuario_id', $user->id)
+                            ->orWhere('motorista_pendente_id', $user->motorista_id);
+                    });
+                } else {
+                    $q->where('usuario_id', $user->id);
+                }
+            })
             ->when($unidadeFiltro, fn ($q) => $q->where('unidade_id', $unidadeFiltro))
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
             ->latest()
@@ -34,8 +42,18 @@ class SolicitacaoController extends Controller
         return SolicitacaoResource::collection($solicitacoes);
     }
 
-    public function show(Solicitacao $solicitacao)
+    public function show(Request $r, Solicitacao $solicitacao)
     {
+        $user = $r->user();
+
+        $podeVer = in_array($user->perfil, ['admin', 'gestor'])
+            || $solicitacao->usuario_id === $user->id
+            || ($user->motorista_id && $solicitacao->motorista_pendente_id === $user->motorista_id);
+
+        if (! $podeVer) {
+            return response()->json(['error' => 'Sem permissão para visualizar esta solicitação.'], 403);
+        }
+
         return new SolicitacaoResource(
             $solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
         );
