@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\Usuario;
 use App\Notifications\RedefinicaoSenhaNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -84,7 +85,7 @@ class ResetSenhaTest extends TestCase
     {
         $usuario = Usuario::factory()->create([
             'email' => 'reset1@example.com',
-            'senha_hash' => \Illuminate\Support\Facades\Hash::make('senhaantiga123'),
+            'senha_hash' => Hash::make('senhaantiga123'),
             'ativo' => true,
         ]);
         $usuario->createToken('app')->plainTextToken;
@@ -105,7 +106,7 @@ class ResetSenhaTest extends TestCase
         });
 
         $usuario->refresh();
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('654321', $usuario->senha_hash));
+        $this->assertTrue(Hash::check('654321', $usuario->senha_hash));
         $this->assertSame(0, $usuario->tokens()->count());
         $this->assertDatabaseCount('password_reset_tokens', 0);
     }
@@ -116,7 +117,7 @@ class ResetSenhaTest extends TestCase
 
         DB::table('password_reset_tokens')->insert([
             'email' => 'reset2@example.com',
-            'token' => \Illuminate\Support\Facades\Hash::make('token-correto'),
+            'token' => Hash::make('token-correto'),
             'created_at' => now(),
         ]);
 
@@ -133,7 +134,7 @@ class ResetSenhaTest extends TestCase
 
         DB::table('password_reset_tokens')->insert([
             'email' => 'reset3@example.com',
-            'token' => \Illuminate\Support\Facades\Hash::make('token-valido'),
+            'token' => Hash::make('token-valido'),
             'created_at' => now()->subMinutes(61),
         ]);
 
@@ -150,7 +151,7 @@ class ResetSenhaTest extends TestCase
 
         DB::table('password_reset_tokens')->insert([
             'email' => 'reset4@example.com',
-            'token' => \Illuminate\Support\Facades\Hash::make('token-valido'),
+            'token' => Hash::make('token-valido'),
             'created_at' => now(),
         ]);
 
@@ -167,7 +168,7 @@ class ResetSenhaTest extends TestCase
 
         DB::table('password_reset_tokens')->insert([
             'email' => 'reset5@example.com',
-            'token' => \Illuminate\Support\Facades\Hash::make('token-valido'),
+            'token' => Hash::make('token-valido'),
             'created_at' => now(),
         ]);
 

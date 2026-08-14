@@ -97,7 +97,7 @@ class AuthController extends Controller
         }
 
         $novoRegistro = ! $usuario;
-        $usuario = $usuario ?: new Usuario();
+        $usuario = $usuario ?: new Usuario;
 
         if ($novoRegistro) {
             $usuario->fill([
