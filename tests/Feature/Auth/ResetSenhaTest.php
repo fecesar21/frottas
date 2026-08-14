@@ -79,4 +79,115 @@ class ResetSenhaTest extends TestCase
         $this->assertDatabaseCount('password_reset_tokens', 1);
         $this->assertNotSame($primeiroToken, $segundoToken);
     }
+
+    public function test_redefinir_senha_com_token_valido_atualiza_senha_e_revoga_tokens_sanctum(): void
+    {
+        $usuario = Usuario::factory()->create([
+            'email' => 'reset1@example.com',
+            'senha_hash' => \Illuminate\Support\Facades\Hash::make('senhaantiga123'),
+            'ativo' => true,
+        ]);
+        $usuario->createToken('app')->plainTextToken;
+
+        Notification::fake();
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'reset1@example.com'])->assertOk();
+
+        Notification::assertSentTo($usuario, RedefinicaoSenhaNotification::class, function ($notification) use ($usuario) {
+            $response = $this->postJson('/api/auth/redefinir-senha', [
+                'email' => $usuario->email,
+                'token' => $notification->toMail($usuario)->actionUrl
+                    ? $this->extrairTokenDaUrl($notification->toMail($usuario)->actionUrl)
+                    : null,
+                'senha' => '654321',
+            ])->assertOk()->assertJson(['message' => 'Senha redefinida com sucesso.']);
+
+            return true;
+        });
+
+        $usuario->refresh();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('654321', $usuario->senha_hash));
+        $this->assertSame(0, $usuario->tokens()->count());
+        $this->assertDatabaseCount('password_reset_tokens', 0);
+    }
+
+    public function test_redefinir_senha_com_token_invalido_retorna_422(): void
+    {
+        Usuario::factory()->create(['email' => 'reset2@example.com', 'ativo' => true]);
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => 'reset2@example.com',
+            'token' => \Illuminate\Support\Facades\Hash::make('token-correto'),
+            'created_at' => now(),
+        ]);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'email' => 'reset2@example.com',
+            'token' => 'token-errado',
+            'senha' => '654321',
+        ])->assertStatus(422);
+    }
+
+    public function test_redefinir_senha_com_token_expirado_retorna_422(): void
+    {
+        Usuario::factory()->create(['email' => 'reset3@example.com', 'ativo' => true]);
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => 'reset3@example.com',
+            'token' => \Illuminate\Support\Facades\Hash::make('token-valido'),
+            'created_at' => now()->subMinutes(61),
+        ]);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'email' => 'reset3@example.com',
+            'token' => 'token-valido',
+            'senha' => '654321',
+        ])->assertStatus(422);
+    }
+
+    public function test_redefinir_senha_com_senha_invalida_retorna_422(): void
+    {
+        Usuario::factory()->create(['email' => 'reset4@example.com', 'ativo' => true]);
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => 'reset4@example.com',
+            'token' => \Illuminate\Support\Facades\Hash::make('token-valido'),
+            'created_at' => now(),
+        ]);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'email' => 'reset4@example.com',
+            'token' => 'token-valido',
+            'senha' => 'abc',
+        ])->assertStatus(422);
+    }
+
+    public function test_redefinir_senha_reaproveitando_token_ja_usado_falha(): void
+    {
+        $usuario = Usuario::factory()->create(['email' => 'reset5@example.com', 'ativo' => true]);
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => 'reset5@example.com',
+            'token' => \Illuminate\Support\Facades\Hash::make('token-valido'),
+            'created_at' => now(),
+        ]);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'email' => 'reset5@example.com',
+            'token' => 'token-valido',
+            'senha' => '654321',
+        ])->assertOk();
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'email' => 'reset5@example.com',
+            'token' => 'token-valido',
+            'senha' => '111111',
+        ])->assertStatus(422);
+    }
+
+    private function extrairTokenDaUrl(string $url): string
+    {
+        parse_str(parse_url($url, PHP_URL_QUERY), $params);
+
+        return $params['token'];
+    }
 }

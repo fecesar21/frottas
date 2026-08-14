@@ -158,6 +158,33 @@ class AuthController extends Controller
         ]);
     }
 
+    public function redefinirSenha(RedefinirSenhaRequest $r)
+    {
+        $dados = $r->validated();
+
+        $registro = DB::table('password_reset_tokens')->where('email', $dados['email'])->first();
+
+        if (! $registro
+            || abs(now()->diffInMinutes($registro->created_at)) > 60
+            || ! Hash::check($dados['token'], $registro->token)
+        ) {
+            return response()->json(['error' => 'Token inválido ou expirado'], 422);
+        }
+
+        $usuario = Usuario::where('ativo', true)->where('email', $dados['email'])->first();
+
+        if (! $usuario) {
+            return response()->json(['error' => 'Token inválido ou expirado'], 422);
+        }
+
+        $usuario->update(['senha_hash' => Hash::make($dados['senha'])]);
+        $usuario->tokens()->delete();
+
+        DB::table('password_reset_tokens')->where('email', $dados['email'])->delete();
+
+        return response()->json(['message' => 'Senha redefinida com sucesso.']);
+    }
+
     public function me(Request $request)
     {
         return response()->json(['user' => $this->buildUserPayload($request->user())]);
