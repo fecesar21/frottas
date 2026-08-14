@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\EsqueciSenhaRequest;
 use App\Http\Requests\Auth\LoginAdRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RedefinirSenhaRequest;
 use App\Models\Motorista;
 use App\Models\UnidadeAdMapeamento;
 use App\Models\Usuario;
+use App\Notifications\RedefinicaoSenhaNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use LdapRecord\LdapRecordException;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
@@ -128,6 +133,28 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'user' => $this->buildUserPayload($usuario),
+        ]);
+    }
+
+    public function esqueciSenha(EsqueciSenhaRequest $r)
+    {
+        $email = $r->validated()['email'];
+
+        $usuario = Usuario::where('ativo', true)->where('email', $email)->first();
+
+        if ($usuario) {
+            $token = Str::random(64);
+
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $email],
+                ['token' => Hash::make($token), 'created_at' => now()]
+            );
+
+            $usuario->notify(new RedefinicaoSenhaNotification($token, $email));
+        }
+
+        return response()->json([
+            'message' => 'Se o e-mail informado estiver cadastrado, você receberá instruções para redefinir sua senha.',
         ]);
     }
 
