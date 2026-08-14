@@ -32,6 +32,7 @@ class RedefinicaoSenhaNotification extends Notification implements ShouldQueue
             ->line('Recebemos uma solicitação para redefinir sua senha.')
             ->action('Redefinir senha', $url)
             ->line('Este link expira em 60 minutos.')
-            ->line('Se você não solicitou isso, ignore este e-mail — nenhuma alteração será feita.');
+            ->line('Se você não solicitou isso, ignore este e-mail — nenhuma alteração será feita.')
+            ->salutation("Atenciosamente,\nHealth Drive - Sistema de Gestão de Frotas");
     }
 }
