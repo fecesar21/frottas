@@ -3,15 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\EsqueciSenhaRequest;
 use App\Http\Requests\Auth\LoginAdRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RedefinirSenhaRequest;
 use App\Models\Motorista;
 use App\Models\UnidadeAdMapeamento;
 use App\Models\Usuario;
+use App\Notifications\RedefinicaoSenhaNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use LdapRecord\LdapRecordException;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
@@ -92,7 +98,7 @@ class AuthController extends Controller
         }
 
         $novoRegistro = ! $usuario;
-        $usuario = $usuario ?: new Usuario();
+        $usuario = $usuario ?: new Usuario;
 
         if ($novoRegistro) {
             $usuario->fill([
@@ -129,6 +135,60 @@ class AuthController extends Controller
             'token' => $token,
             'user' => $this->buildUserPayload($usuario),
         ]);
+    }
+
+    public function esqueciSenha(EsqueciSenhaRequest $r)
+    {
+        $email = Str::lower(trim($r->validated()['email']));
+
+        $usuario = Usuario::where('ativo', true)->where('email', $email)->first();
+
+        if ($usuario) {
+            $token = Str::random(64);
+
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $email],
+                ['token' => Hash::make($token), 'created_at' => now()]
+            );
+
+            $usuario->notify(new RedefinicaoSenhaNotification($token, $email));
+        } else {
+            // Paga o mesmo custo de hashing do ramo "usuário encontrado" para
+            // não vazar, por diferença de tempo de resposta, se o e-mail existe.
+            Hash::make(Str::random(64));
+        }
+
+        return response()->json([
+            'message' => 'Se o e-mail informado estiver cadastrado, você receberá instruções para redefinir sua senha.',
+        ]);
+    }
+
+    public function redefinirSenha(RedefinirSenhaRequest $r)
+    {
+        $dados = $r->validated();
+        $email = Str::lower(trim($dados['email']));
+
+        $registro = DB::table('password_reset_tokens')->where('email', $email)->first();
+
+        if (! $registro
+            || Carbon::parse($registro->created_at)->addMinutes(60)->isPast()
+            || ! Hash::check($dados['token'], $registro->token)
+        ) {
+            return response()->json(['message' => 'Token inválido ou expirado'], 422);
+        }
+
+        $usuario = Usuario::where('ativo', true)->where('email', $email)->first();
+
+        if (! $usuario) {
+            return response()->json(['message' => 'Token inválido ou expirado'], 422);
+        }
+
+        $usuario->update(['senha_hash' => Hash::make($dados['senha'])]);
+        $usuario->tokens()->delete();
+
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+        return response()->json(['message' => 'Senha redefinida com sucesso.']);
     }
 
     public function me(Request $request)
