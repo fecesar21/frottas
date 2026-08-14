@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Truck, Users, CalendarDays, LogIn, GitBranch,
+  LayoutDashboard, Truck, Users, LogIn,
   Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X, Building2, ClipboardList
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
@@ -18,14 +18,12 @@ const sections = [
     items: [
       { to: '/veiculos', label: 'Veículos', icon: Truck },
       { to: '/motoristas', label: 'Motoristas', icon: Users },
-      { to: '/escalas', label: 'Escalas', icon: CalendarDays },
     ],
   },
   {
     label: 'OPERAÇÕES',
     items: [
       { to: '/checkins', label: 'Check-ins', icon: LogIn },
-      { to: '/plantao', label: 'Plantão', icon: GitBranch },
       { to: '/viagens', label: 'Viagens', icon: Route },
       { to: '/abastecimentos', label: 'Abastecimentos', icon: Fuel },
       { to: '/solicitacoes', label: 'Solicitações de Transporte', icon: ClipboardList, gestorOnly: true },

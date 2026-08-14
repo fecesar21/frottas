@@ -8,7 +8,6 @@ import RelatorioChecklistVeiculo from './RelatorioChecklistVeiculo'
 const tabs = [
   { to: 'abastecimentos', label: 'Abastecimentos' },
   { to: 'viagens', label: 'Viagens' },
-  { to: 'plantao', label: 'Plantão' },
   { to: 'checklist-veiculo', label: 'Checklist de Veículo' },
   { to: 'motoristas', label: 'Motoristas' },
 ]
