@@ -27,7 +27,7 @@ class RedefinicaoSenhaNotification extends Notification implements ShouldQueue
             .'/redefinir-senha?token='.$this->token.'&email='.urlencode($this->email);
 
         return (new MailMessage)
-            ->subject('Redefinição de senha — FleetCore')
+            ->subject('Solicitação de Redefinição de Senha — HealthDrive')
             ->greeting('Olá!')
             ->line('Recebemos uma solicitação para redefinir sua senha.')
             ->action('Redefinir senha', $url)
