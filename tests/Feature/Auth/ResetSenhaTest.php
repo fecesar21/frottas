@@ -190,4 +190,18 @@ class ResetSenhaTest extends TestCase
 
         return $params['token'];
     }
+
+    public function test_esqueci_senha_apos_exceder_limite_retorna_429(): void
+    {
+        Notification::fake();
+
+        Usuario::factory()->create(['email' => 'limite@example.com', 'ativo' => true]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/auth/esqueci-senha', ['email' => 'limite@example.com'])->assertOk();
+        }
+
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'limite@example.com'])
+            ->assertStatus(429);
+    }
 }
