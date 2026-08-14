@@ -49,7 +49,7 @@ bash scripts/deploy.sh
 ## Architecture
 
 ### Authentication
-Sanctum token-based auth. Tokens expire in 8 hours. Login accepts `usuario` (username) **or** `email` as the login field. The auth model is `App\Models\Usuario` (not the default `User`), stored in table `usuarios` with `senha_hash` as the password column.
+Sanctum token-based auth. Tokens expire in 8 hours. Login (`POST /api/auth/login`) takes a `usuario` field, but its value must be the user's **CPF** (digits are stripped and matched against the `cpf` column) — despite the field name, it is not a username or email. AD-based login (`POST /api/auth/login-ad`) is a separate flow matching by `samaccountname`. The auth model is `App\Models\Usuario` (not the default `User`), stored in table `usuarios` with `senha_hash` as the password column. `email` on `Usuario` is nullable/unique and not guaranteed to be populated for every operator (only reliably set via the AD login flow or manual admin entry).
 
 ### Authorization
 Two middleware levels:
