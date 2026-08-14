@@ -52,5 +52,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login-ad', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip().'|'.$request->input('usuario'));
         });
+
+        // Usado por POST /api/auth/esqueci-senha e /api/auth/redefinir-senha.
+        // Chaveado por IP + e-mail submetido para não deixar um atacante
+        // esgotar as tentativas de todos os e-mails de uma vez via um único IP,
+        // nem permitir que ele martele um e-mail específico trocando de IP sem limite.
+        RateLimiter::for('esqueci-senha', function (Request $request) {
+            return Limit::perMinutes(15, 5)->by($request->ip().'|'.$request->input('email'));
+        });
     }
 }
