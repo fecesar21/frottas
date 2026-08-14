@@ -4,6 +4,7 @@ namespace Tests\Feature\Escala;
 
 use App\Models\Escala;
 use App\Models\Motorista;
+use App\Models\Unidade;
 use Tests\TestCase;
 
 class EscalaApiTest extends TestCase
@@ -25,7 +26,11 @@ class EscalaApiTest extends TestCase
 
     public function test_store_restaura_escala_soft_deletada_em_vez_de_colidir(): void
     {
-        $this->loginGestor();
+        // Gestor de unidade "matriz" enxerga/opera sobre todas as unidades
+        // (ver App\Http\Middleware\EscopoUnidade), evitando a validação de
+        // vínculo motorista<->unidade que não é o foco deste teste.
+        $usuario = $this->loginGestor();
+        $usuario->update(['unidade_id' => Unidade::factory()->create(['tipo' => 'matriz'])->id]);
         $motorista = Motorista::factory()->create();
         $data = now()->toDateString();
         $escala = Escala::create([

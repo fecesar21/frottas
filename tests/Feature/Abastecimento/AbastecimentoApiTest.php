@@ -3,6 +3,8 @@
 namespace Tests\Feature\Abastecimento;
 
 use App\Models\Abastecimento;
+use App\Models\Checkin;
+use App\Models\ChecklistVeiculo;
 use App\Models\Motorista;
 use App\Models\Veiculo;
 use Illuminate\Http\UploadedFile;
@@ -11,6 +13,23 @@ use Tests\TestCase;
 
 class AbastecimentoApiTest extends TestCase
 {
+    private function liberarChecklist(Veiculo $veiculo, Motorista $motorista): void
+    {
+        $checkin = Checkin::factory()->create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+        ]);
+
+        ChecklistVeiculo::create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+            'checkin_id' => $checkin->id,
+            'data_referencia' => now()->toDateString(),
+            'status' => 'enviado',
+            'enviado_at' => now(),
+        ]);
+    }
+
     public function test_remover_abastecimento_e_soft_delete(): void
     {
         $this->loginGestor();
@@ -37,6 +56,7 @@ class AbastecimentoApiTest extends TestCase
         $this->loginGestor();
         $veiculo = Veiculo::factory()->create();
         $motorista = Motorista::factory()->create();
+        $this->liberarChecklist($veiculo, $motorista);
 
         $response = $this->postJson('/api/abastecimentos', [
             'veiculo_id' => $veiculo->id,

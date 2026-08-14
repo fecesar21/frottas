@@ -16,7 +16,7 @@ class AbastecimentoFactory extends Factory
         return [
             'veiculo_id' => Veiculo::factory(),
             'motorista_id' => Motorista::factory(),
-            'combustivel' => fake()->randomElement(['Diesel_s10', 'Diesel_s500', 'Gasolina', 'Etanol']),
+            'combustivel' => fake()->randomElement(['diesel_s10', 'diesel_s500', 'gasolina', 'etanol']),
             'litros' => fake()->randomFloat(3, 20, 80),
             'valor_litro' => fake()->randomFloat(3, 4.5, 6.5),
             'km_momento' => fake()->numberBetween(1000, 100000),

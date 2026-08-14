@@ -3,6 +3,7 @@
 namespace Tests\Feature\Viagem;
 
 use App\Models\Checkin;
+use App\Models\ChecklistVeiculo;
 use App\Models\Motorista;
 use App\Models\Veiculo;
 use App\Models\Viagem;
@@ -10,6 +11,21 @@ use Tests\TestCase;
 
 class ViagemApiTest extends TestCase
 {
+    private function liberarChecklist(Veiculo $veiculo, Motorista $motorista, ?Checkin $checkin = null): void
+    {
+        ChecklistVeiculo::create([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+            'checkin_id' => ($checkin ?? Checkin::factory()->create([
+                'veiculo_id' => $veiculo->id,
+                'motorista_id' => $motorista->id,
+            ]))->id,
+            'data_referencia' => now()->toDateString(),
+            'status' => 'enviado',
+            'enviado_at' => now(),
+        ]);
+    }
+
     public function test_lista_viagens(): void
     {
         $this->loginAdmin();
@@ -25,6 +41,7 @@ class ViagemApiTest extends TestCase
         $this->loginGestor();
         $veiculo = Veiculo::factory()->create(['km_atual' => 4000]);
         $motorista = Motorista::factory()->create();
+        $this->liberarChecklist($veiculo, $motorista);
 
         $response = $this->postJson('/api/viagens', [
             'veiculo_id' => $veiculo->id,
@@ -32,6 +49,7 @@ class ViagemApiTest extends TestCase
             'origem' => 'São Paulo',
             'destino' => 'Campinas',
             'km_saida' => 5000,
+            'motivo_viagem' => 'buscar_medico',
         ]);
 
         $response->assertCreated()->assertJsonPath('data.origem', 'São Paulo');
@@ -51,6 +69,7 @@ class ViagemApiTest extends TestCase
             'origem' => 'São Paulo',
             'destino' => 'Campinas',
             'km_saida' => 5000,
+            'motivo_viagem' => 'buscar_medico',
         ])->assertForbidden();
     }
 
@@ -66,6 +85,7 @@ class ViagemApiTest extends TestCase
             'veiculo_id' => $veiculo->id,
             'status' => 'ativo',
         ]);
+        $this->liberarChecklist($veiculo, $motorista, $checkin);
 
         // veiculo_id/motorista_id são exigidos pela validação da request, mas o
         // controller os sobrescreve com os dados do check-in ativo do operador.
@@ -75,6 +95,7 @@ class ViagemApiTest extends TestCase
             'origem' => 'São Paulo',
             'destino' => 'Campinas',
             'km_saida' => 5000,
+            'motivo_viagem' => 'buscar_medico',
         ]);
 
         $response->assertCreated();
