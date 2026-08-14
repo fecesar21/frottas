@@ -31,8 +31,8 @@ Route::get('/health', fn () => response()->json(['status' => 'ok', 'ts' => now()
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('login-ad', [AuthController::class, 'loginAd'])->middleware('throttle:login-ad');
-    Route::post('esqueci-senha', [AuthController::class, 'esqueciSenha'])->middleware('throttle:esqueci-senha');
-    Route::post('redefinir-senha', [AuthController::class, 'redefinirSenha'])->middleware('throttle:esqueci-senha');
+    Route::post('esqueci-senha', [AuthController::class, 'esqueciSenha'])->middleware(['throttle:esqueci-senha', 'throttle:esqueci-senha-ip']);
+    Route::post('redefinir-senha', [AuthController::class, 'redefinirSenha'])->middleware(['throttle:esqueci-senha', 'throttle:esqueci-senha-ip']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);

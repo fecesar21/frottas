@@ -11,6 +11,7 @@ use App\Models\Motorista;
 use App\Models\UnidadeAdMapeamento;
 use App\Models\Usuario;
 use App\Notifications\RedefinicaoSenhaNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -138,7 +139,7 @@ class AuthController extends Controller
 
     public function esqueciSenha(EsqueciSenhaRequest $r)
     {
-        $email = $r->validated()['email'];
+        $email = Str::lower(trim($r->validated()['email']));
 
         $usuario = Usuario::where('ativo', true)->where('email', $email)->first();
 
@@ -151,6 +152,10 @@ class AuthController extends Controller
             );
 
             $usuario->notify(new RedefinicaoSenhaNotification($token, $email));
+        } else {
+            // Paga o mesmo custo de hashing do ramo "usuário encontrado" para
+            // não vazar, por diferença de tempo de resposta, se o e-mail existe.
+            Hash::make(Str::random(64));
         }
 
         return response()->json([
@@ -161,26 +166,27 @@ class AuthController extends Controller
     public function redefinirSenha(RedefinirSenhaRequest $r)
     {
         $dados = $r->validated();
+        $email = Str::lower(trim($dados['email']));
 
-        $registro = DB::table('password_reset_tokens')->where('email', $dados['email'])->first();
+        $registro = DB::table('password_reset_tokens')->where('email', $email)->first();
 
         if (! $registro
-            || abs(now()->diffInMinutes($registro->created_at)) > 60
+            || Carbon::parse($registro->created_at)->addMinutes(60)->isPast()
             || ! Hash::check($dados['token'], $registro->token)
         ) {
-            return response()->json(['error' => 'Token inválido ou expirado'], 422);
+            return response()->json(['message' => 'Token inválido ou expirado'], 422);
         }
 
-        $usuario = Usuario::where('ativo', true)->where('email', $dados['email'])->first();
+        $usuario = Usuario::where('ativo', true)->where('email', $email)->first();
 
         if (! $usuario) {
-            return response()->json(['error' => 'Token inválido ou expirado'], 422);
+            return response()->json(['message' => 'Token inválido ou expirado'], 422);
         }
 
         $usuario->update(['senha_hash' => Hash::make($dados['senha'])]);
         $usuario->tokens()->delete();
 
-        DB::table('password_reset_tokens')->where('email', $dados['email'])->delete();
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
 
         return response()->json(['message' => 'Senha redefinida com sucesso.']);
     }

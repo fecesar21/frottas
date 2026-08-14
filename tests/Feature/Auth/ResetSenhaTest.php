@@ -185,6 +185,30 @@ class ResetSenhaTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_redefinir_senha_com_usuario_inativo_retorna_422_e_nao_altera_senha(): void
+    {
+        $usuario = Usuario::factory()->create([
+            'email' => 'inativoreset@example.com',
+            'senha_hash' => Hash::make('senhaantiga123'),
+            'ativo' => false,
+        ]);
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => 'inativoreset@example.com',
+            'token' => Hash::make('token-valido'),
+            'created_at' => now(),
+        ]);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'email' => 'inativoreset@example.com',
+            'token' => 'token-valido',
+            'senha' => '654321',
+        ])->assertStatus(422);
+
+        $usuario->refresh();
+        $this->assertTrue(Hash::check('senhaantiga123', $usuario->senha_hash));
+    }
+
     private function extrairTokenDaUrl(string $url): string
     {
         parse_str(parse_url($url, PHP_URL_QUERY), $params);
