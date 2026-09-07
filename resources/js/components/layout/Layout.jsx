@@ -21,6 +21,7 @@ const pageTitles = {
   '/abastecimentos': 'Abastecimentos',
   '/relatorios': 'Relatórios',
   '/usuarios': 'Usuários',
+  '/configuracoes': 'Configurações',
 }
 
 const ROTAS_OPERADOR_SEM_CHECKIN = ['/checkins']

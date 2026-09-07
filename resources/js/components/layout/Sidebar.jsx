@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Truck, Users, LogIn,
-  Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X, Building2, ClipboardList
+  Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X, Building2, ClipboardList, Settings
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -142,6 +142,7 @@ export default function Sidebar({ open, onClose }) {
                 {[
                   { to: '/usuarios', label: 'Usuários', icon: UserCog },
                   { to: '/unidades', label: 'Unidades', icon: Building2 },
+                  { to: '/configuracoes', label: 'Configurações', icon: Settings },
                 ].map(({ to, label, icon: Icon }) => (
                   <NavLink
                     key={to}
