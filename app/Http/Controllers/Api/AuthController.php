@@ -8,7 +8,7 @@ use App\Http\Requests\Auth\LoginAdRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RedefinirSenhaRequest;
 use App\Models\Motorista;
-use App\Models\UnidadeAdMapeamento;
+use App\Models\UnidadeLdapConfiguracao;
 use App\Models\Usuario;
 use App\Notifications\RedefinicaoSenhaNotification;
 use Carbon\Carbon;
@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use LdapRecord\Connection;
+use LdapRecord\Container;
 use LdapRecord\LdapRecordException;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
@@ -49,29 +51,17 @@ class AuthController extends Controller
     {
         $input = $r->validated();
 
-        try {
-            $ldapUser = LdapUser::findBy('samaccountname', $input['usuario']);
-        } catch (LdapRecordException $e) {
-            Log::error('Falha ao consultar o AD', ['erro' => $e->getMessage()]);
+        $resolvido = $this->resolverLoginLdap($input['usuario'], $input['senha']);
 
-            return response()->json(['error' => 'Serviço de autenticação indisponível, tente novamente'], 503);
-        }
-
-        if (! $ldapUser) {
+        if ($resolvido === null) {
             return response()->json(['error' => 'Usuário ou senha inválidos'], 401);
         }
 
-        try {
-            $binded = $ldapUser->getConnection()->auth()->attempt($ldapUser->getDn(), $input['senha']);
-        } catch (LdapRecordException $e) {
-            Log::error('Falha ao conectar ao AD para bind', ['erro' => $e->getMessage()]);
-
+        if ($resolvido === []) {
             return response()->json(['error' => 'Serviço de autenticação indisponível, tente novamente'], 503);
         }
 
-        if (! $binded) {
-            return response()->json(['error' => 'Usuário ou senha inválidos'], 401);
-        }
+        ['ldapUser' => $ldapUser, 'unidadeConfig' => $unidadeConfig] = $resolvido;
 
         $guid = $ldapUser->getConvertedGuid();
 
@@ -81,9 +71,8 @@ class AuthController extends Controller
             return response()->json(['error' => 'Serviço de autenticação indisponível, tente novamente'], 503);
         }
 
-        $valorAd = $ldapUser->getFirstAttribute(config('ldap.unidade_attribute'));
-        $unidadeId = UnidadeAdMapeamento::where('valor_ad', $valorAd)->first()?->unidade_id;
         $mail = $ldapUser->getFirstAttribute('mail');
+        $unidadeId = $unidadeConfig->unidade_id;
 
         $usuario = Usuario::where('ldap_guid', $guid)->first();
 
@@ -135,6 +124,69 @@ class AuthController extends Controller
             'token' => $token,
             'user' => $this->buildUserPayload($usuario),
         ]);
+    }
+
+    /**
+     * Tenta autenticar usuario/senha contra cada UnidadeLdapConfiguracao
+     * ativa, em ordem, até um bind funcionar.
+     *
+     * @return array{ldapUser: LdapUser, unidadeConfig: UnidadeLdapConfiguracao}|null|array{}
+     *   null       => nenhuma unidade autenticou (usuário/senha inválidos)
+     *   []         => nenhuma unidade respondeu (falha de conectividade em todas)
+     *   array{...} => sucesso
+     */
+    private function resolverLoginLdap(string $usuario, string $senha): ?array
+    {
+        $configs = UnidadeLdapConfiguracao::where('ativo', true)->get();
+
+        if ($configs->isEmpty()) {
+            // Sem unidades configuradas não é uma falha de conectividade:
+            // trata como credenciais inválidas, igual a "usuário não
+            // encontrado em nenhuma unidade".
+            return null;
+        }
+
+        $algumaRespondeu = false;
+
+        foreach ($configs as $config) {
+            $nomeConexao = 'unidade-ldap-'.$config->id;
+
+            try {
+                $manager = Container::getInstance()->getConnectionManager();
+
+                // Se a conexão já estiver registrada (ex.: uma fake do
+                // DirectoryEmulator em testes), não a substitui por uma
+                // conexão real — apenas reaproveita a existente.
+                if (! $manager->hasConnection($nomeConexao)) {
+                    $manager->addConnection(
+                        new Connection($config->paraConexaoLdap()),
+                        $nomeConexao
+                    );
+                }
+
+                $ldapUser = LdapUser::on($nomeConexao)->findBy('samaccountname', $usuario);
+
+                if (! $ldapUser) {
+                    $algumaRespondeu = true;
+                    continue;
+                }
+
+                $binded = $ldapUser->getConnection()->auth()->attempt($ldapUser->getDn(), $senha);
+                $algumaRespondeu = true;
+
+                if ($binded) {
+                    return ['ldapUser' => $ldapUser, 'unidadeConfig' => $config];
+                }
+            } catch (LdapRecordException $e) {
+                Log::warning('Falha ao consultar AD de uma unidade durante login', [
+                    'unidade_id' => $config->unidade_id,
+                    'erro' => $e->getMessage(),
+                ]);
+                continue;
+            }
+        }
+
+        return $algumaRespondeu ? null : [];
     }
 
     public function esqueciSenha(EsqueciSenhaRequest $r)
