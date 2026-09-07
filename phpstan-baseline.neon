@@ -1,6 +1,42 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Checkin\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/ChecklistVeiculoController.php
+
+		-
+			message: '#^Parameter \#1 \$checkin of method App\\Services\\ChecklistVeiculoService\:\:iniciarOuObter\(\) expects App\\Models\\Checkin, Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Checkin\>\|Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/ChecklistVeiculoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Usuario\:\:\$unreadNotifications\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/NotificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tipo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Middleware/EscopoUnidade.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 2
+			path: app/Http/Middleware/RestringirSolicitante.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''admin''\|''gestor''\|''operador'' and ''solicitante'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Http/Middleware/RestringirSolicitante.php
+
+		-
 			message: '#^Access to an undefined property App\\Http\\Resources\\AbastecimentoResource\:\:\$abastecido_at\.$#'
 			identifier: property.notFound
 			count: 1
@@ -469,6 +505,144 @@ parameters:
 			path: app/Http/Resources/PlantaoResource.php
 
 		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$cidade\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$destinoUnidade\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$destino_unidade_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$fornecedor_nome\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$hospital_destino\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$motivo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$motivo_recusa\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$motoristaPendente\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$numero_atendimento\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$observacoes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$origemUnidade\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$origem_unidade_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$unidade_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$usuario\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$usuario_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$veiculoPendente\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$viagem\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SolicitacaoResource\:\:\$viagem_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nome" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>placa" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/SolicitacaoResource.php
+
+		-
 			message: '#^Access to an undefined property App\\Http\\Resources\\UsuarioResource\:\:\$ativo\.$#'
 			identifier: property.notFound
 			count: 1
@@ -673,6 +847,12 @@ parameters:
 			path: app/Http/Resources/ViagemResource.php
 
 		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$motivo_viagem\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
 			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$motorista\.$#'
 			identifier: property.notFound
 			count: 1
@@ -680,6 +860,12 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$motorista_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ViagemResource\:\:\$numero_atendimento\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Resources/ViagemResource.php
@@ -719,3 +905,45 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Resources/ViagemResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nome" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Notifications/NovaSolicitacaoTransporte.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nome" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Notifications/NovaViagemDesignada.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\ChecklistVeiculoItemModelo\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$requer_valor\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ChecklistVeiculoService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SolicitacaoService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$veiculo_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SolicitacaoService.php
+
+		-
+			message: '#^Parameter \#1 \$checkin of method App\\Services\\SolicitacaoService\:\:trocarVeiculoDoCheckin\(\) expects App\\Models\\Checkin, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/SolicitacaoService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nome" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/SolicitacaoService.php
