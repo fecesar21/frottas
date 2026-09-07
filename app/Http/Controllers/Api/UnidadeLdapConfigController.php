@@ -7,6 +7,7 @@ use App\Http\Requests\UnidadeLdapConfig\UpsertUnidadeLdapConfigRequest;
 use App\Models\Unidade;
 use App\Models\UnidadeLdapConfiguracao;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class UnidadeLdapConfigController extends Controller
 {
@@ -45,6 +46,59 @@ class UnidadeLdapConfigController extends Controller
             : UnidadeLdapConfiguracao::create($data);
 
         return response()->json($this->apresentar($config));
+    }
+
+    public function testar(Request $request, Unidade $unidade): JsonResponse
+    {
+        $data = $request->validate([
+            'host' => 'required|string',
+            'port' => 'required|integer',
+            'base_dn' => 'required|string',
+            'username' => 'required|string',
+            'password' => 'nullable|string',
+        ]);
+
+        if (blank($data['password'] ?? null)) {
+            $configExistente = UnidadeLdapConfiguracao::where('unidade_id', $unidade->id)->first();
+            if (! $configExistente) {
+                return response()->json(['sucesso' => false, 'mensagem' => 'Informe a senha da conta de serviço para testar.']);
+            }
+            $data['password'] = $configExistente->password;
+        }
+
+        $conexao = new \LdapRecord\Connection([
+            'hosts' => [$data['host']],
+            'port' => $data['port'],
+            'base_dn' => $data['base_dn'],
+            'username' => $data['username'],
+            'password' => $data['password'],
+            'use_tls' => $request->boolean('use_ssl', true),
+            'use_starttls' => $request->boolean('use_starttls', false),
+            'timeout' => 5,
+            'options' => [
+                LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER,
+            ],
+        ]);
+
+        try {
+            $conexao->connect();
+        } catch (\LdapRecord\LdapRecordException $e) {
+            return response()->json([
+                'sucesso' => false,
+                'mensagem' => 'Falha ao autenticar a conta de serviço: '.$e->getMessage(),
+            ]);
+        }
+
+        $resultado = $conexao->query()->in($data['base_dn'])->rawFilter('(objectClass=user)')->limit(1)->get();
+
+        if (empty($resultado)) {
+            return response()->json([
+                'sucesso' => true,
+                'mensagem' => 'Conexão OK, mas nenhum usuário encontrado no Base DN informado — confira o Base DN.',
+            ]);
+        }
+
+        return response()->json(['sucesso' => true, 'mensagem' => 'Conexão bem-sucedida.']);
     }
 
     public function destroy(Unidade $unidade): JsonResponse

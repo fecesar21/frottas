@@ -138,5 +138,6 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
         Route::get('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'show']);
         Route::put('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'upsert']);
         Route::delete('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'destroy']);
+        Route::post('unidades/{unidade}/ldap-config/testar', [UnidadeLdapConfigController::class, 'testar']);
     });
 });
