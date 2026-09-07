@@ -4,22 +4,10 @@ namespace Tests\Feature\Unidade;
 
 use App\Models\Unidade;
 use App\Models\Usuario;
-use LdapRecord\Laravel\Testing\DirectoryEmulator;
 use Tests\TestCase;
 
 class TestarConexaoLdapTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        DirectoryEmulator::setup('default');
-    }
-
-    protected function tearDown(): void
-    {
-        DirectoryEmulator::tearDown();
-        parent::tearDown();
-    }
 
     public function test_testar_conexao_nao_persiste_nada(): void
     {

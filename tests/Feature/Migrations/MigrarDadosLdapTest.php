@@ -3,8 +3,8 @@
 namespace Tests\Feature\Migrations;
 
 use App\Models\Unidade;
-use App\Models\UnidadeAdMapeamento;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class MigrarDadosLdapTest extends TestCase
@@ -12,8 +12,26 @@ class MigrarDadosLdapTest extends TestCase
     public function test_migracao_agrupa_valores_ad_por_unidade(): void
     {
         $unidade = Unidade::factory()->create();
-        UnidadeAdMapeamento::create(['valor_ad' => 'HOSP-CENTRO', 'unidade_id' => $unidade->id]);
-        UnidadeAdMapeamento::create(['valor_ad' => 'HOSP-CENTRO-ANEXO', 'unidade_id' => $unidade->id]);
+
+        // A migration 2026_09_06_000007 já foi executada por RefreshDatabase,
+        // logo a tabela foi dropada. Precisamos recreá-la para preparar os dados.
+        if (!DB::getSchemaBuilder()->hasTable('unidade_ad_mapeamentos')) {
+            DB::statement("
+                CREATE TABLE unidade_ad_mapeamentos (
+                    id TEXT PRIMARY KEY,
+                    valor_ad TEXT NOT NULL UNIQUE,
+                    unidade_id TEXT NOT NULL,
+                    created_at DATETIME,
+                    updated_at DATETIME,
+                    FOREIGN KEY (unidade_id) REFERENCES unidades(id)
+                )
+            ");
+        }
+
+        DB::table('unidade_ad_mapeamentos')->insert([
+            ['id' => (string) Str::uuid(), 'valor_ad' => 'HOSP-CENTRO', 'unidade_id' => $unidade->id, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => (string) Str::uuid(), 'valor_ad' => 'HOSP-CENTRO-ANEXO', 'unidade_id' => $unidade->id, 'created_at' => now(), 'updated_at' => now()],
+        ]);
 
         // RefreshDatabase já executou todas as migrations (incluindo esta)
         // antes deste teste criar os dados acima. Como a migration já
