@@ -21,6 +21,7 @@ use Illuminate\Support\Str;
 use LdapRecord\Connection;
 use LdapRecord\Container;
 use LdapRecord\LdapRecordException;
+use LdapRecord\Models\ActiveDirectory\User;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
 class AuthController extends Controller
@@ -164,6 +165,7 @@ class AuthController extends Controller
                     );
                 }
 
+                /** @var User|null $ldapUser */
                 $ldapUser = LdapUser::on($nomeConexao)->findBy('samaccountname', $usuario);
 
                 if (! $ldapUser) {
