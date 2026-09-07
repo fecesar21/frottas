@@ -12,6 +12,7 @@ class SomenteAdmin
         if (auth()->user()?->perfil !== 'admin') {
             return response()->json(['error' => 'Acesso restrito a administradores.'], 403);
         }
+
         return $next($request);
     }
 }

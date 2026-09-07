@@ -3,6 +3,7 @@
 namespace Tests\Feature\Unidade;
 
 use App\Models\Unidade;
+use App\Models\UnidadeLdapConfiguracao;
 use App\Models\Usuario;
 use Tests\TestCase;
 
@@ -80,7 +81,7 @@ class UnidadeLdapConfigApiTest extends TestCase
     public function test_atualizar_com_senha_em_branco_mantem_senha_anterior(): void
     {
         $unidade = Unidade::factory()->create();
-        $config = \App\Models\UnidadeLdapConfiguracao::factory()->create([
+        $config = UnidadeLdapConfiguracao::factory()->create([
             'unidade_id' => $unidade->id,
             'password' => 'senha-original',
         ]);
@@ -124,7 +125,7 @@ class UnidadeLdapConfigApiTest extends TestCase
     public function test_destroy_remove_configuracao(): void
     {
         $unidade = Unidade::factory()->create();
-        \App\Models\UnidadeLdapConfiguracao::factory()->create(['unidade_id' => $unidade->id]);
+        UnidadeLdapConfiguracao::factory()->create(['unidade_id' => $unidade->id]);
 
         $this->actingAs($this->admin(), 'sanctum')
             ->deleteJson("/api/unidades/{$unidade->id}/ldap-config")

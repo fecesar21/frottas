@@ -15,7 +15,7 @@ class LoginAdRequest extends FormRequest
     {
         return [
             'usuario' => 'required|string',
-            'senha'   => 'required|string',
+            'senha' => 'required|string',
         ];
     }
 }

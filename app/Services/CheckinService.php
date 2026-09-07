@@ -35,12 +35,12 @@ class CheckinService
             $veiculo->update(['status' => 'em_uso', 'km_atual' => $data['km_saida']]);
 
             KmRegistro::create([
-                'veiculo_id'    => $veiculo->id,
-                'motorista_id'  => $data['motorista_id'],
-                'checkin_id'    => $checkin->id,
-                'km_anterior'   => $kmAnterior,
-                'km_atual'      => $data['km_saida'],
-                'observacao'    => 'Check-in',
+                'veiculo_id' => $veiculo->id,
+                'motorista_id' => $data['motorista_id'],
+                'checkin_id' => $checkin->id,
+                'km_anterior' => $kmAnterior,
+                'km_atual' => $data['km_saida'],
+                'observacao' => 'Check-in',
                 'registrado_at' => now(),
             ]);
 
@@ -72,27 +72,27 @@ class CheckinService
 
         return DB::transaction(function () use ($data, $checkin) {
             $checkin->update([
-                'status'                    => 'encerrado',
-                'checkout_at'               => now(),
-                'km_retorno'                => $data['km_retorno'] ?? null,
+                'status' => 'encerrado',
+                'checkout_at' => now(),
+                'km_retorno' => $data['km_retorno'] ?? null,
                 'nivel_combustivel_retorno' => $data['nivel_combustivel_retorno'] ?? null,
-                'ocorrencias'               => $data['ocorrencias'] ?? null,
+                'ocorrencias' => $data['ocorrencias'] ?? null,
             ]);
 
             $veiculo = Veiculo::find($checkin->veiculo_id);
             $veiculo->update([
-                'status'   => 'disponivel',
+                'status' => 'disponivel',
                 'km_atual' => $data['km_retorno'] ?? $veiculo->km_atual,
             ]);
 
-            if (!empty($data['km_retorno'])) {
+            if (! empty($data['km_retorno'])) {
                 KmRegistro::create([
-                    'veiculo_id'    => $checkin->veiculo_id,
-                    'motorista_id'  => $checkin->motorista_id,
-                    'checkin_id'    => $checkin->id,
-                    'km_anterior'   => $checkin->km_saida,
-                    'km_atual'      => $data['km_retorno'],
-                    'observacao'    => 'Check-out',
+                    'veiculo_id' => $checkin->veiculo_id,
+                    'motorista_id' => $checkin->motorista_id,
+                    'checkin_id' => $checkin->id,
+                    'km_anterior' => $checkin->km_saida,
+                    'km_atual' => $data['km_retorno'],
+                    'observacao' => 'Check-out',
                     'registrado_at' => now(),
                 ]);
             }

@@ -12,14 +12,14 @@ class ChecklistSeeder extends Seeder
     {
         $categorias = [
             [
-                'nome'  => 'Documentação',
+                'nome' => 'Documentação',
                 'ordem' => 1,
                 'itens' => [
                     ['label' => 'CRLV em dia',         'obrigatorio' => true],
                 ],
             ],
             [
-                'nome'  => 'Exterior',
+                'nome' => 'Exterior',
                 'ordem' => 2,
                 'itens' => [
                     ['label' => 'Lataria sem avarias',  'obrigatorio' => true],
@@ -27,11 +27,11 @@ class ChecklistSeeder extends Seeder
                     ['label' => 'Pneus calibrados',     'obrigatorio' => true],
                     ['label' => 'Estepe disponível',    'obrigatorio' => true],
                     ['label' => 'Faróis funcionando',   'obrigatorio' => true],
-                    ['label' => 'Lanternas funcionando','obrigatorio' => true],
+                    ['label' => 'Lanternas funcionando', 'obrigatorio' => true],
                 ],
             ],
             [
-                'nome'  => 'Mecânica',
+                'nome' => 'Mecânica',
                 'ordem' => 3,
                 'itens' => [
                     ['label' => 'Nível de óleo do motor',    'obrigatorio' => true],
@@ -41,11 +41,11 @@ class ChecklistSeeder extends Seeder
                 ],
             ],
             [
-                'nome'  => 'Interior',
+                'nome' => 'Interior',
                 'ordem' => 4,
                 'itens' => [
                     ['label' => 'Limpeza interna',           'obrigatorio' => true],
-                        ['label' => 'Triângulo de segurança',    'obrigatorio' => true],
+                    ['label' => 'Triângulo de segurança',    'obrigatorio' => true],
                 ],
             ],
         ];

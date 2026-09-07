@@ -16,13 +16,13 @@ class CheckinFactory extends Factory
         $kmSaida = fake()->numberBetween(1000, 100000);
 
         return [
-            'motorista_id'              => Motorista::factory(),
-            'veiculo_id'                => Veiculo::factory(),
-            'turno'                     => fake()->randomElement(['dia', 'noite']),
-            'km_saida'                  => $kmSaida,
-            'nivel_combustivel_saida'   => fake()->numberBetween(20, 100),
-            'checkin_at'                => now()->subHours(fake()->numberBetween(1, 8)),
-            'status'                    => 'ativo',
+            'motorista_id' => Motorista::factory(),
+            'veiculo_id' => Veiculo::factory(),
+            'turno' => fake()->randomElement(['dia', 'noite']),
+            'km_saida' => $kmSaida,
+            'nivel_combustivel_saida' => fake()->numberBetween(20, 100),
+            'checkin_at' => now()->subHours(fake()->numberBetween(1, 8)),
+            'status' => 'ativo',
         ];
     }
 
@@ -30,11 +30,12 @@ class CheckinFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $kmRetorno = $attributes['km_saida'] + fake()->numberBetween(10, 500);
+
             return [
-                'km_retorno'                 => $kmRetorno,
-                'nivel_combustivel_retorno'  => fake()->numberBetween(5, 80),
-                'checkout_at'                => now(),
-                'status'                     => 'encerrado',
+                'km_retorno' => $kmRetorno,
+                'nivel_combustivel_retorno' => fake()->numberBetween(5, 80),
+                'checkout_at' => now(),
+                'status' => 'encerrado',
             ];
         });
     }
