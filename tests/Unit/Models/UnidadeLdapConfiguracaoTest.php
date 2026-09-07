@@ -38,7 +38,21 @@ class UnidadeLdapConfiguracaoTest extends TestCase
         $this->assertSame('DC=empresa,DC=local', $conexao['base_dn']);
         $this->assertSame('svc@empresa.local', $conexao['username']);
         $this->assertSame('segredo', $conexao['password']);
-        $this->assertTrue($conexao['use_ssl']);
-        $this->assertFalse($conexao['use_tls']);
+        $this->assertArrayNotHasKey('use_ssl', $conexao);
+        $this->assertTrue($conexao['use_tls']);
+        $this->assertFalse($conexao['use_starttls']);
+    }
+
+    public function test_para_conexao_ldap_e_aceita_pelo_ldaprecord_sem_erro_de_configuracao(): void
+    {
+        $config = UnidadeLdapConfiguracao::factory()->make();
+
+        // LdapRecord\Configuration\DomainConfiguration lança ConfigurationException
+        // para qualquer chave que não reconheça (ex.: 'use_ssl' não existe — só
+        // 'use_tls'/'use_starttls'). Construir a Connection real aqui garante que
+        // paraConexaoLdap() nunca regride para uma chave inválida.
+        $conexaoLdapRecord = new \LdapRecord\Connection($config->paraConexaoLdap());
+
+        $this->assertTrue($conexaoLdapRecord->getConfiguration()->get('use_tls'));
     }
 }

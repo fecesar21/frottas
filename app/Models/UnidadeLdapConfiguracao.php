@@ -42,8 +42,8 @@ class UnidadeLdapConfiguracao extends Model
             'base_dn' => $this->base_dn,
             'username' => $this->username,
             'password' => $this->password,
-            'use_ssl' => $this->use_ssl,
-            'use_tls' => $this->use_starttls,
+            'use_tls' => $this->use_ssl,
+            'use_starttls' => $this->use_starttls,
             'timeout' => 5,
             'options' => [
                 LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER,
