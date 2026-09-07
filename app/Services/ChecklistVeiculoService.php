@@ -84,6 +84,22 @@ class ChecklistVeiculoService
 
         $item = $resposta->itemModelo ?? ChecklistVeiculoItemModelo::find($data['item_modelo_id']);
 
+        if ($data['conforme'] === null) {
+            $resposta->update([
+                'conforme' => null,
+                'observacao' => null,
+                'valor' => null,
+                'foto_path' => null,
+            ]);
+
+            $conformeCount = ChecklistVeiculoResposta::where('checklist_veiculo_id', $checklist->id)->where('conforme', true)->count();
+            $naoConformeCount = ChecklistVeiculoResposta::where('checklist_veiculo_id', $checklist->id)->where('conforme', false)->count();
+
+            $checklist->update(['itens_conforme' => $conformeCount, 'itens_nao_conforme' => $naoConformeCount]);
+
+            return $resposta;
+        }
+
         if ($item && $item->requer_valor) {
             $valor = $data['valor'] ?? null;
 

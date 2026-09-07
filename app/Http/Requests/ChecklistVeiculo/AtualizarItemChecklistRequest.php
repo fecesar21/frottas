@@ -15,7 +15,7 @@ class AtualizarItemChecklistRequest extends FormRequest
     {
         return [
             'item_modelo_id' => 'required|integer|exists:checklist_veiculo_itens_modelo,id',
-            'conforme' => 'required|boolean',
+            'conforme' => 'present|nullable|boolean',
             'observacao' => 'nullable|string',
             'valor' => 'nullable|integer',
             'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',

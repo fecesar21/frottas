@@ -77,10 +77,24 @@ export default function ChecklistVeiculoModal({ onDone }) {
   const valorMin = (resposta) => resposta.item_modelo?.valor_min ?? 0
   const valorMax = (resposta) => resposta.item_modelo?.valor_max ?? 300
 
-  const marcarConforme = (resposta) => {
+  const desmarcar = (resposta) => {
     setError('')
+    setItemAberto(null)
+    setConformeAberto(null)
+    setObservacao('')
+    setValor('')
+    setFoto(null)
+    salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: null })
+  }
+
+  const marcarConforme = (resposta) => {
+    if (resposta.conforme === true) {
+      desmarcar(resposta)
+      return
+    }
+    setError('')
+    setItemAberto(null)
     if (requerValor(resposta)) {
-      setItemAberto(null)
       setConformeAberto(resposta.item_modelo_id)
       setValor(resposta.valor ?? '')
       return
@@ -89,6 +103,10 @@ export default function ChecklistVeiculoModal({ onDone }) {
   }
 
   const abrirNaoConforme = (resposta) => {
+    if (resposta.conforme === false) {
+      desmarcar(resposta)
+      return
+    }
     setError('')
     setConformeAberto(null)
     setItemAberto(resposta.item_modelo_id)
