@@ -4,7 +4,7 @@ Este runbook documenta o processo para habilitar o login via Active Directory (l
 
 ## Contexto importante
 
-**Cada unidade tem seu próprio Active Directory / Domain Controller.** O sistema hoje suporta apenas **uma conexão LDAP por vez** (`config('ldap.connections.default')`), então cada nova unidade exige repetir este processo com os dados daquele AD específico. Se duas unidades precisarem de login simultâneo, será necessário estender `config/ldap.php` para múltiplas conexões nomeadas (não implementado ainda — avaliar quando a segunda unidade for integrada).
+**Cada unidade tem seu próprio Active Directory / Domain Controller.** O sistema agora suporta **uma conexão LDAP por unidade** através de um banco de dados de configurações gerenciável via UI (sem necessidade de editar `.env` ou estender `config/ldap.php`). Cada unidade pode ter seu próprio Domain Controller e atributos de identificação, configuráveis de forma independente na tela de **Configurações → LDAP por Unidade**.
 
 ## Pré-requisitos (levantar com o TI da unidade)
 
@@ -13,23 +13,9 @@ Este runbook documenta o processo para habilitar o login via Active Directory (l
 3. **Conta de serviço somente leitura** no AD (usuário + senha) para o sistema consultar usuários. Não precisa de privilégio de escrita.
 4. **Qual atributo do AD identifica a unidade física** do funcionário. **Não assuma** que `department` ou `company` funcionam — confirme com uma busca real (ver Passo 3). Nesta empresa, `department` guarda o **setor** (Enfermagem, Médicos...), não a unidade; `company` acabou sendo útil porque, *nesse AD específico*, ele é constante e corresponde à unidade em questão (ver Passo 4).
 
-## Passo 1 — Configurar `.env` de produção
+## Passo 1 — Cadastrar a configuração pela tela de Configurações
 
-No servidor (`ssh fcesarc@192.168.1.6`, diretório `/var/www/frottas`), adicionar/editar no `.env`:
-
-```
-LDAP_HOST=<ip-ou-host-do-dc>
-LDAP_BASE_DN="<base dn completo, com aspas se tiver acentos/espaços>"
-LDAP_USERNAME=<usuario>@<dominio>
-LDAP_PASSWORD="<senha>"
-LDAP_PORT=636
-LDAP_USE_SSL=true
-LDAP_UNIDADE_ATTRIBUTE=<atributo a confirmar no Passo 3>
-```
-
-Depois: `php artisan config:clear && php artisan config:cache`.
-
-**Atenção:** se já existir uma unidade configurada (LDAP de outra unidade), este processo **sobrescreve** a configuração atual — o sistema só suporta uma conexão até `config/ldap.php` ser estendido para múltiplas.
+Não é mais necessário editar `.env` nem reiniciar/cachear config. Como Admin, acesse **Configurações → LDAP por Unidade**, selecione a unidade e preencha host, porta, Base DN, usuário/senha da conta de serviço, SSL/StartTLS e o(s) valor(es) do atributo de unidade (Passo 3 abaixo ainda determina qual atributo e valores usar). Use o botão **Testar Conexão** antes de salvar.
 
 ## Passo 2 — Testar conectividade bruta (antes de confiar no LdapRecord)
 
@@ -85,21 +71,9 @@ Analisar: qual atributo tem um valor que **identifica a unidade física** de for
 - Se o valor **varia por funcionário mas representa unidade** (não setor) → normal, cada valor distinto vira uma linha de mapeamento.
 - Se nenhum atributo padrão serve, verificar a estrutura de OUs (`ldapsearch`/`ldap_search` por `objectClass=organizationalUnit`) — pode ser necessário usar o componente do DN do usuário como identificador (não implementado no código hoje; avaliar mudança se for o caso).
 
-## Passo 4 — Cadastrar o(s) mapeamento(s) de unidade
+## Passo 4 — Preencher o(s) valor(es) de unidade na tela
 
-Via tinker no servidor:
-
-```bash
-php artisan tinker --execute='
-$unidade = App\Models\Unidade::where("nome", "<nome exato da Unidade cadastrada>")->firstOrFail();
-App\Models\UnidadeAdMapeamento::updateOrCreate(
-    ["valor_ad" => "<valor encontrado no Passo 3>"],
-    ["unidade_id" => $unidade->id]
-);
-'
-```
-
-Repetir uma vez por valor distinto do atributo, se a unidade tiver múltiplos valores possíveis (ex.: vários hospitais/setores mapeando cada um para sua `Unidade` correspondente).
+Com o(s) valor(es) do atributo identificados no Passo 3, informe-os no campo "Valores do atributo que identificam esta unidade" da tela de Configurações (múltiplos valores separados por vírgula), e salve.
 
 ## Passo 5 — Testar
 
