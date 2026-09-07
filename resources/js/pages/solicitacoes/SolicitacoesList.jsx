@@ -82,38 +82,94 @@ export default function SolicitacoesList() {
         </span>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-        <table className="w-full text-sm">
+      {/* Cards empilhados: mobile e tablet */}
+      <div className="space-y-3 md:hidden">
+        {(data ?? []).map((s) => (
+          <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-medium text-gray-800">{s.usuario_nome ?? '—'}</p>
+                <p className="text-xs text-gray-500">{fmtDt(s.criado_em)}</p>
+              </div>
+              <Badge value={s.status} />
+            </div>
+            <p className="text-sm text-gray-600">{MOTIVOS[s.motivo] ?? s.motivo}</p>
+            <p className="text-sm text-gray-500 break-words">{detalheMotivo(s)}</p>
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
+              <div>
+                <span className="block text-gray-400">Saída</span>
+                {fmtDt(s.saida_at)}
+              </div>
+              <div>
+                <span className="block text-gray-400">Chegada</span>
+                {fmtDt(s.chegada_at)}
+              </div>
+            </div>
+            <p className="text-sm text-gray-600">
+              <span className="text-gray-400 text-xs block">Motorista</span>
+              {s.motorista_nome ?? '—'}
+            </p>
+            {s.status === 'recusada' && (
+              <p className="text-xs text-red-600" title={s.motivo_recusa}>
+                Recusada: {s.motivo_recusa}
+              </p>
+            )}
+            {(s.status === 'aberto' || s.status === 'recusada') && (
+              <button
+                onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
+                className="w-full text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-2 hover:bg-blue-50 transition-colors"
+              >
+                {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
+              </button>
+            )}
+          </div>
+        ))}
+        {(data ?? []).length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 px-4 py-8 text-center text-gray-400">
+            Nenhuma solicitação encontrada
+          </div>
+        )}
+      </div>
+
+      {/* Tabela: telas médias e grandes */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              {['Data', 'Solicitante', 'Motivo', 'Detalhe', 'Saída', 'Chegada', 'Status', 'Motorista', ''].map(h => (
-                <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
-              ))}
+              <th className="px-3 py-3 text-left font-medium w-[9%]">Data</th>
+              <th className="px-3 py-3 text-left font-medium w-[13%]">Solicitante</th>
+              <th className="px-3 py-3 text-left font-medium w-[14%]">Motivo</th>
+              <th className="px-3 py-3 text-left font-medium w-[18%]">Detalhe</th>
+              <th className="px-3 py-3 text-left font-medium w-[9%]">Saída</th>
+              <th className="px-3 py-3 text-left font-medium w-[9%]">Chegada</th>
+              <th className="px-3 py-3 text-left font-medium w-[13%]">Status</th>
+              <th className="px-3 py-3 text-left font-medium w-[10%]">Motorista</th>
+              <th className="px-3 py-3 text-left font-medium w-[5%]"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {(data ?? []).map((s) => (
               <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(s.criado_em)}</td>
-                <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{s.usuario_nome ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{MOTIVOS[s.motivo] ?? s.motivo}</td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{detalheMotivo(s)}</td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(s.saida_at)}</td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(s.chegada_at)}</td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.criado_em)}</td>
+                <td className="px-3 py-3 font-medium text-gray-800 truncate" title={s.usuario_nome}>{s.usuario_nome ?? '—'}</td>
+                <td className="px-3 py-3 text-gray-600 truncate" title={MOTIVOS[s.motivo] ?? s.motivo}>{MOTIVOS[s.motivo] ?? s.motivo}</td>
+                <td className="px-3 py-3 text-gray-500 truncate" title={detalheMotivo(s)}>{detalheMotivo(s)}</td>
+                <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.saida_at)}</td>
+                <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.chegada_at)}</td>
+                <td className="px-3 py-3">
                   <Badge value={s.status} />
                   {s.status === 'recusada' && (
-                    <p className="text-xs text-red-600 mt-1" title={s.motivo_recusa}>
+                    <p className="text-xs text-red-600 mt-1 truncate" title={s.motivo_recusa}>
                       Recusada: {s.motivo_recusa}
                     </p>
                   )}
                 </td>
-                <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.motorista_nome ?? '—'}</td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3 text-gray-600 truncate" title={s.motorista_nome}>{s.motorista_nome ?? '—'}</td>
+                <td className="px-3 py-3">
                   {(s.status === 'aberto' || s.status === 'recusada') && (
                     <button
                       onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
-                      className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors"
+                      className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors whitespace-nowrap"
                     >
                       {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
                     </button>
