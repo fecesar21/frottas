@@ -9,7 +9,6 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import CheckinForm from './CheckinForm'
-import ChecklistVeiculoModal from './ChecklistVeiculoModal'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm') : '—'
 const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
@@ -19,7 +18,6 @@ export default function CheckinsList() {
   const { isOperador, checkinAtivo, setCheckinAtivo } = useAuth()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
-  const [checklistOpen, setChecklistOpen] = useState(false)
   const [checkoutTarget, setCheckoutTarget] = useState(null)
   const [checkoutForm, setCheckoutForm] = useState({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' })
   const [error, setError] = useState('')
@@ -143,12 +141,8 @@ export default function CheckinsList() {
         <CheckinForm onSuccess={() => {
           setFormOpen(false)
           qc.invalidateQueries({ queryKey: ['checkins'] })
-          if (isOperador) setChecklistOpen(true)
+          qc.invalidateQueries({ queryKey: ['checklist-veiculo'] })
         }} />
-      </Modal>
-
-      <Modal open={checklistOpen} onClose={() => setChecklistOpen(false)} title="Checklist do veículo" size="lg">
-        <ChecklistVeiculoModal onDone={() => setChecklistOpen(false)} />
       </Modal>
 
       <Modal open={!!checkoutTarget} onClose={() => setCheckoutTarget(null)} title="Encerrar check-in">

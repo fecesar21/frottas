@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../contexts/AuthContext'
 import { useRastreamento } from '../../hooks/useRastreamento'
 import * as viagensApi from '../../api/viagens'
+import * as checklistVeiculoApi from '../../api/checklistVeiculo'
+import ChecklistVeiculoModal from '../../pages/checkins/ChecklistVeiculoModal'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
@@ -49,6 +51,19 @@ export function AdminRoute({ children }) {
   return children
 }
 
+function useChecklistVeiculoBloqueio() {
+  const { isOperador, checkinAtivo } = useAuth()
+
+  const { data } = useQuery({
+    queryKey: ['checklist-veiculo', 'bloqueio', checkinAtivo?.id],
+    queryFn: () => checklistVeiculoApi.pendente().then(r => r.data),
+    enabled: isOperador && !!checkinAtivo,
+    refetchOnWindowFocus: false,
+  })
+
+  return isOperador && !!checkinAtivo && !!data && data.status !== 'enviado'
+}
+
 function useRastreamentoGlobal() {
   const { isOperador } = useAuth()
 
@@ -70,6 +85,24 @@ export default function Layout() {
   const title = pageTitles[base] ?? 'Health Drive'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { erro: erroRastreamento, pendentes, rastreando } = useRastreamentoGlobal()
+  const bloqueadoPorChecklist = useChecklistVeiculoBloqueio()
+  const qc = useQueryClient()
+
+  if (bloqueadoPorChecklist) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/70 backdrop-blur-sm p-4">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-2xl">
+            <h2 className="text-base font-semibold text-gray-800">Checklist do veículo obrigatório</h2>
+            <p className="text-xs text-gray-500 mt-1">Preencha todo o checklist para continuar utilizando o sistema.</p>
+          </div>
+          <div className="overflow-y-auto flex-1 px-6 py-5">
+            <ChecklistVeiculoModal onDone={() => qc.invalidateQueries({ queryKey: ['checklist-veiculo'] })} />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50">
