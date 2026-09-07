@@ -8,6 +8,8 @@ use App\Models\Unidade;
 use App\Models\UnidadeLdapConfiguracao;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use LdapRecord\Connection;
+use LdapRecord\LdapRecordException;
 
 class UnidadeLdapConfigController extends Controller
 {
@@ -68,7 +70,7 @@ class UnidadeLdapConfigController extends Controller
             $data['password'] = $configExistente->password;
         }
 
-        $conexao = new \LdapRecord\Connection([
+        $conexao = new Connection([
             'hosts' => [$data['host']],
             'port' => $data['port'],
             'base_dn' => $data['base_dn'],
@@ -84,7 +86,7 @@ class UnidadeLdapConfigController extends Controller
 
         try {
             $conexao->connect();
-        } catch (\LdapRecord\LdapRecordException $e) {
+        } catch (LdapRecordException $e) {
             return response()->json([
                 'sucesso' => false,
                 'mensagem' => 'Falha ao autenticar a conta de serviço: '.$e->getMessage(),
@@ -93,7 +95,7 @@ class UnidadeLdapConfigController extends Controller
 
         try {
             $resultado = $conexao->query()->in($data['base_dn'])->rawFilter('(objectClass=user)')->limit(1)->get();
-        } catch (\LdapRecord\LdapRecordException $e) {
+        } catch (LdapRecordException $e) {
             return response()->json([
                 'sucesso' => false,
                 'mensagem' => 'Falha ao consultar o Base DN informado: '.$e->getMessage(),

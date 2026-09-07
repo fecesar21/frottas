@@ -3,6 +3,8 @@
 namespace Tests\Feature\Migrations;
 
 use App\Models\Unidade;
+use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -15,8 +17,8 @@ class MigrarDadosLdapTest extends TestCase
 
         // A migration 2026_09_06_000007 já foi executada por RefreshDatabase,
         // logo a tabela foi dropada. Precisamos recreá-la para preparar os dados.
-        if (!DB::getSchemaBuilder()->hasTable('unidade_ad_mapeamentos')) {
-            DB::statement("
+        if (! DB::getSchemaBuilder()->hasTable('unidade_ad_mapeamentos')) {
+            DB::statement('
                 CREATE TABLE unidade_ad_mapeamentos (
                     id TEXT PRIMARY KEY,
                     valor_ad TEXT NOT NULL UNIQUE,
@@ -25,7 +27,7 @@ class MigrarDadosLdapTest extends TestCase
                     updated_at DATETIME,
                     FOREIGN KEY (unidade_id) REFERENCES unidades(id)
                 )
-            ");
+            ');
         }
 
         DB::table('unidade_ad_mapeamentos')->insert([
@@ -43,7 +45,7 @@ class MigrarDadosLdapTest extends TestCase
             ->where('migration', '2026_09_06_000006_migrate_dados_ldap_para_unidade_ldap_configuracoes')
             ->delete();
 
-        \Illuminate\Support\Facades\Artisan::call('migrate', [
+        Artisan::call('migrate', [
             '--path' => 'database/migrations/2026_09_06_000006_migrate_dados_ldap_para_unidade_ldap_configuracoes.php',
             '--force' => true,
         ]);
@@ -62,7 +64,7 @@ class MigrarDadosLdapTest extends TestCase
         // para variáveis já carregadas — putenv()/$_ENV sozinhos não
         // seriam enxergados por env(). Escrevemos diretamente no
         // repositório do Env para forçar a sobrescrita nesta suíte.
-        $repo = \Illuminate\Support\Env::getRepository();
+        $repo = Env::getRepository();
         putenv('LDAP_HOST=ldap.exemplo.com.br');
         putenv('LDAP_USERNAME=svc_ldap');
         putenv('LDAP_PASSWORD=segredo-super-secreto');
@@ -76,8 +78,8 @@ class MigrarDadosLdapTest extends TestCase
         try {
             $unidade = Unidade::factory()->create();
 
-            if (!DB::getSchemaBuilder()->hasTable('unidade_ad_mapeamentos')) {
-                DB::statement("
+            if (! DB::getSchemaBuilder()->hasTable('unidade_ad_mapeamentos')) {
+                DB::statement('
                     CREATE TABLE unidade_ad_mapeamentos (
                         id TEXT PRIMARY KEY,
                         valor_ad TEXT NOT NULL UNIQUE,
@@ -86,7 +88,7 @@ class MigrarDadosLdapTest extends TestCase
                         updated_at DATETIME,
                         FOREIGN KEY (unidade_id) REFERENCES unidades(id)
                     )
-                ");
+                ');
             }
 
             DB::table('unidade_ad_mapeamentos')->insert([
@@ -97,7 +99,7 @@ class MigrarDadosLdapTest extends TestCase
                 ->where('migration', '2026_09_06_000006_migrate_dados_ldap_para_unidade_ldap_configuracoes')
                 ->delete();
 
-            \Illuminate\Support\Facades\Artisan::call('migrate', [
+            Artisan::call('migrate', [
                 '--path' => 'database/migrations/2026_09_06_000006_migrate_dados_ldap_para_unidade_ldap_configuracoes.php',
                 '--force' => true,
             ]);
@@ -116,7 +118,7 @@ class MigrarDadosLdapTest extends TestCase
                 ->where('migration', '2026_09_06_000006_migrate_dados_ldap_para_unidade_ldap_configuracoes')
                 ->delete();
 
-            \Illuminate\Support\Facades\Artisan::call('migrate', [
+            Artisan::call('migrate', [
                 '--path' => 'database/migrations/2026_09_06_000006_migrate_dados_ldap_para_unidade_ldap_configuracoes.php',
                 '--force' => true,
             ]);

@@ -131,9 +131,9 @@ class AuthController extends Controller
      * ativa, em ordem, até um bind funcionar.
      *
      * @return array{ldapUser: LdapUser, unidadeConfig: UnidadeLdapConfiguracao}|null|array{}
-     *   null       => nenhuma unidade autenticou (usuário/senha inválidos)
-     *   []         => nenhuma unidade respondeu (falha de conectividade em todas)
-     *   array{...} => sucesso
+     *                                                                                        null       => nenhuma unidade autenticou (usuário/senha inválidos)
+     *                                                                                        []         => nenhuma unidade respondeu (falha de conectividade em todas)
+     *                                                                                        array{...} => sucesso
      */
     private function resolverLoginLdap(string $usuario, string $senha): ?array
     {
@@ -168,6 +168,7 @@ class AuthController extends Controller
 
                 if (! $ldapUser) {
                     $algumaRespondeu = true;
+
                     continue;
                 }
 
@@ -182,6 +183,7 @@ class AuthController extends Controller
                     'unidade_id' => $config->unidade_id,
                     'erro' => $e->getMessage(),
                 ]);
+
                 continue;
             }
         }

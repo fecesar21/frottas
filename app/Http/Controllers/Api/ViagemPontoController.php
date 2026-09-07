@@ -19,9 +19,9 @@ class ViagemPontoController extends Controller
         }
 
         $data = $r->validate([
-            'latitude'     => 'required|numeric|between:-90,90',
-            'longitude'    => 'required|numeric|between:-180,180',
-            'accuracy'     => 'nullable|numeric|min:0',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'accuracy' => 'nullable|numeric|min:0',
             'capturado_at' => 'nullable|date',
         ]);
 

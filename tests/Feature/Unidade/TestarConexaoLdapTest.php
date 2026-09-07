@@ -8,7 +8,6 @@ use Tests\TestCase;
 
 class TestarConexaoLdapTest extends TestCase
 {
-
     public function test_testar_conexao_nao_persiste_nada(): void
     {
         $unidade = Unidade::factory()->create();

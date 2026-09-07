@@ -11,21 +11,21 @@ class VeiculoFactory extends Factory
 
     public function definition(): array
     {
-        $marcas  = ['Volkswagen', 'Ford', 'Chevrolet', 'Fiat', 'Mercedes-Benz', 'Iveco', 'Scania', 'Volvo', 'Renault', 'Toyota'];
+        $marcas = ['Volkswagen', 'Ford', 'Chevrolet', 'Fiat', 'Mercedes-Benz', 'Iveco', 'Scania', 'Volvo', 'Renault', 'Toyota'];
         $modelos = ['Sprinter', 'Transit', 'Ducato', 'Daily', 'Accelo', 'Gol', 'Kombi', 'Fiorino', 'S10', 'Hilux', 'Ranger', 'Master', 'Boxer', 'Duster', 'Ambulância'];
 
         return [
-            'placa'              => strtoupper(fake()->unique()->bothify('???-####')),
-            'modelo'             => fake()->randomElement($modelos),
-            'marca'              => fake()->randomElement($marcas),
-            'ano'                => fake()->numberBetween(2015, 2024),
-            'cor'                => fake()->colorName(),
-            'chassi'             => strtoupper(fake()->unique()->bothify('?????????????????')),
-            'renavam'            => fake()->unique()->numerify('###########'),
-            'combustivel'        => fake()->randomElement(['diesel_s10', 'diesel_s500', 'gasolina', 'flex']),
-            'capacidade_tanque'  => fake()->numberBetween(50, 200),
-            'km_atual'           => fake()->numberBetween(0, 200000),
-            'status'             => 'disponivel',
+            'placa' => strtoupper(fake()->unique()->bothify('???-####')),
+            'modelo' => fake()->randomElement($modelos),
+            'marca' => fake()->randomElement($marcas),
+            'ano' => fake()->numberBetween(2015, 2024),
+            'cor' => fake()->colorName(),
+            'chassi' => strtoupper(fake()->unique()->bothify('?????????????????')),
+            'renavam' => fake()->unique()->numerify('###########'),
+            'combustivel' => fake()->randomElement(['diesel_s10', 'diesel_s500', 'gasolina', 'flex']),
+            'capacidade_tanque' => fake()->numberBetween(50, 200),
+            'km_atual' => fake()->numberBetween(0, 200000),
+            'status' => 'disponivel',
         ];
     }
 

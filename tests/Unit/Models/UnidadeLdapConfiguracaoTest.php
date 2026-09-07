@@ -3,6 +3,7 @@
 namespace Tests\Unit\Models;
 
 use App\Models\UnidadeLdapConfiguracao;
+use LdapRecord\Connection;
 use Tests\TestCase;
 
 class UnidadeLdapConfiguracaoTest extends TestCase
@@ -51,7 +52,7 @@ class UnidadeLdapConfiguracaoTest extends TestCase
         // para qualquer chave que não reconheça (ex.: 'use_ssl' não existe — só
         // 'use_tls'/'use_starttls'). Construir a Connection real aqui garante que
         // paraConexaoLdap() nunca regride para uma chave inválida.
-        $conexaoLdapRecord = new \LdapRecord\Connection($config->paraConexaoLdap());
+        $conexaoLdapRecord = new Connection($config->paraConexaoLdap());
 
         $this->assertTrue($conexaoLdapRecord->getConfiguration()->get('use_tls'));
     }

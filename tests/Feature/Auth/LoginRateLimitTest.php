@@ -8,7 +8,6 @@ use Tests\TestCase;
 
 class LoginRateLimitTest extends TestCase
 {
-
     public function test_sexta_tentativa_de_login_no_mesmo_minuto_retorna_429(): void
     {
         Usuario::factory()->create([

@@ -9,8 +9,11 @@ use Illuminate\Support\Str;
 use LdapRecord\Connection;
 use LdapRecord\Container;
 use LdapRecord\Laravel\Testing\DirectoryEmulator;
+use LdapRecord\Laravel\Testing\LdapObject;
+use LdapRecord\LdapRecordException;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 use LdapRecord\Testing\ConnectionFake;
+use LdapRecord\Testing\LdapFake;
 use Tests\TestCase;
 
 class LoginAdTest extends TestCase
@@ -180,7 +183,7 @@ class LoginAdTest extends TestCase
         // atributo objectguid a partir das colunas guid/guid_key do
         // registro, não da tabela de atributos), simulando um retorno do
         // AD sem esse atributo (guid inutilizável).
-        $ldapObject = \LdapRecord\Laravel\Testing\LdapObject::on($nomeConexao)->latest('id')->firstOrFail();
+        $ldapObject = LdapObject::on($nomeConexao)->latest('id')->firstOrFail();
         $ldapObject->attributes()->where('name', 'objectguid')->delete();
         $ldapObject->forceFill(['guid_key' => null])->save();
 
@@ -263,8 +266,8 @@ class LoginAdTest extends TestCase
         // o LdapRecord lançaria em uma falha real (timeout, host fora do
         // ar, etc.), sem depender de rede real no teste.
         $fakeA->getLdapConnection()->expect(
-            \LdapRecord\Testing\LdapFake::operation('search')->andThrow(
-                new \LdapRecord\LdapRecordException('Falha simulada de conexão com o AD')
+            LdapFake::operation('search')->andThrow(
+                new LdapRecordException('Falha simulada de conexão com o AD')
             )
         );
 
