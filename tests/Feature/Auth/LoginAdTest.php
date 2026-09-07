@@ -3,21 +3,48 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\Unidade;
-use App\Models\UnidadeAdMapeamento;
+use App\Models\UnidadeLdapConfiguracao;
 use App\Models\Usuario;
 use Illuminate\Support\Str;
+use LdapRecord\Connection;
+use LdapRecord\Container;
 use LdapRecord\Laravel\Testing\DirectoryEmulator;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use LdapRecord\Testing\ConnectionFake;
 use Tests\TestCase;
 
 class LoginAdTest extends TestCase
 {
-    protected $fake;
-
-    protected function setUp(): void
+    /**
+     * Cria uma Unidade + UnidadeLdapConfiguracao ativa (ou não, via
+     * overrides) e prepara um fake do DirectoryEmulator para a conexão
+     * nomeada 'unidade-ldap-{id}' que AuthController::resolverLoginLdap
+     * registraria em produção.
+     *
+     * DirectoryEmulator::setup() exige que a conexão já esteja registrada
+     * no Container (ele lê a config dela para clonar antes de substituir
+     * pela fake) — por isso registramos aqui uma Connection real (nunca
+     * chega a conectar de fato) antes de chamar setup(). O controller,
+     * ao rodar, encontra a conexão já registrada com esse nome e não a
+     * sobrescreve, preservando a fake.
+     */
+    private function criarUnidadeComLdap(array $overrides = []): array
     {
-        parent::setUp();
-        $this->fake = DirectoryEmulator::setup('default');
+        $unidade = Unidade::factory()->create();
+        $config = UnidadeLdapConfiguracao::factory()->create(array_merge([
+            'unidade_id' => $unidade->id,
+        ], $overrides));
+
+        $nomeConexao = 'unidade-ldap-'.$config->id;
+
+        Container::getInstance()->getConnectionManager()->addConnection(
+            new Connection($config->paraConexaoLdap()),
+            $nomeConexao
+        );
+
+        $fake = DirectoryEmulator::setup($nomeConexao);
+
+        return [$unidade, $config, $fake];
     }
 
     protected function tearDown(): void
@@ -26,34 +53,30 @@ class LoginAdTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * Cria um usuário no diretório LDAP fake. Por padrão também autoriza o
-     * bind (qualquer senha) para esse DN via actingAs(), simulando login
-     * com credenciais válidas.
-     */
-    private function criarUsuarioLdap(array $attrs = [], bool $autorizarBind = true): LdapUser
+    private function criarUsuarioLdap(string $nomeConexao, ConnectionFake $fake, array $attrs = [], bool $autorizarBind = true): LdapUser
     {
-        $user = LdapUser::create(array_merge([
+        $user = new LdapUser(array_merge([
             'cn' => 'João Silva',
             'displayname' => 'João Silva',
             'samaccountname' => 'jsilva',
             'mail' => 'jsilva@empresa.com.br',
-            'department' => 'HOSP-CENTRO',
             'objectguid' => Str::uuid()->toString(),
         ], $attrs));
 
+        $user->setConnection($nomeConexao);
+        $user->save();
+
         if ($autorizarBind) {
-            $this->fake->actingAs($user);
+            $fake->actingAs($user);
         }
 
         return $user;
     }
 
-    public function test_login_ad_com_credenciais_validas_cria_usuario_solicitante(): void
+    public function test_login_ad_com_credenciais_validas_na_unica_unidade_cria_usuario_solicitante(): void
     {
-        $unidade = Unidade::factory()->create();
-        UnidadeAdMapeamento::create(['valor_ad' => 'HOSP-CENTRO', 'unidade_id' => $unidade->id]);
-        $this->criarUsuarioLdap();
+        [$unidade, $config, $fake] = $this->criarUnidadeComLdap();
+        $this->criarUsuarioLdap('unidade-ldap-'.$config->id, $fake);
 
         $response = $this->postJson('/api/auth/login-ad', [
             'usuario' => 'jsilva',
@@ -71,9 +94,61 @@ class LoginAdTest extends TestCase
         ]);
     }
 
+    public function test_login_ad_tenta_proxima_unidade_quando_primeira_nao_tem_o_usuario(): void
+    {
+        [, $configA, $fakeA] = $this->criarUnidadeComLdap();
+        [$unidadeB, $configB, $fakeB] = $this->criarUnidadeComLdap();
+
+        // Unidade A não tem esse usuário no seu diretório (fake vazia,
+        // nenhum LdapUser criado nela); unidade B tem.
+        $this->criarUsuarioLdap('unidade-ldap-'.$configB->id, $fakeB);
+
+        $response = $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'jsilva',
+            'senha' => 'senha-correta',
+        ]);
+
+        $response->assertOk()->assertJsonPath('user.unidade_id', $unidadeB->id);
+    }
+
+    public function test_login_ad_ignora_unidade_com_configuracao_inativa(): void
+    {
+        [$unidadeInativa, $configInativa, $fakeInativa] = $this->criarUnidadeComLdap(['ativo' => false]);
+        $this->criarUsuarioLdap('unidade-ldap-'.$configInativa->id, $fakeInativa);
+
+        $response = $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'jsilva',
+            'senha' => 'senha-correta',
+        ]);
+
+        $response->assertStatus(401);
+    }
+
+    public function test_login_ad_com_senha_incorreta_em_todas_unidades_retorna_401(): void
+    {
+        [, $config, $fake] = $this->criarUnidadeComLdap();
+        $this->criarUsuarioLdap('unidade-ldap-'.$config->id, $fake, [], autorizarBind: false);
+
+        $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'jsilva',
+            'senha' => 'senha-errada',
+        ])->assertUnauthorized()
+            ->assertJson(['error' => 'Usuário ou senha inválidos']);
+    }
+
+    public function test_login_ad_sem_nenhuma_unidade_configurada_retorna_401(): void
+    {
+        $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'naoexiste',
+            'senha' => 'qualquer',
+        ])->assertUnauthorized()
+            ->assertJson(['error' => 'Usuário ou senha inválidos']);
+    }
+
     public function test_login_ad_com_usuario_existente_atualiza_dados(): void
     {
-        $ldapUser = $this->criarUsuarioLdap();
+        [, $config, $fake] = $this->criarUnidadeComLdap();
+        $ldapUser = $this->criarUsuarioLdap('unidade-ldap-'.$config->id, $fake);
         $guid = $ldapUser->getConvertedGuid();
 
         $usuario = Usuario::factory()->create([
@@ -93,57 +168,21 @@ class LoginAdTest extends TestCase
         ]);
     }
 
-    public function test_login_ad_com_senha_incorreta_retorna_401(): void
-    {
-        // Não autorizamos o bind (não chamamos actingAs), então qualquer
-        // tentativa de bind para este usuário falha no diretório fake,
-        // simulando uma senha incorreta.
-        $this->criarUsuarioLdap([], autorizarBind: false);
-
-        $this->postJson('/api/auth/login-ad', [
-            'usuario' => 'jsilva',
-            'senha' => 'senha-errada',
-        ])->assertUnauthorized()
-            ->assertJson(['error' => 'Usuário ou senha inválidos']);
-    }
-
-    public function test_login_ad_com_usuario_inexistente_retorna_401(): void
-    {
-        $this->postJson('/api/auth/login-ad', [
-            'usuario' => 'naoexiste',
-            'senha' => 'qualquer',
-        ])->assertUnauthorized()
-            ->assertJson(['error' => 'Usuário ou senha inválidos']);
-    }
-
-    public function test_login_ad_sem_mapeamento_de_unidade_cria_usuario_com_unidade_nula(): void
-    {
-        $this->criarUsuarioLdap(['department' => 'SETOR-SEM-MAPEAMENTO']);
-
-        $response = $this->postJson('/api/auth/login-ad', [
-            'usuario' => 'jsilva',
-            'senha' => 'senha-correta',
-        ]);
-
-        $response->assertOk()->assertJsonPath('user.unidade_id', null);
-    }
-
     public function test_login_ad_com_guid_ausente_nao_cria_nem_altera_usuario(): void
     {
+        [, $config, $fake] = $this->criarUnidadeComLdap();
         $countAntes = Usuario::count();
 
-        $this->criarUsuarioLdap();
+        $nomeConexao = 'unidade-ldap-'.$config->id;
+        $this->criarUsuarioLdap($nomeConexao, $fake);
 
-        // O DirectoryEmulator sempre popula um GUID na criação (a partir do
-        // atributo 'objectguid' informado, ou gerando um automaticamente).
-        // Para simular um GUID ausente/vazio vindo do AD, esvaziamos o
-        // valor diretamente no registro subjacente do diretório fake após
-        // a criação — tanto na coluna dedicada `guid` quanto no atributo
-        // LDAP `objectguid` armazenado, já que ambos alimentam o resultado
-        // retornado pela consulta emulada.
-        $ldapObject = \LdapRecord\Laravel\Testing\LdapObject::query()->firstOrFail();
-        $ldapObject->update(['guid' => '']);
+        // Remove o guid persistido na fake (a EmulatedBuilder monta o
+        // atributo objectguid a partir das colunas guid/guid_key do
+        // registro, não da tabela de atributos), simulando um retorno do
+        // AD sem esse atributo (guid inutilizável).
+        $ldapObject = \LdapRecord\Laravel\Testing\LdapObject::on($nomeConexao)->latest('id')->firstOrFail();
         $ldapObject->attributes()->where('name', 'objectguid')->delete();
+        $ldapObject->forceFill(['guid_key' => null])->save();
 
         $response = $this->postJson('/api/auth/login-ad', [
             'usuario' => 'jsilva',
@@ -165,9 +204,8 @@ class LoginAdTest extends TestCase
             'ldap_guid' => null,
         ]);
 
-        $unidadeNovaDoAd = Unidade::factory()->create();
-        UnidadeAdMapeamento::create(['valor_ad' => 'HOSP-CENTRO', 'unidade_id' => $unidadeNovaDoAd->id]);
-        $ldapUser = $this->criarUsuarioLdap();
+        [, $config, $fake] = $this->criarUnidadeComLdap();
+        $ldapUser = $this->criarUsuarioLdap('unidade-ldap-'.$config->id, $fake);
 
         $response = $this->postJson('/api/auth/login-ad', [
             'usuario' => 'jsilva',
@@ -192,7 +230,8 @@ class LoginAdTest extends TestCase
 
     public function test_login_ad_com_usuario_inativo_retorna_401_e_nao_reativa(): void
     {
-        $ldapUser = $this->criarUsuarioLdap();
+        [, $config, $fake] = $this->criarUnidadeComLdap();
+        $ldapUser = $this->criarUsuarioLdap('unidade-ldap-'.$config->id, $fake);
         $guid = $ldapUser->getConvertedGuid();
 
         $usuario = Usuario::factory()->create([
@@ -212,5 +251,30 @@ class LoginAdTest extends TestCase
             'id' => $usuario->id,
             'ativo' => false,
         ]);
+    }
+
+    public function test_login_ad_erro_de_conexao_em_uma_unidade_nao_impede_tentar_a_proxima(): void
+    {
+        [, $configA, $fakeA] = $this->criarUnidadeComLdap();
+        [$unidadeB, $configB, $fakeB] = $this->criarUnidadeComLdap();
+
+        // Unidade A: simula uma falha de conectividade/consulta ao AD
+        // fazendo a operação de busca da fake LDAP lançar a exceção que
+        // o LdapRecord lançaria em uma falha real (timeout, host fora do
+        // ar, etc.), sem depender de rede real no teste.
+        $fakeA->getLdapConnection()->expect(
+            \LdapRecord\Testing\LdapFake::operation('search')->andThrow(
+                new \LdapRecord\LdapRecordException('Falha simulada de conexão com o AD')
+            )
+        );
+
+        $this->criarUsuarioLdap('unidade-ldap-'.$configB->id, $fakeB);
+
+        $response = $this->postJson('/api/auth/login-ad', [
+            'usuario' => 'jsilva',
+            'senha' => 'senha-correta',
+        ]);
+
+        $response->assertOk()->assertJsonPath('user.unidade_id', $unidadeB->id);
     }
 }

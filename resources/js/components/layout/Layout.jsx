@@ -21,6 +21,8 @@ const pageTitles = {
   '/abastecimentos': 'Abastecimentos',
   '/relatorios': 'Relatórios',
   '/usuarios': 'Usuários',
+  '/configuracoes': 'Configurações',
+  '/configuracoes/ldap': 'LDAP por Unidade',
 }
 
 const ROTAS_OPERADOR_SEM_CHECKIN = ['/checkins']

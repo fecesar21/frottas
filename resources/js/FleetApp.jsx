@@ -19,6 +19,8 @@ import Relatorios from './pages/relatorios/Relatorios'
 import UsuariosList from './pages/usuarios/UsuariosList'
 import UnidadesList from './pages/unidades/UnidadesList'
 import UnidadeDetalhes from './pages/unidades/UnidadeDetalhes'
+import ConfiguracoesHub from './pages/configuracoes/ConfiguracoesHub'
+import ConfiguracoesLdap from './pages/configuracoes/ConfiguracoesLdap'
 
 function GestorRoute({ children }) {
   const { isGestor } = useAuth()
@@ -61,6 +63,12 @@ export default function App() {
               } />
               <Route path="/unidades/:id" element={
                 <AdminRoute><UnidadeDetalhes /></AdminRoute>
+              } />
+              <Route path="/configuracoes" element={
+                <AdminRoute><ConfiguracoesHub /></AdminRoute>
+              } />
+              <Route path="/configuracoes/ldap" element={
+                <AdminRoute><ConfiguracoesLdap /></AdminRoute>
               } />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
