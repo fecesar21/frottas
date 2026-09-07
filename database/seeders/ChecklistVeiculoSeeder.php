@@ -46,7 +46,6 @@ class ChecklistVeiculoSeeder extends Seeder
                 'itens' => [
                     ['label' => 'Limpeza interna', 'obrigatorio' => true],
                     ['label' => 'Nível de Oxigênio', 'obrigatorio' => true, 'requer_valor' => true, 'valor_min' => 0, 'valor_max' => 300],
-                    ['label' => 'Extintor de incêndio', 'obrigatorio' => true],
                 ],
             ],
         ];
