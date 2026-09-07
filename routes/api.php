@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PlantaoController;
 use App\Http\Controllers\Api\RelatorioController;
 use App\Http\Controllers\Api\SolicitacaoController;
 use App\Http\Controllers\Api\UnidadeController;
+use App\Http\Controllers\Api\UnidadeLdapConfigController;
 use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\VeiculoController;
 use App\Http\Controllers\Api\ViagemController;
@@ -129,7 +130,13 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::post('notificacoes/marcar-lidas', [NotificacaoController::class, 'marcarTodasLidas'])->name('notificacoes.marcar-lidas');
     Route::patch('notificacoes/{id}/lida', [NotificacaoController::class, 'marcarLida'])->name('notificacoes.marcar-lida');
 
-    // Usuários — somente admin
-    Route::middleware('admin')->apiResource('usuarios', UsuarioController::class)
-        ->only(['index', 'store', 'update', 'destroy']);
+    // Usuários e configurações — somente admin
+    Route::middleware('admin')->group(function () {
+        Route::apiResource('usuarios', UsuarioController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+
+        Route::get('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'show']);
+        Route::put('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'upsert']);
+        Route::delete('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'destroy']);
+    });
 });
