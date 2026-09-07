@@ -10,7 +10,9 @@ export default function ChecklistVeiculoModal({ onDone }) {
   const [error, setError] = useState('')
   const [itemAberto, setItemAberto] = useState(null)
   const [observacao, setObservacao] = useState('')
+  const [valor, setValor] = useState('')
   const [foto, setFoto] = useState(null)
+  const [conformeAberto, setConformeAberto] = useState(null)
 
   const { data: checklist, isLoading } = useQuery({
     queryKey: ['checklist-veiculo', 'pendente'],
@@ -21,7 +23,9 @@ export default function ChecklistVeiculoModal({ onDone }) {
     mutationFn: (payload) => checklistApi.atualizarItem(checklist.id, payload),
     onSuccess: () => {
       setItemAberto(null)
+      setConformeAberto(null)
       setObservacao('')
+      setValor('')
       setFoto(null)
       qc.invalidateQueries({ queryKey: ['checklist-veiculo', 'pendente'] })
     },
@@ -69,16 +73,50 @@ export default function ChecklistVeiculoModal({ onDone }) {
     categorias[cat].push(r)
   }
 
+  const requerValor = (resposta) => !!resposta.item_modelo?.requer_valor
+  const valorMin = (resposta) => resposta.item_modelo?.valor_min ?? 0
+  const valorMax = (resposta) => resposta.item_modelo?.valor_max ?? 300
+
   const marcarConforme = (resposta) => {
     setError('')
+    if (requerValor(resposta)) {
+      setItemAberto(null)
+      setConformeAberto(resposta.item_modelo_id)
+      setValor(resposta.valor ?? '')
+      return
+    }
     salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: true })
   }
 
   const abrirNaoConforme = (resposta) => {
     setError('')
+    setConformeAberto(null)
     setItemAberto(resposta.item_modelo_id)
     setObservacao(resposta.observacao ?? '')
+    setValor(resposta.valor ?? '')
     setFoto(null)
+  }
+
+  const validarValor = (resposta) => {
+    if (!requerValor(resposta)) return true
+    const min = valorMin(resposta)
+    const max = valorMax(resposta)
+    if (valor === '' || valor === null || valor === undefined) {
+      setError(`Informe o valor (${min} a ${max}) para este item.`)
+      return false
+    }
+    const numero = Number(valor)
+    if (!Number.isInteger(numero) || numero < min || numero > max) {
+      setError(`O valor deve ser um número inteiro entre ${min} e ${max}.`)
+      return false
+    }
+    return true
+  }
+
+  const salvarConformeComValor = (resposta) => {
+    setError('')
+    if (!validarValor(resposta)) return
+    salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: true, valor })
   }
 
   const salvarNaoConforme = (resposta) => {
@@ -87,7 +125,8 @@ export default function ChecklistVeiculoModal({ onDone }) {
       setError('Informe a observação para o item não conforme.')
       return
     }
-    salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: false, observacao, foto })
+    if (!validarValor(resposta)) return
+    salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: false, observacao, valor: requerValor(resposta) ? valor : undefined, foto })
   }
 
   const todosRespondidos = respostas.every(r => r.conforme !== null)
@@ -134,8 +173,54 @@ export default function ChecklistVeiculoModal({ onDone }) {
                   </div>
                 </div>
 
+                {conformeAberto === r.item_modelo_id && (
+                  <div className="space-y-2 bg-green-50 border border-green-100 rounded-lg p-3">
+                    <label className="block text-xs text-gray-600">
+                      Nível de Oxigênio ({valorMin(r)} a {valorMax(r)})
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={valorMin(r)}
+                      max={valorMax(r)}
+                      step={1}
+                      value={valor}
+                      onChange={(e) => setValor(e.target.value)}
+                      placeholder="Informe o valor"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => salvarConformeComValor(r)}
+                        disabled={salvarItem.isPending}
+                        className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-green-700 disabled:opacity-60"
+                      >
+                        {salvarItem.isPending ? 'Salvando...' : 'Salvar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {itemAberto === r.item_modelo_id && (
                   <div className="space-y-2 bg-red-50 border border-red-100 rounded-lg p-3">
+                    {requerValor(r) && (
+                      <div className="space-y-1">
+                        <label className="block text-xs text-gray-600">
+                          Nível de Oxigênio ({valorMin(r)} a {valorMax(r)})
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min={valorMin(r)}
+                          max={valorMax(r)}
+                          step={1}
+                          value={valor}
+                          onChange={(e) => setValor(e.target.value)}
+                          placeholder="Informe o valor"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                        />
+                      </div>
+                    )}
                     <textarea
                       value={observacao}
                       onChange={(e) => setObservacao(e.target.value)}
@@ -158,6 +243,10 @@ export default function ChecklistVeiculoModal({ onDone }) {
                       </button>
                     </div>
                   </div>
+                )}
+
+                {r.conforme !== null && itemAberto !== r.item_modelo_id && conformeAberto !== r.item_modelo_id && requerValor(r) && r.valor !== null && r.valor !== undefined && (
+                  <p className="text-xs text-gray-500">Valor registrado: <strong>{r.valor}</strong></p>
                 )}
 
                 {r.conforme === false && itemAberto !== r.item_modelo_id && r.observacao && (

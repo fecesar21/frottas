@@ -82,9 +82,27 @@ class ChecklistVeiculoService
             ->where('item_modelo_id', $data['item_modelo_id'])
             ->firstOrFail();
 
+        $item = $resposta->itemModelo ?? ChecklistVeiculoItemModelo::find($data['item_modelo_id']);
+
+        if ($item && $item->requer_valor) {
+            $valor = $data['valor'] ?? null;
+
+            if ($valor === null || $valor === '') {
+                throw ValidationException::withMessages(['valor' => 'Informe o valor para este item.']);
+            }
+
+            $min = $item->valor_min ?? 0;
+            $max = $item->valor_max ?? 300;
+
+            if (! is_numeric($valor) || (int) $valor != $valor || $valor < $min || $valor > $max) {
+                throw ValidationException::withMessages(['valor' => "O valor deve ser um número inteiro entre {$min} e {$max}."]);
+            }
+        }
+
         $resposta->update([
             'conforme' => $data['conforme'],
             'observacao' => $data['observacao'] ?? null,
+            'valor' => $item && $item->requer_valor ? (int) $data['valor'] : null,
             'foto_path' => $data['foto_path'] ?? $resposta->foto_path,
         ]);
 

@@ -10,7 +10,13 @@ class ChecklistVeiculoItemModelo extends Model
 {
     protected $table = 'checklist_veiculo_itens_modelo';
 
-    protected $fillable = ['categoria_id', 'label', 'descricao', 'ordem', 'obrigatorio', 'ativo'];
+    protected $fillable = ['categoria_id', 'label', 'descricao', 'ordem', 'obrigatorio', 'requer_valor', 'valor_min', 'valor_max', 'ativo'];
+
+    protected $casts = [
+        'obrigatorio' => 'boolean',
+        'requer_valor' => 'boolean',
+        'ativo' => 'boolean',
+    ];
 
     public function categoria(): BelongsTo
     {

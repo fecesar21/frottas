@@ -45,7 +45,7 @@ class ChecklistVeiculoSeeder extends Seeder
                 'ordem' => 4,
                 'itens' => [
                     ['label' => 'Limpeza interna', 'obrigatorio' => true],
-                    ['label' => 'Triângulo de segurança', 'obrigatorio' => true],
+                    ['label' => 'Nível de Oxigênio', 'obrigatorio' => true, 'requer_valor' => true, 'valor_min' => 0, 'valor_max' => 300],
                     ['label' => 'Extintor de incêndio', 'obrigatorio' => true],
                 ],
             ],
@@ -60,7 +60,14 @@ class ChecklistVeiculoSeeder extends Seeder
             foreach ($cat['itens'] as $i => $item) {
                 ChecklistVeiculoItemModelo::firstOrCreate(
                     ['categoria_id' => $categoria->id, 'label' => $item['label']],
-                    ['obrigatorio' => $item['obrigatorio'], 'ordem' => $i + 1, 'ativo' => true]
+                    [
+                        'obrigatorio' => $item['obrigatorio'],
+                        'requer_valor' => $item['requer_valor'] ?? false,
+                        'valor_min' => $item['valor_min'] ?? null,
+                        'valor_max' => $item['valor_max'] ?? null,
+                        'ordem' => $i + 1,
+                        'ativo' => true,
+                    ]
                 );
             }
         }

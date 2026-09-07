@@ -16,10 +16,11 @@ class ChecklistVeiculoResposta extends Model
 
     protected $keyType = 'string';
 
-    protected $fillable = ['checklist_veiculo_id', 'item_modelo_id', 'conforme', 'observacao', 'foto_path'];
+    protected $fillable = ['checklist_veiculo_id', 'item_modelo_id', 'conforme', 'observacao', 'valor', 'foto_path'];
 
     protected $casts = [
         'conforme' => 'boolean',
+        'valor' => 'integer',
     ];
 
     public function checklist(): BelongsTo
