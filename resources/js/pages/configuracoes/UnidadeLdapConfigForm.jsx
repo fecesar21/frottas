@@ -139,13 +139,13 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
         </div>
 
         <div className="col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Valores do atributo que identificam esta unidade *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Valores do atributo que identificam esta unidade</label>
           <input
-            type="text" required value={form.valoresAdTexto} onChange={set('valoresAdTexto')}
+            type="text" value={form.valoresAdTexto} onChange={set('valoresAdTexto')}
             placeholder="Ex: HOSP-CENTRO, HOSP-CENTRO-ANEXO"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <p className="text-xs text-gray-400 mt-1">Separe múltiplos valores por vírgula.</p>
+          <p className="text-xs text-gray-400 mt-1">Opcional — reservado para uso futuro (desambiguação de unidade por atributo). Hoje o sistema não consulta este valor durante o login. Separe múltiplos valores por vírgula.</p>
           {fieldErrors.valores_ad && <p className="text-red-500 text-xs mt-1">{fieldErrors.valores_ad[0]}</p>}
         </div>
 

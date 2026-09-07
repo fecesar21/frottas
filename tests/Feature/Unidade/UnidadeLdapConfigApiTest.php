@@ -100,8 +100,12 @@ class UnidadeLdapConfigApiTest extends TestCase
         $this->assertEquals('senha-original', $config->fresh()->password);
     }
 
-    public function test_valores_ad_vazio_falha_validacao(): void
+    public function test_valores_ad_vazio_e_permitido(): void
     {
+        // valores_ad é campo reservado para uso futuro (o fluxo de login
+        // hoje resolve a unidade pelo próprio unidade_id da configuração
+        // que autenticou, nunca por este atributo) — não deve bloquear o
+        // cadastro de uma configuração LDAP.
         $unidade = Unidade::factory()->create();
 
         $this->actingAs($this->admin(), 'sanctum')
@@ -114,7 +118,7 @@ class UnidadeLdapConfigApiTest extends TestCase
                 'unidade_attribute' => 'department',
                 'valores_ad' => [],
             ])
-            ->assertStatus(422);
+            ->assertOk();
     }
 
     public function test_destroy_remove_configuracao(): void

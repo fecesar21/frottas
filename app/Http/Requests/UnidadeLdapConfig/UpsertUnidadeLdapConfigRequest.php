@@ -22,7 +22,7 @@ class UpsertUnidadeLdapConfigRequest extends FormRequest
             'use_ssl' => 'boolean',
             'use_starttls' => 'boolean',
             'unidade_attribute' => 'required|string|max:100',
-            'valores_ad' => 'required|array|min:1',
+            'valores_ad' => 'nullable|array',
             'valores_ad.*' => 'required|string|max:255',
             'ativo' => 'boolean',
         ];

@@ -38,7 +38,7 @@ echo $bind ? "BIND OK" . PHP_EOL : "BIND FALHOU: " . ldap_error($conn) . PHP_EOL
 '
 ```
 
-**Se falhar com "Can't contact LDAP server":** quase sempre é TLS — ou LDAPS não está habilitado no DC (pedir ao TI para habilitar/instalar certificado), ou o certificado é de uma CA interna não reconhecida pelo sistema. Neste segundo caso, `config/ldap.php` já vem preparado com:
+**Se falhar com "Can't contact LDAP server":** quase sempre é TLS — ou LDAPS não está habilitado no DC (pedir ao TI para habilitar/instalar certificado), ou o certificado é de uma CA interna não reconhecida pelo sistema. Neste segundo caso, o próprio código já trata isso automaticamente: `App\Models\UnidadeLdapConfiguracao::paraConexaoLdap()` aplica, para toda unidade, a opção:
 
 ```php
 'options' => [
@@ -46,7 +46,7 @@ echo $bind ? "BIND OK" . PHP_EOL : "BIND FALHOU: " . ldap_error($conn) . PHP_EOL
 ],
 ```
 
-que desabilita a validação da cadeia do certificado (a conexão continua criptografada via LDAPS — só não valida a autoridade emissora). Isso já é a configuração padrão do projeto; normalmente não precisa mexer nesse arquivo para uma nova unidade, só se o comportamento for diferente.
+que desabilita a validação da cadeia do certificado (a conexão continua criptografada via LDAPS — só não valida a autoridade emissora). Esse comportamento é aplicado automaticamente a todas as unidades a partir da configuração cadastrada em Configurações → LDAP por Unidade — não existe mais um `config/ldap.php` para checar ou editar.
 
 ## Passo 3 — Descobrir o atributo correto de unidade
 

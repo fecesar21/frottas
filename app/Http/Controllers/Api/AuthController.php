@@ -137,7 +137,7 @@ class AuthController extends Controller
      */
     private function resolverLoginLdap(string $usuario, string $senha): ?array
     {
-        $configs = UnidadeLdapConfiguracao::where('ativo', true)->get();
+        $configs = UnidadeLdapConfiguracao::where('ativo', true)->orderBy('created_at')->get();
 
         if ($configs->isEmpty()) {
             // Sem unidades configuradas não é uma falha de conectividade:

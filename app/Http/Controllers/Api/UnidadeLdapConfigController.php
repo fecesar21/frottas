@@ -56,6 +56,8 @@ class UnidadeLdapConfigController extends Controller
             'base_dn' => 'required|string',
             'username' => 'required|string',
             'password' => 'nullable|string',
+            'use_ssl' => 'boolean',
+            'use_starttls' => 'boolean',
         ]);
 
         if (blank($data['password'] ?? null)) {
@@ -72,8 +74,8 @@ class UnidadeLdapConfigController extends Controller
             'base_dn' => $data['base_dn'],
             'username' => $data['username'],
             'password' => $data['password'],
-            'use_tls' => $request->boolean('use_ssl', true),
-            'use_starttls' => $request->boolean('use_starttls', false),
+            'use_tls' => $data['use_ssl'] ?? true,
+            'use_starttls' => $data['use_starttls'] ?? false,
             'timeout' => 5,
             'options' => [
                 LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER,
@@ -89,7 +91,14 @@ class UnidadeLdapConfigController extends Controller
             ]);
         }
 
-        $resultado = $conexao->query()->in($data['base_dn'])->rawFilter('(objectClass=user)')->limit(1)->get();
+        try {
+            $resultado = $conexao->query()->in($data['base_dn'])->rawFilter('(objectClass=user)')->limit(1)->get();
+        } catch (\LdapRecord\LdapRecordException $e) {
+            return response()->json([
+                'sucesso' => false,
+                'mensagem' => 'Falha ao consultar o Base DN informado: '.$e->getMessage(),
+            ]);
+        }
 
         if (empty($resultado)) {
             return response()->json([
