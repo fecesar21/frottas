@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\LocalidadeController;
 use App\Http\Controllers\Api\MotoristaController;
+use App\Http\Controllers\Api\PontoViagemController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
 use App\Http\Controllers\Api\RelatorioController;
@@ -131,6 +132,9 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::get('localidades/{localidade}', [LocalidadeController::class, 'show'])->name('localidades.show');
     Route::patch('localidades/{localidade}', [LocalidadeController::class, 'update']);
     Route::delete('localidades/{localidade}', [LocalidadeController::class, 'destroy']);
+
+    // Pontos de Viagem (agregador de Unidades e Localidades)
+    Route::get('pontos-viagem', [PontoViagemController::class, 'index']);
 
     // Notificações
     Route::get('notificacoes', [NotificacaoController::class, 'index'])->name('notificacoes.index');
