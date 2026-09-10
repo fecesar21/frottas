@@ -20,6 +20,7 @@ class RestringirSolicitante
         'solicitacoes.cancelar',
         'unidades.index',
         'unidades.show',
+        'pontos-viagem.index',
         'notificacoes.index',
         'notificacoes.nao-lidas',
         'notificacoes.marcar-lidas',

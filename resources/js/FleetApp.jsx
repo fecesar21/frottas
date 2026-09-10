@@ -21,6 +21,7 @@ import UnidadesList from './pages/unidades/UnidadesList'
 import UnidadeDetalhes from './pages/unidades/UnidadeDetalhes'
 import ConfiguracoesHub from './pages/configuracoes/ConfiguracoesHub'
 import ConfiguracoesLdap from './pages/configuracoes/ConfiguracoesLdap'
+import LocalidadesList from './pages/localidades/LocalidadesList'
 
 function GestorRoute({ children }) {
   const { isGestor } = useAuth()
@@ -69,6 +70,9 @@ export default function App() {
               } />
               <Route path="/configuracoes/ldap" element={
                 <AdminRoute><ConfiguracoesLdap /></AdminRoute>
+              } />
+              <Route path="/configuracoes/localidades" element={
+                <AdminRoute><LocalidadesList /></AdminRoute>
               } />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ChevronRight } from 'lucide-react'
+import { ShieldCheck, ChevronRight, MapPin } from 'lucide-react'
 
 const secoes = [
   {
@@ -7,6 +7,12 @@ const secoes = [
     titulo: 'LDAP por Unidade',
     descricao: 'Configure a conexão com o Active Directory de cada unidade para permitir login de solicitantes via rede.',
     icon: ShieldCheck,
+  },
+  {
+    to: '/configuracoes/localidades',
+    titulo: 'Localidades',
+    descricao: 'Cadastre locais externos (hospitais parceiros, clínicas, empresas) para usar como origem/destino nas solicitações de transporte.',
+    icon: MapPin,
   },
 ]
 

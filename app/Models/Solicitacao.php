@@ -19,7 +19,7 @@ class Solicitacao extends Model
 
     protected $fillable = [
         'usuario_id', 'unidade_id', 'motivo',
-        'origem_unidade_id', 'destino_unidade_id', 'numero_atendimento',
+        'origem_tipo', 'origem_id', 'destino_tipo', 'destino_id', 'numero_atendimento',
         'cidade', 'hospital_destino', 'fornecedor_nome',
         'status', 'viagem_id', 'motorista_pendente_id', 'veiculo_pendente_id', 'motivo_recusa', 'observacoes',
     ];
@@ -41,19 +41,39 @@ class Solicitacao extends Model
     }
 
     /**
-     * @return BelongsTo<Unidade, $this>
+     * NÃO é uma relação Eloquent — é um método comum que resolve, em tempo
+     * de execução, uma Unidade ou Localidade a partir de origem_tipo/origem_id.
+     * Sempre chame como método: $solicitacao->origem(). NÃO use acesso de
+     * propriedade sem parênteses ($solicitacao->origem) nem
+     * Solicitacao::with(['origem']) / ->load(['origem']) — isso lança
+     * LogicException, pois o Eloquent tentará tratá-lo como relação.
      */
-    public function origemUnidade(): BelongsTo
+    public function origem(): Unidade|Localidade|null
     {
-        return $this->belongsTo(Unidade::class, 'origem_unidade_id');
+        return $this->resolverPonto($this->origem_tipo, $this->origem_id);
     }
 
     /**
-     * @return BelongsTo<Unidade, $this>
+     * NÃO é uma relação Eloquent — mesmo aviso de origem(): sempre chame
+     * como método $solicitacao->destino(), nunca via propriedade, with()
+     * ou load().
      */
-    public function destinoUnidade(): BelongsTo
+    public function destino(): Unidade|Localidade|null
     {
-        return $this->belongsTo(Unidade::class, 'destino_unidade_id');
+        return $this->resolverPonto($this->destino_tipo, $this->destino_id);
+    }
+
+    private function resolverPonto(?string $tipo, ?string $id): Unidade|Localidade|null
+    {
+        if (! $tipo || ! $id) {
+            return null;
+        }
+
+        return match ($tipo) {
+            'unidade' => Unidade::find($id),
+            'localidade' => Localidade::find($id),
+            default => null,
+        };
     }
 
     /**
