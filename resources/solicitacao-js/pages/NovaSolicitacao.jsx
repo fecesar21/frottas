@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as solicitacoesApi from '../api/solicitacoes'
-import * as unidadesApi from '../api/unidades'
+import * as pontosViagemApi from '../api/pontosViagem'
 import Layout from '../components/Layout'
 
 const MOTIVOS = [
@@ -15,8 +15,10 @@ const MOTIVOS = [
 
 const INITIAL = {
   motivo: '',
-  origem_unidade_id: '',
-  destino_unidade_id: '',
+  origem_tipo: '',
+  origem_id: '',
+  destino_tipo: '',
+  destino_id: '',
   numero_atendimento: '',
   cidade: '',
   hospital_destino: '',
@@ -27,16 +29,21 @@ const INITIAL = {
 export default function NovaSolicitacao() {
   const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL)
-  const [unidades, setUnidades] = useState([])
+  const [pontos, setPontos] = useState([])
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [sucesso, setSucesso] = useState(false)
 
   useEffect(() => {
-    unidadesApi.listar().then(({ data }) => setUnidades(data.data ?? data)).catch(() => {})
+    pontosViagemApi.listar().then(({ data }) => setPontos(data.data ?? data)).catch(() => {})
   }, [])
 
   const setField = (field, value) => setForm(f => ({ ...f, [field]: value }))
+
+  const setPonto = (prefixo, pontoId) => {
+    const ponto = pontos.find(p => p.id === pontoId)
+    setForm(f => ({ ...f, [`${prefixo}_id`]: pontoId, [`${prefixo}_tipo`]: ponto?.tipo ?? '' }))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -103,27 +110,27 @@ export default function NovaSolicitacao() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Origem *</label>
               <select
                 required
-                value={form.origem_unidade_id}
-                onChange={(e) => setField('origem_unidade_id', e.target.value)}
+                value={form.origem_id}
+                onChange={(e) => setPonto('origem', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">Selecione...</option>
-                {unidades.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                {pontos.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
               </select>
-              {fe('origem_unidade_id')}
+              {fe('origem_id')}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Destino *</label>
               <select
                 required
-                value={form.destino_unidade_id}
-                onChange={(e) => setField('destino_unidade_id', e.target.value)}
+                value={form.destino_id}
+                onChange={(e) => setPonto('destino', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">Selecione...</option>
-                {unidades.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                {pontos.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
               </select>
-              {fe('destino_unidade_id')}
+              {fe('destino_id')}
             </div>
           </div>
         )}
