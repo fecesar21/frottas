@@ -38,4 +38,19 @@ class PontoViagemApiTest extends TestCase
         $this->assertSame('localidade', $itens['Local B']['tipo']);
         $this->assertSame($localidade->id, $itens['Local B']['id']);
     }
+
+    public function test_solicitante_acessa_pontos_viagem(): void
+    {
+        // Regressão: a rota precisa estar nomeada ('pontos-viagem.index') e
+        // constar na allowlist de App\Http\Middleware\RestringirSolicitante,
+        // senão usuários com perfil "solicitante" (público-alvo da tela de
+        // Nova Solicitação) recebem 403 e o formulário fica sem opções de
+        // Origem/Destino.
+        $this->loginAs('solicitante');
+
+        Unidade::factory()->create(['nome' => 'Hospital Central', 'ativo' => true]);
+        Localidade::factory()->create(['nome' => 'Clínica Parceira', 'ativo' => true]);
+
+        $this->getJson('/api/pontos-viagem')->assertOk();
+    }
 }

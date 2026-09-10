@@ -134,7 +134,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::delete('localidades/{localidade}', [LocalidadeController::class, 'destroy']);
 
     // Pontos de Viagem (agregador de Unidades e Localidades)
-    Route::get('pontos-viagem', [PontoViagemController::class, 'index']);
+    Route::get('pontos-viagem', [PontoViagemController::class, 'index'])->name('pontos-viagem.index');
 
     // Notificações
     Route::get('notificacoes', [NotificacaoController::class, 'index'])->name('notificacoes.index');

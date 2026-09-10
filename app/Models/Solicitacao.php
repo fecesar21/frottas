@@ -40,11 +40,24 @@ class Solicitacao extends Model
         return $this->belongsTo(Unidade::class);
     }
 
+    /**
+     * NÃO é uma relação Eloquent — é um método comum que resolve, em tempo
+     * de execução, uma Unidade ou Localidade a partir de origem_tipo/origem_id.
+     * Sempre chame como método: $solicitacao->origem(). NÃO use acesso de
+     * propriedade sem parênteses ($solicitacao->origem) nem
+     * Solicitacao::with(['origem']) / ->load(['origem']) — isso lança
+     * LogicException, pois o Eloquent tentará tratá-lo como relação.
+     */
     public function origem(): Unidade|Localidade|null
     {
         return $this->resolverPonto($this->origem_tipo, $this->origem_id);
     }
 
+    /**
+     * NÃO é uma relação Eloquent — mesmo aviso de origem(): sempre chame
+     * como método $solicitacao->destino(), nunca via propriedade, with()
+     * ou load().
+     */
     public function destino(): Unidade|Localidade|null
     {
         return $this->resolverPonto($this->destino_tipo, $this->destino_id);

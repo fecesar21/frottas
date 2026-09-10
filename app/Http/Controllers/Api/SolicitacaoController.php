@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Solicitacao\StoreSolicitacaoRequest;
 use App\Http\Resources\SolicitacaoResource;
+use App\Models\Localidade;
 use App\Models\Solicitacao;
+use App\Models\Unidade;
 use App\Services\SolicitacaoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class SolicitacaoController extends Controller
@@ -39,7 +42,48 @@ class SolicitacaoController extends Controller
             ->limit(200)
             ->get();
 
-        return SolicitacaoResource::collection($solicitacoes);
+        // Resolve nomes de origem/destino em lote (evita N+1) e disponibiliza
+        // para o resource via propriedade estática. ->response() força a
+        // serialização (toArray de cada item) a acontecer agora, antes de
+        // limpar a estática no finally — se retornássemos a collection "crua"
+        // o Router só chamaria toResponse()/toArray() depois deste método
+        // retornar, quando a estática já teria sido zerada.
+        SolicitacaoResource::$nomesPorId = $this->resolverNomesPorId($solicitacoes);
+
+        try {
+            return SolicitacaoResource::collection($solicitacoes)->response();
+        } finally {
+            SolicitacaoResource::$nomesPorId = null;
+        }
+    }
+
+    /**
+     * Resolve, em lote, os nomes de Unidade/Localidade referenciados pelas
+     * colunas origem_id/destino_id de uma coleção de solicitações, evitando
+     * o N+1 de chamar Solicitacao::origem()/destino() (que fazem find() por
+     * solicitação) uma vez por linha da listagem.
+     *
+     * @param  Collection<int, Solicitacao>  $solicitacoes
+     * @return array<string, string>
+     */
+    private function resolverNomesPorId($solicitacoes): array
+    {
+        $unidadeIds = collect();
+        $localidadeIds = collect();
+
+        foreach (['origem', 'destino'] as $prefixo) {
+            $unidadeIds = $unidadeIds->merge(
+                $solicitacoes->where("{$prefixo}_tipo", 'unidade')->pluck("{$prefixo}_id")
+            );
+            $localidadeIds = $localidadeIds->merge(
+                $solicitacoes->where("{$prefixo}_tipo", 'localidade')->pluck("{$prefixo}_id")
+            );
+        }
+
+        $nomesUnidades = Unidade::whereIn('id', $unidadeIds->filter()->unique())->pluck('nome', 'id');
+        $nomesLocalidades = Localidade::whereIn('id', $localidadeIds->filter()->unique())->pluck('nome', 'id');
+
+        return $nomesUnidades->merge($nomesLocalidades)->all();
     }
 
     public function show(Request $r, Solicitacao $solicitacao)
