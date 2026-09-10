@@ -36,10 +36,11 @@ class NovaViagemDesignada extends Notification implements ShouldQueue
 
     private function detalhe(): string
     {
-        $this->solicitacao->loadMissing(['origemUnidade', 'destinoUnidade']);
+        $origem = $this->solicitacao->origem();
+        $destino = $this->solicitacao->destino();
 
-        if ($this->solicitacao->origemUnidade || $this->solicitacao->destinoUnidade) {
-            return ($this->solicitacao->origemUnidade?->nome ?? '—').' → '.($this->solicitacao->destinoUnidade?->nome ?? '—');
+        if ($origem || $destino) {
+            return ($origem?->nome ?? '—').' → '.($destino?->nome ?? '—');
         }
 
         return $this->solicitacao->cidade ?? $this->solicitacao->hospital_destino ?? 'Sem detalhe';

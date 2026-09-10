@@ -3,6 +3,7 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Models\Checkin;
+use App\Models\Localidade;
 use App\Models\Motorista;
 use App\Models\Solicitacao;
 use App\Models\Unidade;
@@ -32,17 +33,42 @@ class SolicitacaoApiTest extends TestCase
 
         $this->postJson('/api/solicitacoes', ['motivo' => 'transferencia_paciente'])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['origem_unidade_id', 'destino_unidade_id', 'numero_atendimento']);
+            ->assertJsonValidationErrors(['origem_tipo', 'origem_id', 'destino_tipo', 'destino_id', 'numero_atendimento']);
 
         $origem = Unidade::factory()->create();
         $destino = Unidade::factory()->create();
 
         $this->postJson('/api/solicitacoes', [
             'motivo' => 'transferencia_paciente',
-            'origem_unidade_id' => $origem->id,
-            'destino_unidade_id' => $destino->id,
+            'origem_tipo' => 'unidade',
+            'origem_id' => $origem->id,
+            'destino_tipo' => 'unidade',
+            'destino_id' => $destino->id,
             'numero_atendimento' => 12345,
         ])->assertCreated();
+    }
+
+    public function test_transferencia_paciente_aceita_localidade_como_origem_ou_destino(): void
+    {
+        $this->loginOperador();
+
+        $origem = Unidade::factory()->create();
+        $destino = Localidade::factory()->create();
+
+        $response = $this->postJson('/api/solicitacoes', [
+            'motivo' => 'transferencia_paciente',
+            'origem_tipo' => 'unidade',
+            'origem_id' => $origem->id,
+            'destino_tipo' => 'localidade',
+            'destino_id' => $destino->id,
+            'numero_atendimento' => 54321,
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('solicitacoes', [
+            'destino_tipo' => 'localidade',
+            'destino_id' => $destino->id,
+        ]);
     }
 
     public function test_operador_so_ve_as_proprias_solicitacoes(): void

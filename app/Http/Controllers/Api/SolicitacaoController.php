@@ -22,7 +22,7 @@ class SolicitacaoController extends Controller
         // podendo filtrar opcionalmente via ?unidade_id=. Operador e solicitante só veem as próprias.
         $unidadeFiltro = in_array($user->perfil, ['admin', 'gestor']) ? $r->query('unidade_id') : null;
 
-        $solicitacoes = Solicitacao::with(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
+        $solicitacoes = Solicitacao::with(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
             ->when(! in_array($user->perfil, ['admin', 'gestor']), function ($q) use ($user) {
                 if ($user->motorista_id) {
                     $q->where(function ($q) use ($user) {
@@ -55,7 +55,7 @@ class SolicitacaoController extends Controller
         }
 
         return new SolicitacaoResource(
-            $solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
+            $solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente'])
         );
     }
 
@@ -83,7 +83,7 @@ class SolicitacaoController extends Controller
 
         $solicitacao = $this->service->aceitar($solicitacao, $data['motorista_id'], $data['veiculo_id']);
 
-        return new SolicitacaoResource($solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
     }
 
     public function motoristaAceitar(Request $r, Solicitacao $solicitacao)
@@ -101,7 +101,7 @@ class SolicitacaoController extends Controller
 
         $solicitacao = $this->service->motoristaAceitar($solicitacao, $user->motorista_id, $data['km_saida'] ?? null);
 
-        return new SolicitacaoResource($solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
     }
 
     public function motoristaRecusar(Request $r, Solicitacao $solicitacao)
@@ -119,7 +119,7 @@ class SolicitacaoController extends Controller
 
         $solicitacao = $this->service->motoristaRecusar($solicitacao, $user->motorista_id, $data['motivo']);
 
-        return new SolicitacaoResource($solicitacao->load(['usuario', 'origemUnidade', 'destinoUnidade', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
     }
 
     public function cancelar(Request $r, Solicitacao $solicitacao)
