@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CheckinController;
 use App\Http\Controllers\Api\ChecklistVeiculoController;
 use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\KmController;
+use App\Http\Controllers\Api\LocalidadeController;
 use App\Http\Controllers\Api\MotoristaController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
@@ -123,6 +124,13 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::delete('unidades/{unidade}/motoristas/{motorista}', [UnidadeController::class, 'desvincularMotorista']);
     Route::post('unidades/{unidade}/veiculos', [UnidadeController::class, 'vincularVeiculos']);
     Route::delete('unidades/{unidade}/veiculos/{veiculo}', [UnidadeController::class, 'desvincularVeiculo']);
+
+    // Localidades
+    Route::get('localidades', [LocalidadeController::class, 'index'])->name('localidades.index');
+    Route::post('localidades', [LocalidadeController::class, 'store']);
+    Route::get('localidades/{localidade}', [LocalidadeController::class, 'show'])->name('localidades.show');
+    Route::patch('localidades/{localidade}', [LocalidadeController::class, 'update']);
+    Route::delete('localidades/{localidade}', [LocalidadeController::class, 'destroy']);
 
     // Notificações
     Route::get('notificacoes', [NotificacaoController::class, 'index'])->name('notificacoes.index');
