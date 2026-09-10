@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Solicitacao;
 
+use App\Rules\PontoViagemExiste;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSolicitacaoRequest extends FormRequest
@@ -17,9 +18,9 @@ class StoreSolicitacaoRequest extends FormRequest
             'motivo' => 'required|in:transferencia_paciente,buscar_medico,material_outro_hospital,transporte_colaborador,buscar_material_fornecedor,tfd',
 
             'origem_tipo' => 'required_if:motivo,transferencia_paciente,transporte_colaborador|nullable|in:unidade,localidade',
-            'origem_id' => ['required_if:motivo,transferencia_paciente,transporte_colaborador', 'nullable', 'uuid', new \App\Rules\PontoViagemExiste($this->input('origem_tipo'))],
+            'origem_id' => ['required_if:motivo,transferencia_paciente,transporte_colaborador', 'nullable', 'uuid', new PontoViagemExiste($this->input('origem_tipo'))],
             'destino_tipo' => 'required_if:motivo,transferencia_paciente,transporte_colaborador|nullable|in:unidade,localidade',
-            'destino_id' => ['required_if:motivo,transferencia_paciente,transporte_colaborador', 'nullable', 'uuid', new \App\Rules\PontoViagemExiste($this->input('destino_tipo'))],
+            'destino_id' => ['required_if:motivo,transferencia_paciente,transporte_colaborador', 'nullable', 'uuid', new PontoViagemExiste($this->input('destino_tipo'))],
             'numero_atendimento' => 'required_if:motivo,transferencia_paciente|nullable|integer|digits_between:1,6',
             'cidade' => 'required_if:motivo,buscar_medico|nullable|string|max:150',
             'hospital_destino' => 'required_if:motivo,material_outro_hospital|nullable|string|max:150',
