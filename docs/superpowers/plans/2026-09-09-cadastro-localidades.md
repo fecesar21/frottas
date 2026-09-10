@@ -4,7 +4,7 @@
 
 **Goal:** Permitir que o admin cadastre "Localidades" (locais externos à rede de unidades, com endereço/coordenadas/contato) e que elas apareçam, junto com as Unidades, como opções de Origem/Destino nos motivos "Transferência de Paciente" e "Transporte de Colaboradores" da tela de Nova Solicitação.
 
-**Architecture:** Nova tabela/model `Localidade` com CRUD admin-only (espelhando `UnidadeController`). `solicitacoes.origem_unidade_id`/`destino_unidade_id` viram colunas polimórficas `origem_tipo`/`origem_id` e `destino_tipo`/`destino_id`. Um novo endpoint agregador `GET /pontos-viagem` combina unidades e localidades ativas numa lista única, consumida pela tela de Nova Solicitação (app `resources/solicitacao-js`). Uma nova página `/localidades` no admin (`resources/js`) replica o padrão de `/unidades` (lista + modal de formulário).
+**Architecture:** Nova tabela/model `Localidade` com CRUD admin-only (espelhando `UnidadeController`). `solicitacoes.origem_unidade_id`/`destino_unidade_id` viram colunas polimórficas `origem_tipo`/`origem_id` e `destino_tipo`/`destino_id`. Um novo endpoint agregador `GET /pontos-viagem` combina unidades e localidades ativas numa lista única, consumida pela tela de Nova Solicitação (app `resources/solicitacao-js`). Uma nova seção "Localidades" é adicionada ao hub de Configurações já existente no admin (`resources/js/pages/configuracoes/ConfiguracoesHub.jsx`), em `/configuracoes/localidades`.
 
 **Tech Stack:** Laravel 11 (PHP), SQLite, React + `@tanstack/react-query` (admin `resources/js`), React simples com `useState`/`fetch` via axios (`resources/solicitacao-js`), PHPUnit.
 
@@ -17,7 +17,7 @@
 - `destroy` de Localidade é soft: apenas seta `ativo = false`. Nunca apagar a linha.
 - Localidades são uma lista global (não vinculadas a unidade específica) — decisão validada com o usuário durante o brainstorming.
 - Contato da Localidade é simples: um `telefone` e um `email`, sem lista de múltiplos contatos.
-- **Desvio consciente da spec:** a spec descreve a nova tela como parte de um "hub de Configurações" (`ConfiguracoesHub.jsx`). Esse hub **não existe no branch `main`** hoje — está sendo construído em paralelo no worktree `worktree-configuracoes-ldap-por-unidade`, ainda não mesclado. Para não depender de código não mesclado, este plano cria a tela de Localidades como uma página admin de nível superior (`/localidades`), replicando exatamente o padrão já existente de `/unidades` (item de sidebar próprio, sem hub). Quando o hub de Configurações for mesclado, mover a entrada de sidebar para dentro dele é um follow-up trivial, fora do escopo deste plano.
+- **Ruling (pré-flight, corrige a spec):** a spec foi escrita contra uma cópia local do branch `main` que estava desatualizada; nela, o hub de Configurações (`ConfiguracoesHub.jsx`, feature de LDAP por unidade) ainda não tinha sido mesclado. No branch real usado para esta implementação (`origin/main`, commit `9be591b7`), o hub **já existe** com uma seção "LDAP por Unidade" em `/configuracoes/ldap`. Este plano usa o hub real: a Task 5 adiciona uma seção "Localidades" a `ConfiguracoesHub.jsx` e uma rota `/configuracoes/localidades`, em vez de uma página `/localidades` de nível superior. Custo se este ruling estiver errado: a tela fica um passo a mais dentro do hub em vez de direto na sidebar — reversível trivialmente movendo a rota e o item de menu.
 
 ---
 
@@ -804,11 +804,11 @@ Claude-Session: https://claude.ai/code/session_01YFrj2A7MTMbtfxyPbtxvYb"
 - Create: `resources/js/pages/localidades/LocalidadesList.jsx`
 - Create: `resources/js/pages/localidades/LocalidadeForm.jsx`
 - Modify: `resources/js/FleetApp.jsx`
-- Modify: `resources/js/components/layout/Sidebar.jsx`
+- Modify: `resources/js/pages/configuracoes/ConfiguracoesHub.jsx`
 
 **Interfaces:**
 - Consumes: `GET/POST /api/localidades`, `PATCH/DELETE /api/localidades/{id}` (Task 2).
-- Produces: rota `/localidades` (admin-only), acessível pela sidebar.
+- Produces: rota `/configuracoes/localidades` (admin-only), acessível a partir do hub de Configurações (`ConfiguracoesHub.jsx`), que já existe no branch e hoje lista apenas a seção "LDAP por Unidade".
 
 - [ ] **Step 1: Criar o API client**
 
@@ -1108,37 +1108,42 @@ Salvar em `resources/js/pages/localidades/LocalidadesList.jsx`.
 
 - [ ] **Step 4: Registrar a rota em `FleetApp.jsx`**
 
-Adicionar o import junto aos demais (após `import UnidadeDetalhes from './pages/unidades/UnidadeDetalhes'`):
+Adicionar o import junto aos demais (após `import ConfiguracoesLdap from './pages/configuracoes/ConfiguracoesLdap'`):
 
 ```js
 import LocalidadesList from './pages/localidades/LocalidadesList'
 ```
 
-E adicionar a rota, junto às demais rotas `AdminRoute` (após `/unidades/:id`):
+E adicionar a rota, junto à rota `/configuracoes/ldap` já existente:
 
 ```jsx
-              <Route path="/localidades" element={
+              <Route path="/configuracoes/localidades" element={
                 <AdminRoute><LocalidadesList /></AdminRoute>
               } />
 ```
 
-- [ ] **Step 5: Adicionar entrada na sidebar**
+- [ ] **Step 5: Adicionar a seção ao hub de Configurações**
 
-Em `resources/js/components/layout/Sidebar.jsx`, adicionar `MapPin` ao import de ícones do `lucide-react` (junto a `Building2`, `UserCog`) e adicionar ao array de itens admin (junto a `{ to: '/unidades', label: 'Unidades', icon: Building2 }`):
+Em `resources/js/pages/configuracoes/ConfiguracoesHub.jsx`, adicionar `MapPin` ao import de ícones do `lucide-react` (junto a `ShieldCheck`, `ChevronRight`) e adicionar um item ao array `secoes` (junto ao item `to: '/configuracoes/ldap'`):
 
 ```js
-                  { to: '/localidades', label: 'Localidades', icon: MapPin },
+  {
+    to: '/configuracoes/localidades',
+    titulo: 'Localidades',
+    descricao: 'Cadastre locais externos (hospitais parceiros, clínicas, empresas) para usar como origem/destino nas solicitações de transporte.',
+    icon: MapPin,
+  },
 ```
 
 - [ ] **Step 6: Testar manualmente no navegador**
 
-Rodar `composer dev`, logar como admin, navegar até `/localidades`, criar uma localidade, editar, inativar e reativar. Confirmar que os dados persistem após reload.
+Rodar `composer dev`, logar como admin, navegar até `/configuracoes` → "Localidades", criar uma localidade, editar, inativar e reativar. Confirmar que os dados persistem após reload.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add resources/js/api/localidades.js resources/js/pages/localidades resources/js/FleetApp.jsx resources/js/components/layout/Sidebar.jsx
-git commit -m "feat: adiciona tela admin de cadastro de localidades
+git add resources/js/api/localidades.js resources/js/pages/localidades resources/js/FleetApp.jsx resources/js/pages/configuracoes/ConfiguracoesHub.jsx
+git commit -m "feat: adiciona tela admin de cadastro de localidades ao hub de configuracoes
 
 Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01YFrj2A7MTMbtfxyPbtxvYb"
