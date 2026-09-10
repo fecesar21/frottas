@@ -17,12 +17,42 @@ return new class extends Migration
         DB::table('solicitacoes')->whereNotNull('origem_unidade_id')->update(['origem_tipo' => 'unidade']);
         DB::table('solicitacoes')->whereNotNull('destino_unidade_id')->update(['destino_tipo' => 'unidade']);
 
+        $this->dropForeignKeyFor('origem_unidade_id');
+        $this->dropForeignKeyFor('destino_unidade_id');
+
         Schema::table('solicitacoes', function (Blueprint $table) {
-            $table->dropForeign(['origem_unidade_id']);
-            $table->dropForeign(['destino_unidade_id']);
             $table->renameColumn('origem_unidade_id', 'origem_id');
             $table->renameColumn('destino_unidade_id', 'destino_id');
         });
+    }
+
+    /**
+     * Remove a FK apontando para a coluna, buscando o nome real da constraint
+     * em vez de assumir o padrao do Laravel (producao renomeou algumas apos
+     * uma migration anterior que recriou a tabela com sufixo "_tmp_20260807").
+     */
+    private function dropForeignKeyFor(string $column): void
+    {
+        $connection = Schema::getConnection();
+
+        if ($connection->getDriverName() !== 'mysql') {
+            Schema::table('solicitacoes', function (Blueprint $table) use ($column) {
+                $table->dropForeign([$column]);
+            });
+
+            return;
+        }
+
+        $constraints = DB::select(
+            'SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE '
+            .'WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? '
+            .'AND REFERENCED_TABLE_NAME IS NOT NULL',
+            ['solicitacoes', $column]
+        );
+
+        foreach ($constraints as $constraint) {
+            DB::statement("ALTER TABLE solicitacoes DROP FOREIGN KEY `{$constraint->CONSTRAINT_NAME}`");
+        }
     }
 
     public function down(): void
