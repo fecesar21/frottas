@@ -1,7 +1,7 @@
 {
   "name": "HealthDrive — Controle de Frotas",
   "short_name": "HealthDrive",
-  "description": "Sistema de controle de frotas e passagem de plantão",
+  "description": "Sistema de controle de frotas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#090e18",
@@ -59,12 +59,6 @@
     }
   ],
   "shortcuts": [
-    {
-      "name": "Passagem de Plantão",
-      "short_name": "Plantão",
-      "url": "/plantao",
-      "description": "Abrir passagem de plantão"
-    },
     {
       "name": "Nova Viagem",
       "short_name": "Viagem",

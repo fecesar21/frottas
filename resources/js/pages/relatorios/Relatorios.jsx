@@ -1,7 +1,6 @@
 import { NavLink, Routes, Route, Navigate } from 'react-router-dom'
 import RelatorioAbastecimentos from './RelatorioAbastecimentos'
 import RelatorioViagens from './RelatorioViagens'
-import RelatorioPlantao from './RelatorioPlantao'
 import RelatorioMotoristas from './RelatorioMotoristas'
 import RelatorioChecklistVeiculo from './RelatorioChecklistVeiculo'
 
@@ -32,7 +31,6 @@ export default function Relatorios() {
         <Route index element={<Navigate to="abastecimentos" replace />} />
         <Route path="abastecimentos" element={<RelatorioAbastecimentos />} />
         <Route path="viagens" element={<RelatorioViagens />} />
-        <Route path="plantao" element={<RelatorioPlantao />} />
         <Route path="checklist-veiculo" element={<RelatorioChecklistVeiculo />} />
         <Route path="motoristas" element={<RelatorioMotoristas />} />
       </Routes>

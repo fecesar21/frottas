@@ -4,6 +4,8 @@
 >
 > **Observação:** o `CLAUDE.md` diz que Vite/Tailwind estão "sem uso" e que o projeto é só API. Isso está **desatualizado**: existem duas SPAs React completas, compiladas pelo Vite para `public/`.
 
+> **Atualização 24/09/2026:** Escalas e Passagem de Plantão foram **retiradas do frontend** (páginas, rotas, menu, aba de relatório, coluna "Plantões" e atalho PWA). O backend foi mantido. As seções 6.7, 6.10 e a aba "Plantão" em 6.15 descrevem o estado anterior, restaurável pela tag git `pre-remocao-escalas-plantao`.
+
 ---
 
 ## 1. Visão geral da arquitetura

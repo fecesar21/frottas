@@ -38,7 +38,7 @@ export default function RelatorioMotoristas() {
       <table className="w-full text-sm">
         <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
           <tr>
-            {['Nome', 'CNH', 'Cat.', 'Validade CNH', 'Turno', 'Viagens', 'KM total', 'Abastec.', 'Plantões', 'Status', 'CNH'].map(h => (
+            {['Nome', 'CNH', 'Cat.', 'Validade CNH', 'Turno', 'Viagens', 'KM total', 'Abastec.', 'Status', 'CNH'].map(h => (
               <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
             ))}
           </tr>
@@ -54,7 +54,6 @@ export default function RelatorioMotoristas() {
               <td className="px-4 py-3 text-center">{m.total_viagens}</td>
               <td className="px-4 py-3">{fmtKm(m.km_total)} km</td>
               <td className="px-4 py-3 text-center">{m.total_abastecimentos}</td>
-              <td className="px-4 py-3 text-center">{m.total_plantoes}</td>
               <td className="px-4 py-3"><Badge value={m.status} /></td>
               <td className="px-4 py-3"><Badge value={m.cnh_status} /></td>
             </tr>

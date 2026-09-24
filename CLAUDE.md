@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Health Drive / FleetCore** — a Laravel 11 REST API for fleet management (vehicles, drivers, schedules, trips, refueling, shift handover, and odometer tracking). Pure API backend; no Blade views.
+**Health Drive / FleetCore** — a Laravel 11 REST API for fleet management (vehicles, drivers, schedules, trips, refueling, shift handover, and odometer tracking). Laravel API backend plus two React SPAs (see Frontend below); no Blade views.
 
 ## Commands
 
@@ -82,5 +82,7 @@ Controllers live in `app/Http/Controllers/Api/`. There is a dead `UsuarioControl
 ### Database
 Uses SQLite (`database/database.sqlite`) by default. Tests also use SQLite (in-memory mode is commented out in `phpunit.xml`, so tests run against the file DB unless reconfigured).
 
-### Frontend Assets
-Vite + Tailwind are configured (`vite.config.js`, `tailwind.config.js`) but unused — this project is API-only. `package.json` / `postcss.config.js` are boilerplate skeleton files.
+### Frontend
+There are two React SPAs built by Vite into `public/`: the fleet panel (`index.html` → `resources/js/`) and the transport-request app (`solicitacao.html` → `resources/solicitacao-js/`, served under `/solicitar`). Frontend tests: `npm test` (Vitest + Testing Library, jsdom). Full spec: `docs/ESPECIFICACAO_FRONTEND.md`.
+
+> **Escalas and Passagem de Plantão are retired from the UI** (decision of 2026-09-24): their pages, routes, menu items, report tab and PWA shortcut were removed from the frontend. The backend (controllers, models, API routes, tables) was intentionally kept so no data is lost. To restore the frontend, see git tag `pre-remocao-escalas-plantao`.

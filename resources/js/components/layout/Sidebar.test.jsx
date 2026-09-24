@@ -7,8 +7,8 @@ import { useAuth } from '../../contexts/AuthContext'
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: vi.fn() }))
 
 const MENUS_GESTAO = [
-  'Dashboard', 'Veículos', 'Motoristas', 'Escalas', 'Check-ins',
-  'Passagem de Plantão', 'Viagens', 'Abastecimentos', 'Relatórios',
+  'Dashboard', 'Veículos', 'Motoristas', 'Check-ins',
+  'Viagens', 'Abastecimentos', 'Relatórios',
 ]
 
 function mockAuth(perfil, extra = {}) {
@@ -34,7 +34,7 @@ function renderSidebar() {
 const link = (nome) => screen.queryByRole('link', { name: nome })
 
 describe('Sidebar', () => {
-  it('operador com check-in vê apenas Check-ins, Plantão, Viagens e Abastecimentos', () => {
+  it('operador com check-in vê apenas Check-ins, Viagens e Abastecimentos', () => {
     mockAuth('operador', { checkinAtivo: { id: 'c1' } })
     renderSidebar()
 
@@ -45,10 +45,9 @@ describe('Sidebar', () => {
     expect(link('Usuários')).not.toBeInTheDocument()
 
     expect(link('Check-ins')).toBeInTheDocument()
-    expect(link('Passagem de Plantão')).toHaveAttribute('href', '/plantao')
     expect(link('Viagens')).toBeInTheDocument()
     expect(link('Abastecimentos')).toBeInTheDocument()
-    expect(screen.getAllByRole('link')).toHaveLength(4)
+    expect(screen.getAllByRole('link')).toHaveLength(3)
   })
 
   it('operador sem check-in vê somente Check-ins', () => {
@@ -67,6 +66,14 @@ describe('Sidebar', () => {
       expect(link(nome)).toBeInTheDocument()
     }
     expect(link('Solicitações de Transporte')).toBeInTheDocument()
+  })
+
+  it.each(['admin', 'gestor', 'operador'])('%s não vê Escalas nem Passagem de Plantão', (perfil) => {
+    mockAuth(perfil, { checkinAtivo: { id: 'c1' } })
+    renderSidebar()
+
+    expect(link('Escalas')).not.toBeInTheDocument()
+    expect(link('Passagem de Plantão')).not.toBeInTheDocument()
   })
 
   it('somente admin vê a seção ADMIN', () => {

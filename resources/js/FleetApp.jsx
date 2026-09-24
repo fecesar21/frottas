@@ -9,9 +9,7 @@ import RedefinirSenha from './pages/RedefinirSenha'
 import Dashboard from './pages/Dashboard'
 import VeiculosList from './pages/veiculos/VeiculosList'
 import MotoristasList from './pages/motoristas/MotoristasList'
-import EscalasCalendario from './pages/escalas/EscalasCalendario'
 import CheckinsList from './pages/checkins/CheckinsList'
-import PlantaoList from './pages/plantao/PlantaoList'
 import ViagensList from './pages/viagens/ViagensList'
 import SolicitacoesList from './pages/solicitacoes/SolicitacoesList'
 import AbastecimentosList from './pages/abastecimentos/AbastecimentosList'
@@ -47,9 +45,7 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/veiculos" element={<VeiculosList />} />
               <Route path="/motoristas" element={<MotoristasList />} />
-              <Route path="/escalas" element={<EscalasCalendario />} />
               <Route path="/checkins" element={<CheckinsList />} />
-              <Route path="/plantao" element={<PlantaoList />} />
               <Route path="/viagens" element={<ViagensList />} />
               <Route path="/solicitacoes" element={
                 <GestorRoute><SolicitacoesList /></GestorRoute>

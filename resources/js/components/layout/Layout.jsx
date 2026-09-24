@@ -13,9 +13,7 @@ const pageTitles = {
   '/': 'Dashboard',
   '/veiculos': 'Veículos',
   '/motoristas': 'Motoristas',
-  '/escalas': 'Escalas',
   '/checkins': 'Check-ins',
-  '/plantao': 'Passagem de Plantão',
   '/viagens': 'Viagens',
   '/solicitacoes': 'Solicitações de Transporte',
   '/abastecimentos': 'Abastecimentos',
@@ -26,7 +24,7 @@ const pageTitles = {
 }
 
 const ROTAS_OPERADOR_SEM_CHECKIN = ['/checkins']
-const ROTAS_OPERADOR_COM_CHECKIN = ['/checkins', '/plantao', '/viagens', '/abastecimentos']
+const ROTAS_OPERADOR_COM_CHECKIN = ['/checkins', '/viagens', '/abastecimentos']
 
 export function PrivateRoute() {
   const { user, isOperador, checkinAtivo } = useAuth()
