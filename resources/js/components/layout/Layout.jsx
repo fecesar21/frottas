@@ -26,7 +26,7 @@ const pageTitles = {
 }
 
 const ROTAS_OPERADOR_SEM_CHECKIN = ['/checkins']
-const ROTAS_OPERADOR_COM_CHECKIN = ['/checkins', '/viagens', '/abastecimentos']
+const ROTAS_OPERADOR_COM_CHECKIN = ['/checkins', '/plantao', '/viagens', '/abastecimentos']
 
 export function PrivateRoute() {
   const { user, isOperador, checkinAtivo } = useAuth()

@@ -1,11 +1,13 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Truck, Users, LogIn,
-  Route, Fuel, Gauge, BarChart3, UserCog, LogOut, Menu, X, Building2, ClipboardList, Settings
+  LayoutDashboard, Truck, Users, LogIn, CalendarDays, ClipboardCheck,
+  Route, Fuel, BarChart3, UserCog, LogOut, X, Building2, ClipboardList, Settings
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
+// `operador: true` marca os itens que o motorista pode ver.
+// Os demais itens são exclusivos de admin/gestor.
 const sections = [
   {
     label: 'PRINCIPAL',
@@ -18,15 +20,17 @@ const sections = [
     items: [
       { to: '/veiculos', label: 'Veículos', icon: Truck },
       { to: '/motoristas', label: 'Motoristas', icon: Users },
+      { to: '/escalas', label: 'Escalas', icon: CalendarDays },
     ],
   },
   {
     label: 'OPERAÇÕES',
     items: [
-      { to: '/checkins', label: 'Check-ins', icon: LogIn },
-      { to: '/viagens', label: 'Viagens', icon: Route },
-      { to: '/abastecimentos', label: 'Abastecimentos', icon: Fuel },
-      { to: '/solicitacoes', label: 'Solicitações de Transporte', icon: ClipboardList, gestorOnly: true },
+      { to: '/checkins', label: 'Check-ins', icon: LogIn, operador: true },
+      { to: '/plantao', label: 'Passagem de Plantão', icon: ClipboardCheck, operador: true },
+      { to: '/viagens', label: 'Viagens', icon: Route, operador: true },
+      { to: '/abastecimentos', label: 'Abastecimentos', icon: Fuel, operador: true },
+      { to: '/solicitacoes', label: 'Solicitações de Transporte', icon: ClipboardList },
     ],
   },
   {
@@ -39,14 +43,17 @@ const sections = [
 
 const perfil = { admin: 'Admin', gestor: 'Gestor', operador: 'Operador' }
 
+function itemVisivel(item, { isOperador, isGestor, checkinAtivo }) {
+  if (isOperador) {
+    // Sem check-in ativo o operador só pode iniciar o turno (ver PrivateRoute).
+    return item.operador === true && (checkinAtivo || item.to === '/checkins')
+  }
+  return isGestor
+}
+
 export default function Sidebar({ open, onClose }) {
   const { user, isAdmin, isGestor, isOperador, checkinAtivo, logout } = useAuth()
   const navigate = useNavigate()
-
-  // Rotas visíveis para operadores dependem do estado do checkin
-  const rotasPermitidas = isOperador
-    ? (checkinAtivo ? ['/checkins', '/viagens', '/abastecimentos'] : ['/checkins'])
-    : null
 
   const handleLogout = async () => {
     await logout()
@@ -100,9 +107,9 @@ export default function Sidebar({ open, onClose }) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
           {sections.map((section) => {
-            const itensVisiveis = rotasPermitidas
-              ? section.items.filter(item => rotasPermitidas.includes(item.to))
-              : section.items.filter(item => !item.gestorOnly || isGestor)
+            const itensVisiveis = section.items.filter(item =>
+              itemVisivel(item, { isOperador, isGestor, checkinAtivo })
+            )
             if (itensVisiveis.length === 0) return null
             return (
               <div key={section.label}>

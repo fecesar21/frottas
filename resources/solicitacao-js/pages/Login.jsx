@@ -18,7 +18,7 @@ export default function Login() {
     try {
       await login(form)
     } catch (err) {
-      setError(err.response?.data?.error ?? 'Usuário ou senha inválidos.')
+      setError(err.response?.status === 401 ? 'Usuário ou senha incorretos.' : (err.response?.data?.error ?? 'Não foi possível entrar. Tente novamente.'))
     } finally {
       setLoading(false)
     }
