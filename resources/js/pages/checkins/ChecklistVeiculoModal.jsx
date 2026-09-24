@@ -153,7 +153,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
     <div className="space-y-4">
       {error && <Alert type="error" message={error} />}
 
-      <div className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
         <span>Veículo: <strong>{checklist.veiculo?.placa ?? '—'}</strong></span>
         <span>
           Conforme: <strong className="text-green-600">{checklist.itens_conforme}</strong>
@@ -167,13 +167,13 @@ export default function ChecklistVeiculoModal({ onDone }) {
           <div className="space-y-2">
             {itens.map((r) => (
               <div key={r.id} className="bg-white border rounded-lg px-4 py-3 space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-sm text-gray-700">{r.item_modelo?.label ?? '—'}</span>
-                  <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
                     <button
                       onClick={() => marcarConforme(r)}
                       disabled={salvarItem.isPending}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors disabled:cursor-not-allowed ${
+                      className={`flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1 rounded-lg border text-xs font-medium transition-colors disabled:cursor-not-allowed ${
                         r.conforme === true ? 'text-green-600 bg-green-50 border-green-200' : 'text-gray-400 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -182,7 +182,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
                     <button
                       onClick={() => abrirNaoConforme(r)}
                       disabled={salvarItem.isPending}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors disabled:cursor-not-allowed ${
+                      className={`flex items-center justify-center gap-1 px-2.5 py-2 sm:py-1 rounded-lg border text-xs font-medium transition-colors disabled:cursor-not-allowed ${
                         r.conforme === false ? 'text-red-600 bg-red-50 border-red-200' : 'text-gray-400 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
