@@ -132,19 +132,19 @@ export default function SolicitacoesList() {
       </div>
 
       {/* Tabela: telas médias e grandes */}
-      <div className="hidden md:block bg-white rounded-xl border border-gray-200">
-        <table className="w-full text-sm table-fixed">
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-x-auto">
+        <table className="w-full min-w-[900px] text-sm table-fixed">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
               <th className="px-3 py-3 text-left font-medium w-[9%]">Data</th>
               <th className="px-3 py-3 text-left font-medium w-[13%]">Solicitante</th>
               <th className="px-3 py-3 text-left font-medium w-[14%]">Motivo</th>
-              <th className="px-3 py-3 text-left font-medium w-[18%]">Detalhe</th>
+              <th className="px-3 py-3 text-left font-medium w-[15%]">Detalhe</th>
               <th className="px-3 py-3 text-left font-medium w-[9%]">Saída</th>
               <th className="px-3 py-3 text-left font-medium w-[9%]">Chegada</th>
               <th className="px-3 py-3 text-left font-medium w-[13%]">Status</th>
               <th className="px-3 py-3 text-left font-medium w-[10%]">Motorista</th>
-              <th className="px-3 py-3 text-left font-medium w-[5%]"></th>
+              <th className="px-3 py-3 text-left font-medium w-[8%]"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
