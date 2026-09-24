@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3 } from 'lucide-react'
 import * as solicitacoesApi from '../../api/solicitacoes'
 import KmSaidaModal from './KmSaidaModal'
+import { rotuloMotivo, detalheSolicitacao } from '../../utils/solicitacao'
 
 // Ponto de entrada persistente para a fila de viagens designadas que ainda
 // aguardam o motorista informar o KM de saída (finding Important 4): caso o
@@ -43,8 +44,11 @@ export default function FilaMotoristaCard({ ehMotorista }) {
       </div>
       <ul className="space-y-1.5">
         {fila.map((s) => (
-          <li key={s.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-amber-100">
-            <span className="text-gray-700">{s.origem ?? s.cidade ?? '—'} → <strong>{s.destino ?? s.hospital_destino ?? '—'}</strong></span>
+          <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 bg-white rounded-lg px-3 py-2 border border-amber-100">
+            <span className="min-w-0 text-gray-700">
+              <strong>{rotuloMotivo(s.motivo)}</strong>
+              {detalheSolicitacao(s) && <span className="block text-xs text-gray-500">{detalheSolicitacao(s)}</span>}
+            </span>
             <button
               onClick={() => { setAlvo(s); setErro('') }}
               className="text-xs bg-amber-600 text-white px-3 py-1 rounded-lg hover:bg-amber-700"

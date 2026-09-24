@@ -12,6 +12,8 @@ const MOTIVOS = {
 }
 
 const STATUS = {
+  pendente_motorista: { label: 'Aguardando motorista', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  recusada: { label: 'Em análise pelo gestor', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   aberto: { label: 'Em aberto', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   em_trajeto: { label: 'Motorista em Trajeto', className: 'bg-blue-50 text-blue-700 border-blue-200' },
   aguardando_finalizacao_trajeto: { label: 'Aguardando Finalização do Trajeto Anterior', className: 'bg-orange-50 text-orange-700 border-orange-200' },

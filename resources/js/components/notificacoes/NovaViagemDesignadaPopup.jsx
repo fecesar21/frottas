@@ -5,6 +5,7 @@ import { Truck } from 'lucide-react'
 import * as solicitacoesApi from '../../api/solicitacoes'
 import KmSaidaModal from './KmSaidaModal'
 import MotivoRecusaModal from './MotivoRecusaModal'
+import { rotuloMotivo } from '../../utils/solicitacao'
 
 export default function NovaViagemDesignadaPopup({ notificacao, temViagemAtiva, onFechar }) {
   const qc = useQueryClient()
@@ -54,7 +55,7 @@ export default function NovaViagemDesignadaPopup({ notificacao, temViagemAtiva, 
     )
   }
 
-  const detalhe = notificacao.data?.detalhe
+  const detalhe = notificacao.data?.detalhe === 'Sem detalhe' ? null : notificacao.data?.detalhe
 
   return createPortal(
     <>
@@ -65,7 +66,8 @@ export default function NovaViagemDesignadaPopup({ notificacao, temViagemAtiva, 
             <Truck size={24} />
           </div>
           <h2 className="text-base font-semibold text-navy-900 mb-1">Nova Viagem Designada pelo Gestor</h2>
-          {detalhe && <p className="text-sm text-gray-500 mt-1">{detalhe}</p>}
+          <p className="text-sm font-medium text-gray-700 mt-2">{rotuloMotivo(notificacao.data?.motivo)}</p>
+          {detalhe && <p className="text-sm text-gray-500">{detalhe}</p>}
           {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
           <div className="flex gap-2 mt-5">
             <button
