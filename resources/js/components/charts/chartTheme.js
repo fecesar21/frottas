@@ -26,3 +26,14 @@ export function fmtMinutos(min) {
   if (horas === 0) return `${resto}min`
   return `${horas}h ${resto}min`
 }
+
+// Duração longa legível: "2d 3h", "5h 20min", "45min".
+export function fmtDuracao(min) {
+  if (min == null) return '—'
+  const d = Math.floor(min / 1440)
+  const h = Math.floor((min % 1440) / 60)
+  const m = min % 60
+  if (d) return h ? `${d}d ${h}h` : `${d}d`
+  if (h) return m ? `${h}h ${m}min` : `${h}h`
+  return `${m}min`
+}

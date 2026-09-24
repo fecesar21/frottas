@@ -365,6 +365,83 @@ class RelatorioController extends Controller
             ->download('relatorio-viagens.pdf');
     }
 
+    // ── RELATÓRIO: MANUTENÇÕES DE VEÍCULOS ───────────────────────
+    // Sem cache: é usado pelo Dashboard logo após o toggle de manutenção.
+    // O tempo "no período" é recortado a [de, ate] (uma manutenção que
+    // atravessa meses conta só a parte dentro de cada mês); manutenções
+    // abertas contam até agora. Cálculo em PHP para ser portátil.
+    private function manutencoesData(Request $r): array
+    {
+        $r->validate([
+            'de' => 'nullable|date',
+            'ate' => 'nullable|date|after_or_equal:de',
+        ]);
+
+        $de = $r->de ?? now()->startOfMonth()->toDateString();
+        $ate = $r->ate ?? now()->toDateString();
+        $inicioPeriodo = Carbon::parse($de)->startOfDay();
+        $fimPeriodo = Carbon::parse($ate)->endOfDay();
+        $agora = now();
+
+        $rows = DB::table('veiculo_manutencoes as vm')
+            ->join('veiculos as v', 'vm.veiculo_id', '=', 'v.id')
+            ->where('vm.inicio', '<=', $fimPeriodo)
+            ->where(fn ($q) => $q->whereNull('vm.fim')->orWhere('vm.fim', '>=', $inicioPeriodo))
+            ->orderByDesc('vm.inicio')
+            ->select('vm.id', 'vm.veiculo_id', 'v.placa', 'v.modelo', 'vm.inicio', 'vm.fim', 'vm.motivo')
+            ->get()
+            ->map(function ($m) use ($inicioPeriodo, $fimPeriodo, $agora) {
+                $inicio = Carbon::parse($m->inicio);
+                $fim = $m->fim ? Carbon::parse($m->fim) : $agora;
+                $ini = $inicio->max($inicioPeriodo);
+                $fimRecorte = $fim->min($fimPeriodo)->min($agora);
+
+                $m->em_andamento = $m->fim === null;
+                $m->duracao_min = (int) $inicio->diffInMinutes($fim);
+                $m->duracao_periodo_min = $fimRecorte->gt($ini) ? (int) $ini->diffInMinutes($fimRecorte) : 0;
+
+                return $m;
+            });
+
+        $totais = [
+            'total_manutencoes' => $rows->count(),
+            'tempo_total_min' => $rows->sum('duracao_periodo_min'),
+            'tempo_medio_min' => $rows->count() ? (int) round($rows->avg('duracao_periodo_min')) : null,
+            'em_manutencao_agora' => DB::table('veiculo_manutencoes')->whereNull('fim')->count(),
+        ];
+
+        $por_veiculo = $rows->groupBy('veiculo_id')->map(fn ($g) => [
+            'placa' => $g->first()->placa,
+            'modelo' => $g->first()->modelo,
+            'manutencoes' => $g->count(),
+            'tempo_total_min' => $g->sum('duracao_periodo_min'),
+        ])->sortByDesc('tempo_total_min')->values();
+
+        $em_andamento = DB::table('veiculo_manutencoes as vm')
+            ->join('veiculos as v', 'vm.veiculo_id', '=', 'v.id')
+            ->whereNull('vm.fim')
+            ->orderBy('vm.inicio')
+            ->get(['v.placa', 'v.modelo', 'vm.inicio', 'vm.motivo'])
+            ->map(function ($m) use ($agora) {
+                $m->duracao_min = (int) Carbon::parse($m->inicio)->diffInMinutes($agora);
+
+                return $m;
+            });
+
+        return compact('rows', 'totais', 'por_veiculo', 'em_andamento', 'de', 'ate');
+    }
+
+    public function manutencoes(Request $r)
+    {
+        return response()->json($this->manutencoesData($r));
+    }
+
+    public function manutencoesPdf(Request $r)
+    {
+        return Pdf::loadView('relatorios.pdf.manutencoes', $this->manutencoesData($r))
+            ->download('relatorio-manutencoes.pdf');
+    }
+
     // ── RELATÓRIO: PASSAGENS DE PLANTÃO ──────────────────────────
     private function plantaoData(Request $r): array
     {

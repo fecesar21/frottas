@@ -26,6 +26,8 @@ export default function VeiculosList() {
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [statusError, setStatusError] = useState('')
+  const [manutencaoTarget, setManutencaoTarget] = useState(null)
+  const [motivo, setMotivo] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['veiculos', statusFilter],
@@ -33,10 +35,12 @@ export default function VeiculosList() {
   })
 
   const mudarStatus = useMutation({
-    mutationFn: ({ id, status }) => veiculosApi.atualizarStatus(id, status),
+    mutationFn: ({ id, status, motivo }) => veiculosApi.atualizarStatus(id, status, motivo),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['veiculos'] })
       qc.invalidateQueries({ queryKey: ['dashboard'] })
+      qc.invalidateQueries({ queryKey: ['manutencoes'] })
+      setManutencaoTarget(null)
     },
     onError: (e) => setStatusError(e.response?.data?.message ?? 'Erro ao atualizar status'),
   })
@@ -49,9 +53,20 @@ export default function VeiculosList() {
     mudarStatus.mutate({ id: v.id, status: novoStatus })
   }
 
+  // Entrar em manutenção pede um motivo (opcional); sair é direto.
   const toggleManutencao = (v) => {
-    const novoStatus = v.status === 'manutencao' ? 'disponivel' : 'manutencao'
-    mudarStatus.mutate({ id: v.id, status: novoStatus })
+    if (v.status === 'manutencao') {
+      mudarStatus.mutate({ id: v.id, status: 'disponivel' })
+      return
+    }
+    setStatusError('')
+    setMotivo('')
+    setManutencaoTarget(v)
+  }
+
+  const confirmarManutencao = (e) => {
+    e.preventDefault()
+    mudarStatus.mutate({ id: manutencaoTarget.id, status: 'manutencao', motivo: motivo.trim() || undefined })
   }
 
   if (isLoading) return <LoadingSpinner />
@@ -149,6 +164,36 @@ export default function VeiculosList() {
           </tbody>
         </table>
       </div>
+
+      <Modal open={!!manutencaoTarget} onClose={() => setManutencaoTarget(null)} title="Colocar em manutenção" size="sm">
+        <form onSubmit={confirmarManutencao} className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Veículo: <strong className="font-mono">{manutencaoTarget?.placa}</strong> — {manutencaoTarget?.modelo}
+          </p>
+          <div>
+            <label htmlFor="manutencao-motivo" className="block text-sm font-medium text-gray-700 mb-1">Motivo (opcional)</label>
+            <input
+              id="manutencao-motivo"
+              type="text"
+              maxLength={255}
+              autoFocus
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ex.: troca de óleo, pneus, funilaria"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+          </div>
+          {statusError && <Alert type="error" message={statusError} />}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setManutencaoTarget(null)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button type="submit" disabled={mudarStatus.isPending} className="px-4 py-2 text-sm rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-60">
+              {mudarStatus.isPending ? 'Salvando...' : 'Confirmar'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal open={formOpen} onClose={closeForm} title={editTarget ? 'Editar veículo' : 'Novo veículo'} size="lg">
         <VeiculoForm veiculo={editTarget} onSuccess={closeForm} />

@@ -8,9 +8,9 @@ use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\LocalidadeController;
 use App\Http\Controllers\Api\MotoristaController;
-use App\Http\Controllers\Api\PontoViagemController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
+use App\Http\Controllers\Api\PontoViagemController;
 use App\Http\Controllers\Api\RelatorioController;
 use App\Http\Controllers\Api\SolicitacaoController;
 use App\Http\Controllers\Api\UnidadeController;
@@ -113,6 +113,8 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
         Route::get('eficiencia', [RelatorioController::class, 'eficiencia']);
         Route::get('checkins', [RelatorioController::class, 'checkins']);
         Route::get('checklist-veiculo', [RelatorioController::class, 'checklistVeiculo']);
+        Route::get('manutencoes', [RelatorioController::class, 'manutencoes']);
+        Route::get('manutencoes/pdf', [RelatorioController::class, 'manutencoesPdf']);
     });
 
     // Unidades

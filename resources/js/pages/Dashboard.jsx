@@ -9,6 +9,7 @@ import MonthYearFilter from '../components/charts/MonthYearFilter'
 import LineChartCard from '../components/charts/LineChartCard'
 import BarChartCard from '../components/charts/BarChartCard'
 import PieChartCard from '../components/charts/PieChartCard'
+import ManutencaoResumo from '../components/manutencoes/ManutencaoResumo'
 import { fmtBrl as fmtBrlChart, fmtNumero, fmtMinutos, CHART_COLORS } from '../components/charts/chartTheme'
 
 function fmt(n) {
@@ -36,6 +37,17 @@ export default function Dashboard() {
   const { data: graficos, isLoading: loadingGraficos } = useQuery({
     queryKey: ['dashboard-graficos', periodo.mes, periodo.ano],
     queryFn: () => relatoriosApi.dashboardGraficos(periodo).then(r => r.data),
+    refetchInterval: 60_000,
+  })
+
+  // Período do filtro em datas (YYYY-MM-DD) para o relatório de manutenções.
+  const pad = (n) => String(n).padStart(2, '0')
+  const deMes = `${periodo.ano}-${pad(periodo.mes)}-01`
+  const ateMes = `${periodo.ano}-${pad(periodo.mes)}-${pad(new Date(periodo.ano, periodo.mes, 0).getDate())}`
+
+  const { data: manutencoes, isLoading: loadingManutencoes } = useQuery({
+    queryKey: ['manutencoes', deMes, ateMes],
+    queryFn: () => relatoriosApi.manutencoes({ de: deMes, ate: ateMes }).then(r => r.data),
     refetchInterval: 60_000,
   })
 
@@ -156,6 +168,12 @@ export default function Dashboard() {
             colorByItem
           />
         </div>
+      </div>
+
+      {/* Manutenção de veículos (mesmo mês/ano do filtro acima) */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Manutenção de veículos (no mês)</h3>
+        <ManutencaoResumo data={manutencoes} loading={loadingManutencoes} />
       </div>
 
       {/* CNH alert */}

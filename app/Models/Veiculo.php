@@ -78,4 +78,9 @@ class Veiculo extends Model
     {
         return $this->km_proxima_revisao !== null && $this->km_atual >= $this->km_proxima_revisao;
     }
+
+    public function manutencoes(): HasMany
+    {
+        return $this->hasMany(VeiculoManutencao::class);
+    }
 }

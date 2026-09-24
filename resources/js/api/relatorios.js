@@ -9,4 +9,6 @@ export const viagensPdf = (params) => api.get('/relatorios/viagens/pdf', { param
 export const motoristas = () => api.get('/relatorios/motoristas')
 export const motoristasPdf = () => api.get('/relatorios/motoristas/pdf', { responseType: 'blob' })
 export const checkins = () => api.get('/relatorios/checkins')
+export const manutencoes = (params) => api.get('/relatorios/manutencoes', { params })
+export const manutencoesPdf = (params) => api.get('/relatorios/manutencoes/pdf', { params, responseType: 'blob' })
 export const checklistVeiculo = (params) => api.get('/relatorios/checklist-veiculo', { params })

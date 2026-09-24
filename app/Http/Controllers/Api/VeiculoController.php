@@ -8,6 +8,7 @@ use App\Http\Requests\Veiculo\UpdateVeiculoRequest;
 use App\Http\Resources\VeiculoResource;
 use App\Models\Veiculo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VeiculoController extends Controller
 {
@@ -49,23 +50,36 @@ class VeiculoController extends Controller
     public function update(UpdateVeiculoRequest $request, Veiculo $veiculo)
     {
         $data = $request->validated();
+        $motivo = $data['manutencao_motivo'] ?? null;
+        unset($data['manutencao_motivo']);
 
-        if (isset($data['status'])) {
-            if ($data['status'] === 'manutencao' && $veiculo->status !== 'manutencao') {
+        DB::transaction(function () use ($veiculo, $data, $motivo) {
+            $entrando = ($data['status'] ?? null) === 'manutencao' && $veiculo->status !== 'manutencao';
+            $saindo = isset($data['status']) && $data['status'] !== 'manutencao' && $veiculo->status === 'manutencao';
+
+            if ($entrando) {
                 $data['manutencao_inicio'] = now();
-            } elseif ($data['status'] !== 'manutencao') {
+                $veiculo->manutencoes()->create(['inicio' => $data['manutencao_inicio'], 'motivo' => $motivo]);
+            } elseif (isset($data['status']) && $data['status'] !== 'manutencao') {
                 $data['manutencao_inicio'] = null;
             }
-        }
 
-        $veiculo->update($data);
+            if ($saindo) {
+                $veiculo->manutencoes()->whereNull('fim')->update(['fim' => now()]);
+            }
+
+            $veiculo->update($data);
+        });
 
         return new VeiculoResource($veiculo->fresh());
     }
 
     public function destroy(Veiculo $veiculo)
     {
-        $veiculo->update(['status' => 'inativo']);
+        DB::transaction(function () use ($veiculo) {
+            $veiculo->manutencoes()->whereNull('fim')->update(['fim' => now()]);
+            $veiculo->update(['status' => 'inativo', 'manutencao_inicio' => null]);
+        });
 
         return response()->json(['message' => 'Veículo desativado']);
     }

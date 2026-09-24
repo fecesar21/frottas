@@ -5,4 +5,5 @@ export const buscar = (id) => api.get(`/veiculos/${id}`)
 export const criar = (data) => api.post('/veiculos', data)
 export const atualizar = (id, data) => api.put(`/veiculos/${id}`, data)
 export const desativar = (id) => api.delete(`/veiculos/${id}`)
-export const atualizarStatus = (id, status) => api.patch(`/veiculos/${id}`, { status })
+export const atualizarStatus = (id, status, manutencaoMotivo) =>
+  api.patch(`/veiculos/${id}`, manutencaoMotivo ? { status, manutencao_motivo: manutencaoMotivo } : { status })

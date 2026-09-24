@@ -27,6 +27,7 @@ class UpdateVeiculoRequest extends FormRequest
             'km_proxima_revisao' => 'nullable|integer|min:0',
             'status' => 'sometimes|in:disponivel,em_uso,manutencao,inativo',
             'observacoes' => 'nullable|string',
+            'manutencao_motivo' => 'nullable|string|max:255',
         ];
     }
 
