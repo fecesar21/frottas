@@ -66,8 +66,8 @@ class RelatorioController extends Controller
     // Todas as agregações por mês/duração são feitas em PHP com Carbon,
     // nunca com funções SQL específicas de motor (strftime, DATE_FORMAT,
     // TIMESTAMPDIFF, IF(), CURDATE()), para permanecer portátil entre
-    // SQLite (banco real do projeto) e MySQL. Ver bug conhecido em
-    // viagensData()/motoristasData() acima.
+    // SQLite (banco real do projeto) e MySQL. Mesmo princípio de
+    // viagensData() e motoristasData().
     public function dashboardGraficos(Request $r)
     {
         $r->validate([
@@ -305,8 +305,8 @@ class RelatorioController extends Controller
     }
 
     // ── RELATÓRIO: VIAGENS ────────────────────────────────────────
-    // BUG CONHECIDO: usa TIMESTAMPDIFF/IF() (raw SQL exclusivo do MySQL) — quebra em SQLite.
-    // Sem cobertura de teste por esse motivo. Ver plano "Fundação de Qualidade".
+    // km_percorrido e duracao_min são calculados em PHP (Carbon) para manter
+    // a consulta portátil entre SQLite e MySQL.
     private function viagensData(Request $r): array
     {
         $de = $r->de ?? now()->startOfMonth()->toDateString();
@@ -323,11 +323,17 @@ class RelatorioController extends Controller
                 'm.nome as motorista_nome',
                 'vg.origem', 'vg.destino',
                 'vg.motivo_viagem', 'vg.numero_atendimento',
-                'vg.km_saida', 'vg.km_chegada', 'vg.status',
-                DB::raw('IF(vg.km_chegada IS NOT NULL, vg.km_chegada - vg.km_saida, NULL) as km_percorrido'),
-                DB::raw('IF(vg.chegada_at IS NOT NULL AND vg.saida_at IS NOT NULL, TIMESTAMPDIFF(MINUTE, vg.saida_at, vg.chegada_at), NULL) as duracao_min')
+                'vg.km_saida', 'vg.km_chegada', 'vg.status'
             )
-            ->get();
+            ->get()
+            ->map(function ($vg) {
+                $vg->km_percorrido = $vg->km_chegada !== null ? $vg->km_chegada - $vg->km_saida : null;
+                $vg->duracao_min = $vg->saida_at && $vg->chegada_at
+                    ? (int) Carbon::parse($vg->saida_at)->diffInMinutes(Carbon::parse($vg->chegada_at))
+                    : null;
+
+                return $vg;
+            });
 
         $totais = [
             'total_viagens' => $rows->count(),
@@ -425,27 +431,57 @@ class RelatorioController extends Controller
     }
 
     // ── RELATÓRIO: MOTORISTAS ─────────────────────────────────────
-    // BUG CONHECIDO: usa IF()/CURDATE()/DATE_ADD (raw SQL exclusivo do MySQL) — quebra em SQLite.
-    // Sem cobertura de teste por esse motivo. Ver plano "Fundação de Qualidade".
+    // Cada contagem vem de uma subquery agregada por motorista, unida por
+    // LEFT JOIN: juntar viagens/abastecimentos/plantões diretamente geraria
+    // produto cartesiano e inflaria o km_total. O status da CNH é calculado
+    // em PHP com Carbon, mantendo a consulta portátil entre SQLite e MySQL.
     private function motoristasData(Request $r)
     {
+        $viagens = DB::table('viagens')
+            ->groupBy('motorista_id')
+            ->select(
+                'motorista_id',
+                DB::raw('COUNT(*) as total_viagens'),
+                DB::raw('SUM(CASE WHEN km_chegada IS NOT NULL THEN km_chegada - km_saida ELSE 0 END) as km_total')
+            );
+
+        $abastecimentos = DB::table('abastecimentos')
+            ->groupBy('motorista_id')
+            ->select('motorista_id', DB::raw('COUNT(*) as total_abastecimentos'));
+
+        $plantoes = DB::table('passagens_plantao')
+            ->groupBy('motorista_entrando_id')
+            ->select('motorista_entrando_id', DB::raw('COUNT(*) as total_plantoes'));
+
+        $hoje = now()->startOfDay();
+        $limiteVencendo = $hoje->copy()->addDays(30);
+
         return DB::table('motoristas as m')
-            ->leftJoin('viagens as vg', 'm.id', '=', 'vg.motorista_id')
-            ->leftJoin('abastecimentos as ab', 'm.id', '=', 'ab.motorista_id')
-            ->leftJoin('passagens_plantao as pp', 'm.id', '=', 'pp.motorista_entrando_id')
+            ->leftJoinSub($viagens, 'vg', 'vg.motorista_id', '=', 'm.id')
+            ->leftJoinSub($abastecimentos, 'ab', 'ab.motorista_id', '=', 'm.id')
+            ->leftJoinSub($plantoes, 'pp', 'pp.motorista_entrando_id', '=', 'm.id')
             ->where('m.status', '!=', 'inativo')
-            ->groupBy('m.id', 'm.nome', 'm.cnh_numero', 'm.cnh_categoria', 'm.cnh_validade', 'm.turno_padrao', 'm.status')
             ->select(
                 'm.id', 'm.nome', 'm.cnh_numero', 'm.cnh_categoria',
                 'm.cnh_validade', 'm.turno_padrao', 'm.status',
-                DB::raw('COUNT(DISTINCT vg.id) as total_viagens'),
-                DB::raw('SUM(IF(vg.km_chegada IS NOT NULL, vg.km_chegada - vg.km_saida, 0)) as km_total'),
-                DB::raw('COUNT(DISTINCT ab.id) as total_abastecimentos'),
-                DB::raw('COUNT(DISTINCT pp.id) as total_plantoes'),
-                DB::raw("IF(m.cnh_validade < CURDATE(), 'vencida', IF(m.cnh_validade < DATE_ADD(CURDATE(), INTERVAL 30 DAY), 'vencendo', 'ok')) as cnh_status")
+                DB::raw('COALESCE(vg.total_viagens, 0) as total_viagens'),
+                DB::raw('COALESCE(vg.km_total, 0) as km_total'),
+                DB::raw('COALESCE(ab.total_abastecimentos, 0) as total_abastecimentos'),
+                DB::raw('COALESCE(pp.total_plantoes, 0) as total_plantoes')
             )
             ->orderBy('m.nome')
-            ->get();
+            ->get()
+            ->map(function ($m) use ($hoje, $limiteVencendo) {
+                $validade = $m->cnh_validade ? Carbon::parse($m->cnh_validade)->startOfDay() : null;
+                $m->cnh_status = match (true) {
+                    $validade === null => 'ok',
+                    $validade->lt($hoje) => 'vencida',
+                    $validade->lt($limiteVencendo) => 'vencendo',
+                    default => 'ok',
+                };
+
+                return $m;
+            });
     }
 
     public function motoristas(Request $r)

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import * as relatoriosApi from '../../api/relatorios'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Badge from '../../components/ui/Badge'
+import Alert from '../../components/ui/Alert'
 import { downloadBlob } from '../../utils/downloadBlob'
 
 const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
@@ -10,7 +11,7 @@ const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
 export default function RelatorioMotoristas() {
   const [exportando, setExportando] = useState(false)
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['relatorio-motoristas'],
     queryFn: () => relatoriosApi.motoristas().then(r => r.data),
   })
@@ -26,6 +27,7 @@ export default function RelatorioMotoristas() {
   }
 
   if (isLoading) return <LoadingSpinner />
+  if (isError) return <Alert type="error" message="Não foi possível carregar o relatório de motoristas. Tente novamente." />
 
   return (
     <div className="space-y-3">
