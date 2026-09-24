@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3 } from 'lucide-react'
 import * as solicitacoesApi from '../../api/solicitacoes'
+import * as viagensApi from '../../api/viagens'
 import KmSaidaModal from './KmSaidaModal'
 import { rotuloMotivo, detalheSolicitacao } from '../../utils/solicitacao'
 
@@ -20,6 +21,15 @@ export default function FilaMotoristaCard({ ehMotorista }) {
     enabled: ehMotorista,
     refetchInterval: 30_000,
   })
+
+  // Mesma query do rastreamento global (Layout): independe do filtro da lista.
+  const { data: emAndamento } = useQuery({
+    queryKey: ['viagens', 'em_andamento'],
+    queryFn: () => viagensApi.listar({ status: 'em_andamento' }).then(r => r.data.data ?? r.data),
+    enabled: ehMotorista,
+    refetchInterval: 30_000,
+  })
+  const temViagemAtiva = (emAndamento ?? []).length > 0
 
   const aceitarMutation = useMutation({
     mutationFn: (km) => solicitacoesApi.motoristaAceitar(alvo.id, km),
@@ -42,6 +52,11 @@ export default function FilaMotoristaCard({ ehMotorista }) {
         <Clock3 size={16} />
         Viagens aguardando você informar o KM de saída ({fila.length})
       </div>
+      {temViagemAtiva && (
+        <p className="text-xs text-amber-700 mb-2">
+          Registre a chegada da viagem em andamento para iniciar a próxima.
+        </p>
+      )}
       <ul className="space-y-1.5">
         {fila.map((s) => (
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 bg-white rounded-lg px-3 py-2 border border-amber-100">
@@ -51,7 +66,9 @@ export default function FilaMotoristaCard({ ehMotorista }) {
             </span>
             <button
               onClick={() => { setAlvo(s); setErro('') }}
-              className="text-xs bg-amber-600 text-white px-3 py-1 rounded-lg hover:bg-amber-700"
+              disabled={temViagemAtiva}
+              title={temViagemAtiva ? 'Finalize a viagem em andamento primeiro' : undefined}
+              className="text-xs bg-amber-600 text-white px-3 py-1 rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Informar KM e aceitar
             </button>

@@ -76,9 +76,9 @@ export default function ViagensList() {
             </div>
             <p className="font-mono text-gray-600">{v.veiculo?.placa ?? '—'}</p>
             <p className="text-gray-600">
-              <span className="text-gray-400">{v.origem}</span>
+              <span className="text-gray-400">{v.origem || '—'}</span>
               <span className="mx-1 text-gray-300">→</span>
-              <span>{v.destino}</span>
+              <span>{v.destino || '—'}</span>
             </p>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-gray-500 text-xs">
               <p>Saída: <span className="text-gray-700">{fmtDt(v.saida_at)}</span></p>
@@ -122,9 +122,9 @@ export default function ViagensList() {
                 <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{v.motorista?.nome?.split(' ')[0] ?? '—'}</td>
                 <td className="px-4 py-3 font-mono text-gray-600 whitespace-nowrap">{v.veiculo?.placa ?? '—'}</td>
                 <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                  <span className="text-gray-400">{v.origem}</span>
+                  <span className="text-gray-400">{v.origem || '—'}</span>
                   <span className="mx-1 text-gray-300">→</span>
-                  <span>{v.destino}</span>
+                  <span>{v.destino || '—'}</span>
                 </td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(v.saida_at)}</td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(v.chegada_at)}</td>
