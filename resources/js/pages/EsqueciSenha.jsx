@@ -25,7 +25,9 @@ export default function EsqueciSenha() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-brand-950 flex items-center justify-center p-4 bg-dot-pattern">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-navy-950 via-navy-900 to-brand-950 flex items-center justify-center p-4">
+      {/* Camada própria: bg-dot-pattern define background-image e sobrescreveria o gradiente */}
+      <div className="absolute inset-0 bg-dot-pattern pointer-events-none" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-navy-700/40 rounded-full blur-3xl pointer-events-none" />
 
@@ -91,8 +93,8 @@ export default function EsqueciSenha() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-white/20 mt-6">
-          © {new Date().getFullYear()} Health Drive
+        <p className="text-center text-xs text-white/40 mt-6 px-2">
+          © {new Date().getFullYear()} UTI Tech - Soluções em Tecnologia. Todos os direitos reservados.
         </p>
       </div>
     </div>
