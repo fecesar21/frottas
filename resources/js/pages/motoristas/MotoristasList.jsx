@@ -42,8 +42,8 @@ export default function MotoristasList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
           {[{ v: '', l: 'Todos' }, { v: 'ativo', l: 'Ativos' }, { v: 'inativo', l: 'Inativos' }].map(({ v, l }) => (
             <button key={v} onClick={() => setStatusFilter(v)}
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${statusFilter === v ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600 hover:border-blue-400'}`}>
@@ -60,7 +60,7 @@ export default function MotoristasList() {
 
       {statusError && <Alert type="error" message={statusError} />}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>

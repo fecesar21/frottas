@@ -120,8 +120,10 @@ export default function Layout() {
             GPS: {erroRastreamento}{pendentes > 0 ? ` (${pendentes} ponto(s) pendente(s) de envio)` : ''}
           </div>
         )}
-        <main className="flex-1 p-5 md:p-6 overflow-auto animate-fade-in">
-          <Outlet />
+        <main className="flex-1 p-4 sm:p-5 md:p-6 overflow-auto animate-fade-opacity">
+          <div className="max-w-screen-2xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

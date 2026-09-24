@@ -30,11 +30,15 @@ export default function RelatorioAbastecimentos() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4">
-        <label className="text-sm text-gray-600">De:</label>
-        <input type="date" value={de} onChange={e => setDe(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
-        <label className="text-sm text-gray-600">Até:</label>
-        <input type="date" value={ate} onChange={e => setAte(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-xl p-4">
+        <label className="flex items-center gap-2 text-sm text-gray-600">
+          De:
+          <input type="date" value={de} onChange={e => setDe(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-gray-600">
+          Até:
+          <input type="date" value={ate} onChange={e => setAte(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+        </label>
         <button onClick={() => refetch()} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">Filtrar</button>
         <button onClick={exportarPdf} disabled={exportando} className="ml-auto bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50">
           {exportando ? 'Exportando...' : 'Exportar PDF'}
@@ -45,7 +49,7 @@ export default function RelatorioAbastecimentos() {
 
       {data && (
         <>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { l: 'Total litros', v: `${Number(data.totais?.total_litros ?? 0).toFixed(1)} L` },
               { l: 'Total gasto', v: fmtBrl(data.totais?.total_valor) },
@@ -59,7 +63,7 @@ export default function RelatorioAbastecimentos() {
             ))}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                 <tr>

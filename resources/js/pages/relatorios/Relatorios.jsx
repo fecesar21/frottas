@@ -14,11 +14,11 @@ const tabs = [
 export default function Relatorios() {
   return (
     <div className="space-y-4">
-      <nav className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
+      <nav className="flex gap-1 overflow-x-auto bg-white border border-gray-200 rounded-xl p-1">
         {tabs.map(({ to, label }) => (
           <NavLink key={to} to={to}
             className={({ isActive }) =>
-              `flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              `flex-1 shrink-0 whitespace-nowrap text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
               }`
             }>

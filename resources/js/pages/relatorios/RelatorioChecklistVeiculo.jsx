@@ -28,7 +28,7 @@ export default function RelatorioChecklistVeiculo() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-xl p-4">
-        <div className="w-56">
+        <div className="w-full sm:w-56">
           <VeiculoSelect value={veiculoId} onChange={setVeiculoId} />
         </div>
         <label className="text-sm text-gray-600">Data:</label>

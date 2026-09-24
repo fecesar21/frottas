@@ -55,8 +55,8 @@ export default function VeiculosList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
           {['', 'disponivel', 'em_uso', 'manutencao', 'inativo'].map((s) => (
             <button
               key={s}
@@ -76,7 +76,7 @@ export default function VeiculosList() {
 
       {statusError && <Alert type="error" message={statusError} />}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
