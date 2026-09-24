@@ -34,7 +34,10 @@ export default function VeiculosList() {
 
   const mudarStatus = useMutation({
     mutationFn: ({ id, status }) => veiculosApi.atualizarStatus(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['veiculos'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['veiculos'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
     onError: (e) => setStatusError(e.response?.data?.message ?? 'Erro ao atualizar status'),
   })
 

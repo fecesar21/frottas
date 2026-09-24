@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Relatorio;
 
+use App\Models\Abastecimento;
+use App\Models\Motorista;
 use App\Models\Veiculo;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -14,23 +16,42 @@ class RelatorioCacheApiTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_dashboard_retorna_resultado_cacheado_apos_criar_novo_veiculo(): void
+    public function test_dashboard_retorna_resultado_cacheado_apos_novo_abastecimento(): void
     {
         $this->loginAdmin();
+        $veiculo = Veiculo::factory()->create();
+        $motorista = Motorista::factory()->create();
 
         $primeira = $this->getJson('/api/relatorios/dashboard')
             ->assertOk()
             ->json();
 
-        // Cria um veículo novo entre as duas chamadas: se o cache não
-        // estivesse ativo, o total de veículos mudaria na segunda resposta.
-        Veiculo::factory()->create(['status' => 'disponivel']);
+        // Abastecimento não invalida o cache: se o cache não estivesse
+        // ativo, o custo de combustível do mês mudaria na segunda resposta.
+        Abastecimento::factory()->create(['veiculo_id' => $veiculo->id, 'motorista_id' => $motorista->id, 'abastecido_at' => now(), 'litros' => 40, 'valor_litro' => 6]);
 
         $segunda = $this->getJson('/api/relatorios/dashboard')
             ->assertOk()
             ->json();
 
         $this->assertEquals($primeira, $segunda);
+    }
+
+    public function test_colocar_veiculo_em_manutencao_atualiza_dashboard_na_hora(): void
+    {
+        $this->loginGestor();
+        $veiculo = Veiculo::factory()->create(['status' => 'disponivel']);
+
+        $this->getJson('/api/relatorios/dashboard')
+            ->assertOk()
+            ->assertJsonPath('veiculos.manutencao', 0);
+
+        $this->patchJson("/api/veiculos/{$veiculo->id}", ['status' => 'manutencao'])->assertOk();
+
+        $this->getJson('/api/relatorios/dashboard')
+            ->assertOk()
+            ->assertJsonPath('veiculos.manutencao', 1)
+            ->assertJsonPath('veiculos.disponiveis', 0);
     }
 
     public function test_eficiencia_retorna_resultado_cacheado_apos_criar_novo_veiculo(): void

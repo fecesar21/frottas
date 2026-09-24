@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Veiculo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class RelatorioController extends Controller
     // ── DASHBOARD (KPIs gerais) ──────────────────────────────────
     public function dashboard(Request $r)
     {
-        $dados = Cache::remember('relatorio.dashboard', now()->addMinutes(5), function () {
+        $dados = Cache::remember(Veiculo::CACHE_DASHBOARD, now()->addMinutes(5), function () {
             $inicio = now()->startOfMonth();
             $fim = now()->endOfMonth();
 
