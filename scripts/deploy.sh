@@ -40,6 +40,13 @@ echo "==> Limpando e reconstruindo caches..."
 php artisan optimize:clear
 php artisan optimize
 
+# Comandos artisan rodados pelo usuário de deploy criam subdiretórios em
+# storage/ que o www-data não consegue escrever — isso já quebrou o cache de
+# um usuário específico em produção (erro 500 só para ele).
+echo "==> Corrigindo permissões de storage/ e bootstrap/cache..."
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R ug+rwX storage bootstrap/cache
+
 echo "==> Reiniciando workers de fila..."
 php artisan queue:restart
 
