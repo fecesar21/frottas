@@ -8,6 +8,7 @@ use App\Http\Resources\SolicitacaoResource;
 use App\Models\Localidade;
 use App\Models\Solicitacao;
 use App\Models\Unidade;
+use App\Services\RoteamentoSolicitacaoService;
 use App\Services\SolicitacaoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -15,7 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 class SolicitacaoController extends Controller
 {
-    public function __construct(private SolicitacaoService $service) {}
+    public function __construct(
+        private SolicitacaoService $service,
+        private RoteamentoSolicitacaoService $roteamento,
+    ) {}
 
     public function index(Request $r)
     {
@@ -92,7 +96,9 @@ class SolicitacaoController extends Controller
 
         $podeVer = in_array($user->perfil, ['admin', 'gestor'])
             || $solicitacao->usuario_id === $user->id
-            || ($user->motorista_id && $solicitacao->motorista_pendente_id === $user->motorista_id);
+            || ($user->motorista_id && $solicitacao->motorista_pendente_id === $user->motorista_id)
+            || ($user->motorista && $solicitacao->status === 'aberto'
+                && $this->roteamento->podeAssumir($solicitacao, $user->motorista));
 
         if (! $podeVer) {
             return response()->json(['error' => 'Sem permissão para visualizar esta solicitação.'], 403);
@@ -144,6 +150,20 @@ class SolicitacaoController extends Controller
         $data = $r->validate(['km_saida' => 'nullable|integer|min:0']);
 
         $solicitacao = $this->service->motoristaAceitar($solicitacao, $user->motorista_id, $data['km_saida'] ?? null);
+
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+    }
+
+    public function assumir(Request $r, Solicitacao $solicitacao)
+    {
+        $user = $r->user();
+        if (! $user->motorista) {
+            return response()->json(['error' => 'Apenas motoristas podem assumir solicitações.'], 403);
+        }
+
+        $data = $r->validate(['km_saida' => 'nullable|integer|min:0']);
+
+        $solicitacao = $this->service->assumir($solicitacao, $user->motorista, $data['km_saida'] ?? null);
 
         return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
     }

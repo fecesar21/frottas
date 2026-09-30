@@ -8,16 +8,21 @@ use App\Models\Solicitacao;
 use App\Models\Usuario;
 use App\Models\Veiculo;
 use App\Models\Viagem;
+use App\Notifications\NovaSolicitacaoDisponivel;
 use App\Notifications\NovaSolicitacaoTransporte;
 use App\Notifications\NovaViagemDesignada;
 use App\Notifications\SolicitacaoRecusadaPeloMotorista;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class SolicitacaoService
 {
-    public function __construct(private CheckinService $checkinService) {}
+    public function __construct(
+        private CheckinService $checkinService,
+        private RoteamentoSolicitacaoService $roteamento,
+    ) {}
 
     public function store(array $data, Usuario $usuario): Solicitacao
     {
@@ -27,17 +32,14 @@ class SolicitacaoService
 
         $solicitacao = Solicitacao::create($data);
 
-        $destinatarios = Usuario::where('perfil', 'admin')
-            ->orWhere(function ($q) use ($solicitacao) {
-                $q->where('perfil', 'gestor')
-                    ->where(function ($q) use ($solicitacao) {
-                        $q->where('unidade_id', $solicitacao->unidade_id)
-                            ->orWhereHas('unidade', fn ($q) => $q->where('tipo', 'matriz'));
-                    });
-            })
-            ->get();
+        Notification::send($this->destinatariosGestao($solicitacao), new NovaSolicitacaoTransporte($solicitacao));
 
-        Notification::send($destinatarios, new NovaSolicitacaoTransporte($solicitacao));
+        $usuariosMotoristas = $this->roteamento->motoristasElegiveis($solicitacao)
+            ->pluck('usuario')
+            ->filter();
+        if ($usuariosMotoristas->isNotEmpty()) {
+            Notification::send($usuariosMotoristas, new NovaSolicitacaoDisponivel($solicitacao));
+        }
 
         return $solicitacao;
     }
@@ -102,6 +104,40 @@ class SolicitacaoService
         });
     }
 
+    /**
+     * Motorista em atividade assume uma solicitação ainda aberta, com o veículo
+     * do seu check-in. Segue o mesmo fluxo do aceite (cria a Viagem ou entra na fila).
+     */
+    public function assumir(Solicitacao $solicitacao, Motorista $motorista, ?int $kmSaida = null): Solicitacao
+    {
+        return DB::transaction(function () use ($solicitacao, $motorista, $kmSaida) {
+            /** @var Solicitacao $solicitacao */
+            $solicitacao = Solicitacao::whereKey($solicitacao->id)->lockForUpdate()->firstOrFail();
+
+            if ($solicitacao->status !== 'aberto') {
+                throw ValidationException::withMessages([
+                    'status' => 'Esta solicitação já foi assumida ou tratada.',
+                ]);
+            }
+
+            $checkin = $motorista->checkinAtivo;
+            if (! $checkin || ! $this->roteamento->podeAssumir($solicitacao, $motorista)) {
+                throw ValidationException::withMessages([
+                    'motorista' => 'Você não está apto a assumir esta solicitação com o veículo do seu check-in.',
+                ]);
+            }
+
+            $solicitacao->update([
+                'status' => 'pendente_motorista',
+                'motorista_pendente_id' => $motorista->id,
+                'veiculo_pendente_id' => $checkin->veiculo_id,
+                'motivo_recusa' => null,
+            ]);
+
+            return $this->motoristaAceitar($solicitacao, $motorista->id, $kmSaida);
+        });
+    }
+
     public function motoristaRecusar(Solicitacao $solicitacao, string $motoristaId, string $motivo): Solicitacao
     {
         $motorista = Motorista::findOrFail($motoristaId);
@@ -113,17 +149,7 @@ class SolicitacaoService
             'veiculo_pendente_id' => null,
         ]);
 
-        $destinatarios = Usuario::where('perfil', 'admin')
-            ->orWhere(function ($q) use ($solicitacao) {
-                $q->where('perfil', 'gestor')
-                    ->where(function ($q) use ($solicitacao) {
-                        $q->where('unidade_id', $solicitacao->unidade_id)
-                            ->orWhereHas('unidade', fn ($q) => $q->where('tipo', 'matriz'));
-                    });
-            })
-            ->get();
-
-        Notification::send($destinatarios, new SolicitacaoRecusadaPeloMotorista($solicitacao->fresh(), $motorista->nome, $motivo));
+        Notification::send($this->destinatariosGestao($solicitacao), new SolicitacaoRecusadaPeloMotorista($solicitacao->fresh(), $motorista->nome, $motivo));
 
         return $solicitacao->fresh();
     }
@@ -156,6 +182,22 @@ class SolicitacaoService
         $solicitacao->update(['status' => 'cancelado']);
 
         return $solicitacao->fresh();
+    }
+
+    /**
+     * @return Collection<int, Usuario>
+     */
+    private function destinatariosGestao(Solicitacao $solicitacao): Collection
+    {
+        return Usuario::where('perfil', 'admin')
+            ->orWhere(function ($q) use ($solicitacao) {
+                $q->where('perfil', 'gestor')
+                    ->where(function ($q) use ($solicitacao) {
+                        $q->where('unidade_id', $solicitacao->unidade_id)
+                            ->orWhereHas('unidade', fn ($q) => $q->where('tipo', 'matriz'));
+                    });
+            })
+            ->get();
     }
 
     private function efetivarAceite(Solicitacao $solicitacao, string $motoristaId, string $veiculoId, int $kmSaida): Solicitacao

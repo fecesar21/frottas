@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNotificacoes } from '../../hooks/useNotificacoes'
 import NovaSolicitacaoPopup from '../notificacoes/NovaSolicitacaoPopup'
 import NovaViagemDesignadaPopup from '../notificacoes/NovaViagemDesignadaPopup'
+import SolicitacaoDisponivelPopup from '../notificacoes/SolicitacaoDisponivelPopup'
 import * as viagensApi from '../../api/viagens'
 
 const perfilLabel = { admin: 'Administrador', gestor: 'Gestor', operador: 'Operador' }
@@ -113,7 +114,15 @@ export default function Header({ title, onMenuClick }) {
           onFechar={() => removerPendente(pendentes[0].id)}
         />
       )}
-      {pendentes[0] && !pendentes[0].type?.endsWith('NovaViagemDesignada') && (
+      {pendentes[0] && pendentes[0].type?.endsWith('NovaSolicitacaoDisponivel') && (
+        <SolicitacaoDisponivelPopup
+          key={pendentes[0].id}
+          notificacao={pendentes[0]}
+          temViagemAtiva={temViagemAtiva}
+          onFechar={() => removerPendente(pendentes[0].id)}
+        />
+      )}
+      {pendentes[0] && !pendentes[0].type?.endsWith('NovaViagemDesignada') && !pendentes[0].type?.endsWith('NovaSolicitacaoDisponivel') && (
         <NovaSolicitacaoPopup
           key={pendentes[0].id}
           notificacao={pendentes[0]}
