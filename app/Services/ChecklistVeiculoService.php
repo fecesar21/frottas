@@ -48,7 +48,9 @@ class ChecklistVeiculoService
                     'status' => 'pendente',
                 ]);
 
-                $itens = ChecklistVeiculoItemModelo::where('ativo', true)->get();
+                $itens = ChecklistVeiculoItemModelo::where('ativo', true)
+                    ->when(! $checkin->veiculo?->ehAmbulancia(), fn ($q) => $q->where('somente_ambulancia', false))
+                    ->get();
 
                 foreach ($itens as $item) {
                     ChecklistVeiculoResposta::create([
@@ -138,7 +140,8 @@ class ChecklistVeiculoService
 
         $pendentes = ChecklistVeiculoResposta::where('checklist_veiculo_id', $checklist->id)
             ->whereNull('conforme')
-            ->whereHas('itemModelo', fn ($q) => $q->where('obrigatorio', true))
+            ->whereHas('itemModelo', fn ($q) => $q->where('obrigatorio', true)
+                ->when(! $checklist->veiculo?->ehAmbulancia(), fn ($q) => $q->where('somente_ambulancia', false)))
             ->with('itemModelo')
             ->get();
 

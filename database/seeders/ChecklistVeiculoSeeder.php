@@ -45,7 +45,7 @@ class ChecklistVeiculoSeeder extends Seeder
                 'ordem' => 4,
                 'itens' => [
                     ['label' => 'Limpeza interna', 'obrigatorio' => true],
-                    ['label' => 'Nível de Oxigênio', 'obrigatorio' => true, 'requer_valor' => true, 'valor_min' => 0, 'valor_max' => 300],
+                    ['label' => 'Nível de Oxigênio', 'obrigatorio' => true, 'requer_valor' => true, 'valor_min' => 0, 'valor_max' => 300, 'somente_ambulancia' => true],
                 ],
             ],
         ];
@@ -64,6 +64,7 @@ class ChecklistVeiculoSeeder extends Seeder
                         'requer_valor' => $item['requer_valor'] ?? false,
                         'valor_min' => $item['valor_min'] ?? null,
                         'valor_max' => $item['valor_max'] ?? null,
+                        'somente_ambulancia' => $item['somente_ambulancia'] ?? false,
                         'ordem' => $i + 1,
                         'ativo' => true,
                     ]

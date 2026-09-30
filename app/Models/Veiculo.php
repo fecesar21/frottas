@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Veiculo extends Model
 {
@@ -29,6 +30,11 @@ class Veiculo extends Model
     protected $casts = [
         'manutencao_inicio' => 'datetime',
     ];
+
+    public function ehAmbulancia(): bool
+    {
+        return str_contains(mb_strtoupper(Str::ascii((string) $this->modelo)), 'AMBULANCIA');
+    }
 
     // Relações
     public function checkinAtivo(): HasOne
