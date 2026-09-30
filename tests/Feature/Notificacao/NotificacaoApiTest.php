@@ -4,6 +4,7 @@ namespace Tests\Feature\Notificacao;
 
 use App\Models\Motorista;
 use App\Notifications\CnhVencendoNotification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class NotificacaoApiTest extends TestCase
@@ -56,6 +57,23 @@ class NotificacaoApiTest extends TestCase
         $usuario->notify(new CnhVencendoNotification($motorista));
 
         $this->postJson('/api/notificacoes/marcar-lidas')->assertNoContent();
+
+        $this->assertSame(0, $usuario->unreadNotifications()->count());
+    }
+
+    public function test_nao_lidas_descarta_notificacao_de_solicitacao_inexistente(): void
+    {
+        $usuario = $this->loginAdmin();
+        $usuario->notifications()->create([
+            'id' => (string) Str::uuid(),
+            'type' => 'App\Notifications\NovaSolicitacaoDisponivel',
+            'data' => ['solicitacao_id' => (string) Str::uuid()],
+        ]);
+
+        $this->getJson('/api/notificacoes/nao-lidas')
+            ->assertOk()
+            ->assertJson(['total' => 0])
+            ->assertJsonCount(0, 'notificacoes');
 
         $this->assertSame(0, $usuario->unreadNotifications()->count());
     }
