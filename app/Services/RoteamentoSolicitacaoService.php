@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Checkin;
 use App\Models\Motorista;
 use App\Models\Solicitacao;
 use App\Models\Unidade;
+use App\Models\Veiculo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -25,7 +27,7 @@ class RoteamentoSolicitacaoService
         }
 
         return Motorista::whereHas('checkinAtivo')
-            ->with(['usuario', 'unidades', 'checkinAtivo.veiculo.unidades'])
+            ->with(['usuario', 'unidades', 'checkinsAtivos.veiculo.unidades'])
             ->get()
             ->filter(fn (Motorista $m) => $this->atende($m, $regra))
             ->values();
@@ -33,14 +35,23 @@ class RoteamentoSolicitacaoService
 
     public function podeAssumir(Solicitacao $solicitacao, Motorista $motorista): bool
     {
+        return $this->checkinQueAtende($solicitacao, $motorista) !== null;
+    }
+
+    /**
+     * Check-in ativo do motorista cujo veículo atende a solicitação. Motoristas com
+     * check-in duplo podem atender com qualquer um dos dois veículos.
+     */
+    public function checkinQueAtende(Solicitacao $solicitacao, Motorista $motorista): ?Checkin
+    {
         $regra = $this->regra($solicitacao);
         if ($regra === null) {
-            return false;
+            return null;
         }
 
-        $motorista->loadMissing(['unidades', 'checkinAtivo.veiculo.unidades']);
+        $motorista->loadMissing(['unidades', 'checkinsAtivos.veiculo.unidades']);
 
-        return $this->atende($motorista, $regra);
+        return $motorista->checkinsAtivos->first(fn (Checkin $c) => $this->veiculoAtende($motorista, $c->veiculo, $regra));
     }
 
     /**
@@ -73,7 +84,11 @@ class RoteamentoSolicitacaoService
 
     private function atende(Motorista $motorista, array $regra): bool
     {
-        $veiculo = $motorista->checkinAtivo?->veiculo;
+        return $motorista->checkinsAtivos->contains(fn (Checkin $c) => $this->veiculoAtende($motorista, $c->veiculo, $regra));
+    }
+
+    private function veiculoAtende(Motorista $motorista, ?Veiculo $veiculo, array $regra): bool
+    {
         if (! $veiculo) {
             return false;
         }

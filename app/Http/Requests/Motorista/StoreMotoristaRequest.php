@@ -23,6 +23,7 @@ class StoreMotoristaRequest extends FormRequest
             'cnh_validade' => 'required|date',
             'turno_padrao' => 'nullable|in:dia,noite',
             'observacoes' => 'nullable|string',
+            'permite_checkin_duplo' => 'sometimes|boolean',
         ];
     }
 

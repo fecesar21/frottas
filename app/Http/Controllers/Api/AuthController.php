@@ -262,10 +262,12 @@ class AuthController extends Controller
 
     private function buildUserPayload(Usuario $usuario): array
     {
-        $checkinAtivo = null;
+        $checkinsAtivos = collect();
+        $permiteCheckinDuplo = false;
         if ($usuario->perfil === 'operador' && $usuario->motorista_id) {
-            $motorista = Motorista::with('checkinAtivo.veiculo')->find($usuario->motorista_id);
-            $checkinAtivo = $motorista?->checkinAtivo;
+            $motorista = Motorista::with('checkinsAtivos.veiculo')->find($usuario->motorista_id);
+            $checkinsAtivos = $motorista?->checkinsAtivos ?? collect();
+            $permiteCheckinDuplo = (bool) $motorista?->permite_checkin_duplo;
         }
 
         return [
@@ -276,7 +278,9 @@ class AuthController extends Controller
             'perfil' => $usuario->perfil,
             'motorista_id' => $usuario->motorista_id,
             'unidade_id' => $usuario->unidade_id,
-            'checkin_ativo' => $checkinAtivo,
+            'checkin_ativo' => $checkinsAtivos->first(),
+            'checkins_ativos' => $checkinsAtivos->values(),
+            'permite_checkin_duplo' => $permiteCheckinDuplo,
         ];
     }
 }

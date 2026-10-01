@@ -12,25 +12,40 @@ const readStorage = () => {
   }
 }
 
+// Motoristas com check-in duplo podem ter até 2 check-ins ativos; os demais, 1.
+const checkinsDoUsuario = (u) =>
+  u?.checkins_ativos ?? (u?.checkin_ativo ? [u.checkin_ativo] : [])
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(readStorage)
-  const [checkinAtivo, setCheckinAtivoState] = useState(() => readStorage()?.checkin_ativo ?? null)
+  const [checkinsAtivos, setCheckinsAtivosState] = useState(() => checkinsDoUsuario(readStorage()))
 
-  const setCheckinAtivo = useCallback((checkin) => {
-    setCheckinAtivoState(checkin)
+  const setCheckinsAtivos = useCallback((lista) => {
+    setCheckinsAtivosState(lista)
     setUser(prev => {
-      const updated = { ...prev, checkin_ativo: checkin }
+      const updated = { ...prev, checkin_ativo: lista[0] ?? null, checkins_ativos: lista }
       localStorage.setItem('hd_user', JSON.stringify(updated))
       return updated
     })
   }, [])
+
+  // Adiciona um check-in recém-criado; com null, limpa todos.
+  const setCheckinAtivo = useCallback((checkin) => {
+    setCheckinsAtivos(checkin
+      ? [...checkinsAtivos.filter(c => c.id !== checkin.id), checkin]
+      : [])
+  }, [checkinsAtivos, setCheckinsAtivos])
+
+  const removerCheckinAtivo = useCallback((id) => {
+    setCheckinsAtivos(checkinsAtivos.filter(c => c.id !== id))
+  }, [checkinsAtivos, setCheckinsAtivos])
 
   const refreshUser = useCallback(async () => {
     try {
       const { data } = await authApi.me()
       localStorage.setItem('hd_user', JSON.stringify(data.user))
       setUser(data.user)
-      setCheckinAtivoState(data.user.checkin_ativo ?? null)
+      setCheckinsAtivosState(checkinsDoUsuario(data.user))
     } catch {}
   }, [])
 
@@ -47,7 +62,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('hd_token', data.token)
     localStorage.setItem('hd_user', JSON.stringify(data.user))
     setUser(data.user)
-    setCheckinAtivoState(data.user.checkin_ativo ?? null)
+    setCheckinsAtivosState(checkinsDoUsuario(data.user))
     return data.user
   }, [])
 
@@ -56,8 +71,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('hd_token')
     localStorage.removeItem('hd_user')
     setUser(null)
-    setCheckinAtivoState(null)
+    setCheckinsAtivosState([])
   }, [])
+
+  const permiteCheckinDuplo = !!user?.permite_checkin_duplo
 
   return (
     <AuthContext.Provider value={{
@@ -67,8 +84,12 @@ export function AuthProvider({ children }) {
       isAdmin: user?.perfil === 'admin',
       isGestor: ['admin', 'gestor'].includes(user?.perfil),
       isOperador: user?.perfil === 'operador',
-      checkinAtivo,
+      checkinAtivo: checkinsAtivos[0] ?? null,
+      checkinsAtivos,
+      permiteCheckinDuplo,
+      limiteCheckins: permiteCheckinDuplo ? 2 : 1,
       setCheckinAtivo,
+      removerCheckinAtivo,
       refreshUser,
     }}>
       {children}

@@ -32,8 +32,19 @@ class ChecklistVeiculoController extends Controller
         if ($r->checkin_id) {
             $checkin = Checkin::findOrFail($r->checkin_id);
         } else {
-            $motorista = Motorista::with('checkinAtivo')->find(auth()->user()->motorista_id);
-            $checkin = $motorista?->checkinAtivo;
+            // Com check-in duplo, devolve o primeiro checklist ainda não enviado
+            // para que o motorista conclua os dois antes de operar.
+            $motorista = Motorista::with('checkinsAtivos')->find(auth()->user()->motorista_id);
+            $ativos = $motorista?->checkinsAtivos ?? collect();
+
+            foreach ($ativos as $ativo) {
+                $checklist = $this->service->iniciarOuObter($ativo);
+                if ($checklist->status !== 'enviado') {
+                    return response()->json($checklist->setAttribute('precisa_enviar', true));
+                }
+            }
+
+            $checkin = $ativos->first();
         }
 
         if (! $checkin) {

@@ -24,6 +24,7 @@ class UpdateMotoristaRequest extends FormRequest
             'turno_padrao' => 'nullable|in:dia,noite',
             'status' => 'sometimes|in:ativo,inativo,ferias,afastado',
             'observacoes' => 'nullable|string',
+            'permite_checkin_duplo' => 'sometimes|boolean',
         ];
     }
 

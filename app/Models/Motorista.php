@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Validation\ValidationException;
 
 class Motorista extends Model
 {
@@ -26,7 +27,11 @@ class Motorista extends Model
 
     protected $fillable = [
         'nome', 'cpf', 'telefone', 'email', 'cnh_numero', 'cnh_categoria',
-        'cnh_validade', 'turno_padrao', 'status', 'observacoes',
+        'cnh_validade', 'turno_padrao', 'status', 'observacoes', 'permite_checkin_duplo',
+    ];
+
+    protected $casts = [
+        'permite_checkin_duplo' => 'boolean',
     ];
 
     public function usuario(): HasOne
@@ -37,6 +42,37 @@ class Motorista extends Model
     public function checkinAtivo(): HasOne
     {
         return $this->hasOne(Checkin::class, 'motorista_id')->where('status', 'ativo');
+    }
+
+    public function checkinsAtivos(): HasMany
+    {
+        return $this->hasMany(Checkin::class, 'motorista_id')->where('status', 'ativo')->orderBy('checkin_at');
+    }
+
+    public function limiteCheckinsAtivos(): int
+    {
+        return $this->permite_checkin_duplo ? 2 : 1;
+    }
+
+    /**
+     * Check-in ativo a usar numa operação (viagem, abastecimento, checklist).
+     * Com um único check-in ativo ele é usado direto; com dois (motoristas com
+     * check-in duplo) o veículo precisa ser informado e pertencer a um deles.
+     */
+    public function resolverCheckinAtivo(?string $veiculoId): ?Checkin
+    {
+        $ativos = $this->checkinsAtivos()->get();
+
+        if ($ativos->count() <= 1) {
+            return $ativos->first();
+        }
+
+        if (! $veiculoId) {
+            throw ValidationException::withMessages(['veiculo_id' => 'Selecione o veículo para esta operação.']);
+        }
+
+        return $ativos->firstWhere('veiculo_id', $veiculoId)
+            ?? throw ValidationException::withMessages(['veiculo_id' => 'O veículo selecionado não pertence a um check-in ativo seu.']);
     }
 
     public function checkins(): HasMany

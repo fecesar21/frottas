@@ -43,8 +43,8 @@ class AbastecimentoController extends Controller
         $data = $request->validated();
 
         if (auth()->user()->perfil === 'operador') {
-            $motorista = Motorista::with('checkinAtivo')->find(auth()->user()->motorista_id);
-            $checkin = $motorista?->checkinAtivo;
+            $motorista = Motorista::find(auth()->user()->motorista_id);
+            $checkin = $motorista?->resolverCheckinAtivo($request->input('veiculo_id'));
 
             if (! $checkin) {
                 return response()->json(['error' => 'Realize o check-in antes de registrar um abastecimento.'], 403);
@@ -52,6 +52,7 @@ class AbastecimentoController extends Controller
 
             $data['motorista_id'] = auth()->user()->motorista_id;
             $data['veiculo_id'] = $checkin->getAttribute('veiculo_id');
+            $data['checkin_id'] = $checkin->getAttribute('id');
         }
 
         if ($this->checklistService->bloqueiaOperacao($data['veiculo_id'])) {

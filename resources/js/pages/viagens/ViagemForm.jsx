@@ -4,14 +4,16 @@ import * as viagensApi from '../../api/viagens'
 import { useAuth } from '../../contexts/AuthContext'
 import MotoristaSelect from '../../components/shared/MotoristaSelect'
 import VeiculoSelect from '../../components/shared/VeiculoSelect'
+import VeiculoCheckinSelect from '../../components/shared/VeiculoCheckinSelect'
 import Alert from '../../components/ui/Alert'
 
 export default function ViagemForm({ onSuccess }) {
-  const { user, isOperador, checkinAtivo } = useAuth()
+  const { user, isOperador, checkinsAtivos } = useAuth()
 
   const [form, setForm] = useState({
     motorista_id: isOperador ? user.motorista_id : '',
-    veiculo_id:   isOperador ? (checkinAtivo?.veiculo_id ?? '') : '',
+    // Com 2 check-ins ativos o operador escolhe o veículo; com 1, ele é fixo.
+    veiculo_id:   isOperador && checkinsAtivos.length === 1 ? checkinsAtivos[0].veiculo_id : '',
     origem: '',
     destino: '',
     motivo_viagem: '',
@@ -34,6 +36,10 @@ export default function ViagemForm({ onSuccess }) {
     e.preventDefault()
     setError('')
     setFieldErrors({})
+    if (isOperador && !form.veiculo_id) {
+      setFieldErrors({ veiculo_id: ['Selecione o veículo da viagem.'] })
+      return
+    }
     criar.mutate({
       ...form,
       km_saida: Number(form.km_saida),
@@ -62,9 +68,7 @@ export default function ViagemForm({ onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Veículo *</label>
         {isOperador ? (
-          <div className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700">
-            {checkinAtivo?.veiculo?.placa ?? checkinAtivo?.veiculo_id ?? '—'}
-          </div>
+          <VeiculoCheckinSelect checkins={checkinsAtivos} value={form.veiculo_id} onChange={v => setForm(f => ({ ...f, veiculo_id: v }))} />
         ) : (
           <VeiculoSelect value={form.veiculo_id} onChange={v => setForm(f => ({ ...f, veiculo_id: v }))} required filterStatus="em_uso" />
         )}

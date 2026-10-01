@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Checkin;
 use App\Models\KmRegistro;
+use App\Models\Motorista;
 use App\Models\Veiculo;
 use App\Models\Viagem;
 use Illuminate\Support\Facades\DB;
@@ -13,8 +14,15 @@ class CheckinService
 {
     public function store(array $data): Checkin
     {
-        if (Checkin::where('motorista_id', $data['motorista_id'])->where('status', 'ativo')->exists()) {
-            throw ValidationException::withMessages(['motorista_id' => 'Motorista já possui check-in ativo.']);
+        $motorista = Motorista::findOrFail($data['motorista_id']);
+        $ativos = Checkin::where('motorista_id', $motorista->id)->where('status', 'ativo')->count();
+
+        if ($ativos >= $motorista->limiteCheckinsAtivos()) {
+            throw ValidationException::withMessages([
+                'motorista_id' => $ativos > 1
+                    ? 'Motorista já possui 2 check-ins ativos.'
+                    : 'Motorista já possui check-in ativo.',
+            ]);
         }
 
         if (Checkin::where('veiculo_id', $data['veiculo_id'])->where('status', 'ativo')->exists()) {
@@ -59,7 +67,10 @@ class CheckinService
         }
 
         if ($iniciadoPeloOperador) {
+            // Só bloqueia por viagem feita com o veículo deste check-in: quem tem
+            // check-in duplo pode liberar um carro enquanto viaja com o outro.
             $viagemEmAndamento = Viagem::where('motorista_id', $checkin->motorista_id)
+                ->where('veiculo_id', $checkin->veiculo_id)
                 ->where('status', 'em_andamento')
                 ->exists();
 

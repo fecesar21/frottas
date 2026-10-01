@@ -15,7 +15,7 @@ const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
 
 export default function CheckinsList() {
   const qc = useQueryClient()
-  const { isOperador, checkinAtivo, setCheckinAtivo } = useAuth()
+  const { isOperador, checkinAtivo, checkinsAtivos, limiteCheckins, removerCheckinAtivo } = useAuth()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [checkoutTarget, setCheckoutTarget] = useState(null)
@@ -32,10 +32,10 @@ export default function CheckinsList() {
 
   const doCheckout = useMutation({
     mutationFn: ({ id, data }) => checkinsApi.checkout(id, data),
-    onSuccess: () => {
+    onSuccess: (_res, { id }) => {
       qc.invalidateQueries({ queryKey: ['checkins'] })
       qc.invalidateQueries({ queryKey: ['veiculos'] })
-      if (isOperador) setCheckinAtivo(null)
+      if (isOperador) removerCheckinAtivo(id)
       setCheckoutTarget(null)
     },
     onError: (e) => {
@@ -64,9 +64,9 @@ export default function CheckinsList() {
             </button>
           ))}
         </div>
-        {(!isOperador || !checkinAtivo) && (
+        {(!isOperador || checkinsAtivos.length < limiteCheckins) && (
           <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
-            <Plus size={16} /> Novo check-in
+            <Plus size={16} /> {isOperador && checkinsAtivos.length > 0 ? 'Adicionar 2º veículo' : 'Novo check-in'}
           </button>
         )}
       </div>

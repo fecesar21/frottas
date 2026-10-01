@@ -32,6 +32,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
     cnh_validade: motorista?.cnh_validade ?? '',
     turno_padrao: motorista?.turno_padrao ?? '',
     observacoes: motorista?.observacoes ?? '',
+    permite_checkin_duplo: !!motorista?.permite_checkin_duplo,
   })
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
@@ -160,6 +161,17 @@ export default function MotoristaForm({ motorista, onSuccess }) {
             <option value="dia">Dia</option>
             <option value="noite">Noite</option>
           </select>
+        </div>
+        <div className="col-span-2">
+          <label className="flex items-start gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={form.permite_checkin_duplo}
+              onChange={e => setForm(f => ({ ...f, permite_checkin_duplo: e.target.checked }))}
+              className="mt-0.5 rounded border-gray-300" />
+            <span>
+              Permitir 2 check-ins simultâneos
+              <span className="block text-xs text-gray-500">Para quem alterna entre ambulância e carro administrativo no mesmo plantão.</span>
+            </span>
+          </label>
         </div>
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>

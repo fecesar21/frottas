@@ -23,8 +23,8 @@ class StoreAbastecimentoRequest extends FormRequest
 
         if ($usuarioLogado && $usuarioLogado->perfil === 'operador') {
             // Busca o motorista e o check-in ativo dele
-            $motorista = Motorista::with('checkinAtivo')->find($usuarioLogado->motorista_id);
-            $checkin = $motorista?->checkinAtivo;
+            $motorista = Motorista::find($usuarioLogado->motorista_id);
+            $checkin = $motorista?->resolverCheckinAtivo($this->input('veiculo_id'));
 
             if ($checkin) {
                 $this->merge([

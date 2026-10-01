@@ -120,8 +120,8 @@ class SolicitacaoService
                 ]);
             }
 
-            $checkin = $motorista->checkinAtivo;
-            if (! $checkin || ! $this->roteamento->podeAssumir($solicitacao, $motorista)) {
+            $checkin = $this->roteamento->checkinQueAtende($solicitacao, $motorista);
+            if (! $checkin) {
                 throw ValidationException::withMessages([
                     'motorista' => 'Você não está apto a assumir esta solicitação com o veículo do seu check-in.',
                 ]);
@@ -202,8 +202,10 @@ class SolicitacaoService
 
     private function efetivarAceite(Solicitacao $solicitacao, string $motoristaId, string $veiculoId, int $kmSaida): Solicitacao
     {
-        $motorista = Motorista::with('checkinAtivo')->findOrFail($motoristaId);
-        $checkin = $motorista->checkinAtivo;
+        $motorista = Motorista::with('checkinsAtivos')->findOrFail($motoristaId);
+        // Com check-in duplo, usa o check-in que já está no veículo da viagem.
+        $checkin = $motorista->checkinsAtivos->firstWhere('veiculo_id', $veiculoId)
+            ?? $motorista->checkinsAtivos->first();
 
         if ($checkin && $checkin->veiculo_id !== $veiculoId) {
             $kmRetornoTrajetoAnterior = Viagem::where('motorista_id', $motoristaId)

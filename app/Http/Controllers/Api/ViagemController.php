@@ -49,8 +49,8 @@ class ViagemController extends Controller
         $data = $request->validated();
 
         if (auth()->user()->perfil === 'operador') {
-            $motorista = Motorista::with('checkinAtivo')->find(auth()->user()->motorista_id);
-            $checkin = $motorista?->checkinAtivo;
+            $motorista = Motorista::find(auth()->user()->motorista_id);
+            $checkin = $motorista?->resolverCheckinAtivo($request->input('veiculo_id'));
 
             if (! $checkin) {
                 return response()->json(['error' => 'Realize o check-in antes de registrar uma viagem.'], 403);
