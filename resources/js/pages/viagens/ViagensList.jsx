@@ -83,6 +83,8 @@ export default function ViagensList() {
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-gray-500 text-xs">
               <p>Saída: <span className="text-gray-700">{fmtDt(v.saida_at)}</span></p>
               <p>Chegada: <span className="text-gray-700">{fmtDt(v.chegada_at)}</span></p>
+              <p>KM saída: <span className="text-gray-700">{fmtKm(v.km_saida)}</span></p>
+              <p>KM chegada: <span className="text-gray-700">{fmtKm(v.km_chegada)}</span></p>
               <p>KM: <span className="text-gray-700">{fmtKm(v.km_percorrido)} {v.km_percorrido ? 'km' : ''}</span></p>
             </div>
             <div className="flex items-center gap-2">
@@ -111,7 +113,7 @@ export default function ViagensList() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              {['Motorista', 'Veículo', 'Origem → Destino', 'Saída', 'Chegada', 'KM percorrido', 'Status', ''].map(h => (
+              {['Motorista', 'Veículo', 'Origem → Destino', 'Saída', 'KM saída', 'Chegada', 'KM chegada', 'KM percorrido', 'Status', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -127,7 +129,9 @@ export default function ViagensList() {
                   <span>{v.destino || '—'}</span>
                 </td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(v.saida_at)}</td>
+                <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_saida)}</td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(v.chegada_at)}</td>
+                <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_chegada)}</td>
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_percorrido)} {v.km_percorrido ? 'km' : ''}</td>
                 <td className="px-4 py-3"><Badge value={v.status} /></td>
                 <td className="px-4 py-3">
