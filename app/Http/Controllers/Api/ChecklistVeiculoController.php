@@ -89,8 +89,10 @@ class ChecklistVeiculoController extends Controller
     {
         $data = $request->validated();
 
-        if ($request->hasFile('foto')) {
-            $data['foto_path'] = $request->file('foto')->store('checklist_veiculo/fotos', 'public');
+        if ($request->hasFile('fotos')) {
+            $data['fotos'] = collect($request->file('fotos'))
+                ->map(fn ($foto) => $foto->store('checklist_veiculo/fotos', 'public'))
+                ->all();
         }
 
         $resposta = $this->service->atualizarItem($checklistVeiculo, $data);

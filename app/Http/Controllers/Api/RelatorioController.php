@@ -703,8 +703,13 @@ class RelatorioController extends Controller
             ->join('checklist_veiculo_itens_modelo as im', 'r.item_modelo_id', '=', 'im.id')
             ->whereIn('r.checklist_veiculo_id', $rows->pluck('id'))
             ->where('r.conforme', false)
-            ->select('r.checklist_veiculo_id', 'im.label', 'r.observacao', 'r.foto_path')
+            ->select('r.checklist_veiculo_id', 'im.label', 'r.observacao', 'r.foto_path', 'r.fotos')
             ->get()
+            ->map(function ($item) {
+                $item->fotos = $item->fotos ? json_decode($item->fotos, true) : ($item->foto_path ? [$item->foto_path] : []);
+
+                return $item;
+            })
             ->groupBy('checklist_veiculo_id');
 
         $rows = $rows->map(function ($row) use ($itensNaoConforme) {

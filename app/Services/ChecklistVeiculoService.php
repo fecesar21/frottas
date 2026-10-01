@@ -97,6 +97,7 @@ class ChecklistVeiculoService
                 'observacao' => null,
                 'valor' => null,
                 'foto_path' => null,
+                'fotos' => null,
             ]);
 
             $conformeCount = ChecklistVeiculoResposta::where('checklist_veiculo_id', $checklist->id)->where('conforme', true)->count();
@@ -126,7 +127,8 @@ class ChecklistVeiculoService
             'conforme' => $data['conforme'],
             'observacao' => $data['observacao'] ?? null,
             'valor' => $item && $item->requer_valor ? (int) $data['valor'] : null,
-            'foto_path' => $data['foto_path'] ?? $resposta->foto_path,
+            'foto_path' => isset($data['fotos']) ? $data['fotos'][0] : $resposta->foto_path,
+            'fotos' => $data['fotos'] ?? $resposta->fotos,
         ]);
 
         $conformeCount = ChecklistVeiculoResposta::where('checklist_veiculo_id', $checklist->id)->where('conforme', true)->count();

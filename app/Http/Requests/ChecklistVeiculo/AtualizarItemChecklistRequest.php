@@ -18,7 +18,18 @@ class AtualizarItemChecklistRequest extends FormRequest
             'conforme' => 'present|nullable|boolean',
             'observacao' => 'nullable|string',
             'valor' => 'nullable|integer',
-            'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'fotos' => 'nullable|array|max:3',
+            'fotos.*' => 'file|mimes:jpg,jpeg,png,webp|max:5120',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'fotos.max' => 'Anexe no máximo 3 fotos por item.',
+            'fotos.*.uploaded' => 'Não foi possível enviar a foto. Tente uma imagem menor.',
+            'fotos.*.max' => 'Cada foto deve ter no máximo 5 MB.',
+            'fotos.*.mimes' => 'A foto deve ser JPG, PNG ou WEBP.',
         ];
     }
 }

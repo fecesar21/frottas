@@ -95,10 +95,14 @@ export default function RelatorioChecklistVeiculo() {
                 <div key={i} className="border border-red-200 bg-red-50 rounded-lg p-3 space-y-2">
                   <p className="text-sm font-medium text-red-800">{item.label}</p>
                   {item.observacao && <p className="text-sm text-gray-700">{item.observacao}</p>}
-                  {item.foto_path ? (
-                    <a href={`/storage/${item.foto_path}`} target="_blank" rel="noreferrer" className="inline-block">
-                      <img src={`/storage/${item.foto_path}`} alt={item.label} className="max-h-48 rounded-lg border border-gray-200" />
-                    </a>
+                  {(item.fotos ?? (item.foto_path ? [item.foto_path] : [])).length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {(item.fotos ?? [item.foto_path]).map((path, j) => (
+                        <a key={j} href={`/storage/${path}`} target="_blank" rel="noreferrer" className="inline-block">
+                          <img src={`/storage/${path}`} alt={`${item.label} — foto ${j + 1}`} className="max-h-48 rounded-lg border border-gray-200" />
+                        </a>
+                      ))}
+                    </div>
                   ) : (
                     <p className="flex items-center gap-1 text-xs text-gray-400"><ImageIcon size={12} /> Sem foto anexada</p>
                   )}

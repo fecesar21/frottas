@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle, XCircle, Send, Camera } from 'lucide-react'
+import { CheckCircle, XCircle, Send, Camera, X } from 'lucide-react'
 import * as checklistApi from '../../api/checklistVeiculo'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
+import comprimirImagem from '../../utils/comprimirImagem'
+
+const MAX_FOTOS = 3
 
 export default function ChecklistVeiculoModal({ onDone }) {
   const qc = useQueryClient()
@@ -11,7 +14,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
   const [itemAberto, setItemAberto] = useState(null)
   const [observacao, setObservacao] = useState('')
   const [valor, setValor] = useState('')
-  const [foto, setFoto] = useState(null)
+  const [fotos, setFotos] = useState([])
   const [conformeAberto, setConformeAberto] = useState(null)
 
   const { data: checklist, isLoading } = useQuery({
@@ -26,7 +29,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
       setConformeAberto(null)
       setObservacao('')
       setValor('')
-      setFoto(null)
+      setFotos([])
       qc.invalidateQueries({ queryKey: ['checklist-veiculo', 'pendente'] })
     },
     onError: (e) => {
@@ -83,7 +86,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
     setConformeAberto(null)
     setObservacao('')
     setValor('')
-    setFoto(null)
+    setFotos([])
     salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: null })
   }
 
@@ -112,7 +115,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
     setItemAberto(resposta.item_modelo_id)
     setObservacao(resposta.observacao ?? '')
     setValor(resposta.valor ?? '')
-    setFoto(null)
+    setFotos([])
   }
 
   const validarValor = (resposta) => {
@@ -144,8 +147,20 @@ export default function ChecklistVeiculoModal({ onDone }) {
       return
     }
     if (!validarValor(resposta)) return
-    salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: false, observacao, valor: requerValor(resposta) ? valor : undefined, foto })
+    salvarItem.mutate({ item_modelo_id: resposta.item_modelo_id, conforme: false, observacao, valor: requerValor(resposta) ? valor : undefined, fotos })
   }
+
+  const adicionarFotos = async (e) => {
+    const selecionadas = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (!selecionadas.length) return
+    const espaco = MAX_FOTOS - fotos.length
+    if (selecionadas.length > espaco) setError(`É possível anexar no máximo ${MAX_FOTOS} fotos por item.`)
+    const comprimidas = await Promise.all(selecionadas.slice(0, Math.max(espaco, 0)).map((f) => comprimirImagem(f)))
+    setFotos((atuais) => [...atuais, ...comprimidas].slice(0, MAX_FOTOS))
+  }
+
+  const removerFoto = (indice) => setFotos((atuais) => atuais.filter((_, i) => i !== indice))
 
   const todosRespondidos = respostas.every(r => r.conforme !== null)
 
@@ -246,12 +261,28 @@ export default function ChecklistVeiculoModal({ onDone }) {
                       rows={2}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                     />
+                    {fotos.length > 0 && (
+                      <ul className="space-y-1">
+                        {fotos.map((f, i) => (
+                          <li key={i} className="flex items-center justify-between gap-2 text-xs text-gray-600 bg-white border border-gray-200 rounded px-2 py-1">
+                            <span className="truncate">{f.name}</span>
+                            <button type="button" onClick={() => removerFoto(i)} aria-label={`Remover foto ${i + 1}`} className="text-gray-400 hover:text-red-600">
+                              <X size={14} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <div className="flex items-center justify-between gap-2">
-                      <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
-                        <Camera size={14} />
-                        {foto ? foto.name : 'Anexar foto (opcional)'}
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} />
-                      </label>
+                      {fotos.length < MAX_FOTOS ? (
+                        <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
+                          <Camera size={14} />
+                          {fotos.length ? `Adicionar foto (${fotos.length}/${MAX_FOTOS})` : `Anexar fotos (opcional, até ${MAX_FOTOS})`}
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={adicionarFotos} />
+                        </label>
+                      ) : (
+                        <span className="text-xs text-gray-500">{MAX_FOTOS}/{MAX_FOTOS} fotos anexadas</span>
+                      )}
                       <button
                         onClick={() => salvarNaoConforme(r)}
                         disabled={salvarItem.isPending}
