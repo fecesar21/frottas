@@ -6,6 +6,7 @@ use App\Models\Checkin;
 use App\Models\ChecklistVeiculo;
 use App\Models\ChecklistVeiculoItemModelo;
 use App\Models\ChecklistVeiculoResposta;
+use App\Support\Plantao;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -14,9 +15,7 @@ class ChecklistVeiculoService
 {
     public function necessitaChecklist(string $veiculoId): bool
     {
-        $checklist = ChecklistVeiculo::where('veiculo_id', $veiculoId)
-            ->whereDate('data_referencia', now()->toDateString())
-            ->first();
+        $checklist = $this->doPlantao($veiculoId, Plantao::atual())->first();
 
         return ! $checklist || $checklist->status !== 'enviado';
     }
@@ -28,23 +27,22 @@ class ChecklistVeiculoService
 
     public function iniciarOuObter(Checkin $checkin): ChecklistVeiculo
     {
-        $hoje = now()->toDateString();
+        $plantao = Plantao::atual();
 
-        $existente = ChecklistVeiculo::where('veiculo_id', $checkin->veiculo_id)
-            ->whereDate('data_referencia', $hoje)
-            ->first();
+        $existente = $this->doPlantao($checkin->veiculo_id, $plantao)->first();
 
         if ($existente) {
             return $existente->load(['veiculo', 'respostas.itemModelo.categoria']);
         }
 
         try {
-            return DB::transaction(function () use ($checkin, $hoje) {
+            return DB::transaction(function () use ($checkin, $plantao) {
                 $checklist = ChecklistVeiculo::create([
                     'veiculo_id' => $checkin->veiculo_id,
                     'motorista_id' => $checkin->motorista_id,
                     'checkin_id' => $checkin->id,
-                    'data_referencia' => $hoje,
+                    'data_referencia' => $plantao['data'],
+                    'turno' => $plantao['turno'],
                     'status' => 'pendente',
                 ]);
 
@@ -63,11 +61,18 @@ class ChecklistVeiculoService
                 return $checklist->load(['veiculo', 'respostas.itemModelo.categoria']);
             });
         } catch (QueryException) {
-            return ChecklistVeiculo::where('veiculo_id', $checkin->veiculo_id)
-                ->whereDate('data_referencia', $hoje)
+            return $this->doPlantao($checkin->veiculo_id, $plantao)
                 ->firstOrFail()
                 ->load(['veiculo', 'respostas.itemModelo.categoria']);
         }
+    }
+
+    /** @param array{data: string, turno: string} $plantao */
+    private function doPlantao(string $veiculoId, array $plantao)
+    {
+        return ChecklistVeiculo::where('veiculo_id', $veiculoId)
+            ->whereDate('data_referencia', $plantao['data'])
+            ->where('turno', $plantao['turno']);
     }
 
     public function atualizarItem(ChecklistVeiculo $checklist, array $data): ChecklistVeiculoResposta

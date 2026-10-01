@@ -58,6 +58,7 @@ class ChecklistVeiculoController extends Controller
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
             ->when($isOperador, fn ($q) => $q->where('motorista_id', auth()->user()->motorista_id))
             ->latest('data_referencia')
+            ->latest('created_at')
             ->limit(200)
             ->get();
 

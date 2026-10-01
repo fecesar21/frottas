@@ -665,6 +665,7 @@ class RelatorioController extends Controller
             ->when($r->data, fn ($q, $d) => $q->where('cv.data_referencia', $d))
             ->when($r->status, fn ($q, $s) => $q->where('cv.status', $s))
             ->orderByDesc('cv.data_referencia')
+            ->orderByDesc('cv.created_at')
             ->select('cv.*', 'v.placa as veiculo_placa', 'v.modelo as veiculo_modelo', 'm.nome as motorista_nome')
             ->limit(200)
             ->get();

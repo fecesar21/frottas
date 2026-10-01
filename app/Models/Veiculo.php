@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\InvalidaCacheDashboard;
+use App\Support\Plantao;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -77,7 +78,12 @@ class Veiculo extends Model
 
     public function checklistHoje(): HasOne
     {
-        return $this->hasOne(ChecklistVeiculo::class, 'veiculo_id')->whereDate('data_referencia', now()->toDateString());
+        // Checklist do plantão vigente (07h–19h / 19h–07h), não do dia do calendário.
+        $plantao = Plantao::atual();
+
+        return $this->hasOne(ChecklistVeiculo::class, 'veiculo_id')
+            ->whereDate('data_referencia', $plantao['data'])
+            ->where('turno', $plantao['turno']);
     }
 
     public function getPrecisaManutencaoAttribute(): bool

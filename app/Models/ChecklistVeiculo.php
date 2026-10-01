@@ -18,7 +18,7 @@ class ChecklistVeiculo extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'veiculo_id', 'motorista_id', 'checkin_id', 'data_referencia', 'status',
+        'veiculo_id', 'motorista_id', 'checkin_id', 'data_referencia', 'turno', 'status',
         'itens_conforme', 'itens_nao_conforme', 'observacoes_gerais', 'enviado_at',
     ];
 

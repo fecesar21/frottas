@@ -49,7 +49,7 @@ export default function RelatorioChecklistVeiculo() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
-                {['Data', 'Motorista', 'Veículo', 'Status', 'Conforme', 'Não conforme', ''].map(h => (
+                {['Data', 'Plantão', 'Motorista', 'Veículo', 'Status', 'Conforme', 'Não conforme', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -58,6 +58,7 @@ export default function RelatorioChecklistVeiculo() {
               {rows.map((r) => (
                 <tr key={r.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(r.data_referencia)}</td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.turno === 'noturno' ? 'Noturno' : 'Diurno'}</td>
                   <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{r.motorista_nome ?? '—'}</td>
                   <td className="px-4 py-3 font-mono text-gray-800 whitespace-nowrap">{r.veiculo_placa ?? '—'}</td>
                   <td className="px-4 py-3"><Badge value={r.status} /></td>
@@ -76,7 +77,7 @@ export default function RelatorioChecklistVeiculo() {
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Nenhum checklist encontrado</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Nenhum checklist encontrado</td></tr>
               )}
             </tbody>
           </table>
@@ -87,7 +88,7 @@ export default function RelatorioChecklistVeiculo() {
         {detalheAberto && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Veículo <strong>{detalheAberto.veiculo_placa}</strong> — Motorista <strong>{detalheAberto.motorista_nome}</strong> — {fmtDt(detalheAberto.data_referencia)}
+              Veículo <strong>{detalheAberto.veiculo_placa}</strong> — Motorista <strong>{detalheAberto.motorista_nome}</strong> — {fmtDt(detalheAberto.data_referencia)} ({detalheAberto.turno === 'noturno' ? 'plantão noturno' : 'plantão diurno'})
             </p>
             <div className="space-y-3">
               {(detalheAberto.itens_nao_conforme_detalhe ?? []).map((item, i) => (

@@ -7,6 +7,7 @@ use App\Models\Checkin;
 use App\Models\ChecklistVeiculo;
 use App\Models\Motorista;
 use App\Models\Veiculo;
+use App\Support\Plantao;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -24,7 +25,8 @@ class AbastecimentoApiTest extends TestCase
             'veiculo_id' => $veiculo->id,
             'motorista_id' => $motorista->id,
             'checkin_id' => $checkin->id,
-            'data_referencia' => now()->toDateString(),
+            'data_referencia' => Plantao::atual()['data'],
+            'turno' => Plantao::atual()['turno'],
             'status' => 'enviado',
             'enviado_at' => now(),
         ]);
