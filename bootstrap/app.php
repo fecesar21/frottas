@@ -3,6 +3,7 @@
 use App\Http\Middleware\EscopoUnidade;
 use App\Http\Middleware\RestringirSolicitante;
 use App\Http\Middleware\SomenteAdmin;
+use Carbon\Carbon;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -35,6 +36,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('alertas:verificar')->daily();
         $schedule->command('colaboradores:sincronizar')->hourly()->withoutOverlapping();
+
+        // Resumo em PDF por e-mail 1h após o fim de cada plantão e no dia 01 (mês anterior).
+        $umaHoraApos = fn (string $hora) => Carbon::createFromFormat('H:i', $hora)->addHour()->format('H:i');
+        $schedule->command('relatorio:resumo plantao')
+            ->dailyAt($umaHoraApos(config('plantao.inicio_noturno', '19:00')))->withoutOverlapping();
+        $schedule->command('relatorio:resumo plantao')
+            ->dailyAt($umaHoraApos(config('plantao.inicio_diurno', '07:00')))->withoutOverlapping();
+        $schedule->command('relatorio:resumo mensal')->monthlyOn(1, '07:00')->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (ValidationException $e, Request $request) {
