@@ -45,7 +45,7 @@ export default function AbastecimentosList() {
         <div>
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Resumo por veículo</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {(resumo ?? []).slice(0, 8).map((r) => (
+            {(resumo ?? []).map((r) => (
               <div key={r.veiculo_id} className="bg-white border border-gray-200 rounded-xl p-4 text-sm">
                 <p className="font-mono font-bold text-gray-800">{r.placa}</p>
                 <p className="text-gray-500 text-xs">{r.modelo}</p>

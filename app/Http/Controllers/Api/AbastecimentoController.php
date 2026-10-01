@@ -77,6 +77,6 @@ class AbastecimentoController extends Controller
 
     public function resumo()
     {
-        return response()->json(DB::select('SELECT * FROM vw_resumo_abastecimentos LIMIT 50'));
+        return response()->json(DB::select('SELECT * FROM vw_resumo_abastecimentos WHERE total_abastecimentos > 0 ORDER BY total_valor DESC LIMIT 50'));
     }
 }
