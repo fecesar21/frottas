@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Veiculo;
+use App\Models\VeiculoManutencao;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -397,10 +398,16 @@ class RelatorioController extends Controller
 
         $rows = DB::table('veiculo_manutencoes as vm')
             ->join('veiculos as v', 'vm.veiculo_id', '=', 'v.id')
+            ->leftJoin('usuarios as ua', 'vm.aberta_por_id', '=', 'ua.id')
+            ->leftJoin('usuarios as uf', 'vm.fechada_por_id', '=', 'uf.id')
             ->where('vm.inicio', '<=', $fimPeriodo)
             ->where(fn ($q) => $q->whereNull('vm.fim')->orWhere('vm.fim', '>=', $inicioPeriodo))
             ->orderByDesc('vm.inicio')
-            ->select('vm.id', 'vm.veiculo_id', 'v.placa', 'v.modelo', 'vm.inicio', 'vm.fim', 'vm.motivo')
+            ->select(
+                'vm.id', 'vm.veiculo_id', 'v.placa', 'v.modelo', 'vm.inicio', 'vm.fim', 'vm.tipo', 'vm.motivo',
+                'vm.origem', 'vm.km_entrada', 'vm.km_saida', 'vm.local', 'vm.observacao_saida',
+                'ua.nome as aberta_por', 'uf.nome as fechada_por'
+            )
             ->get()
             ->map(function ($m) use ($inicioPeriodo, $fimPeriodo, $agora) {
                 $inicio = Carbon::parse($m->inicio);
@@ -408,6 +415,7 @@ class RelatorioController extends Controller
                 $ini = $inicio->max($inicioPeriodo);
                 $fimRecorte = $fim->min($fimPeriodo)->min($agora);
 
+                $m->tipo_label = VeiculoManutencao::rotuloTipo($m->tipo);
                 $m->em_andamento = $m->fim === null;
                 $m->duracao_min = (int) $inicio->diffInMinutes($fim);
                 $m->duracao_periodo_min = $fimRecorte->gt($ini) ? (int) $ini->diffInMinutes($fimRecorte) : 0;
@@ -429,18 +437,27 @@ class RelatorioController extends Controller
             'tempo_total_min' => $g->sum('duracao_periodo_min'),
         ])->sortByDesc('tempo_total_min')->values();
 
+        $por_tipo = $rows->groupBy(fn ($m) => $m->tipo ?? 'nao_informado')->map(fn ($g, $tipo) => [
+            'tipo' => $tipo === 'nao_informado' ? null : $tipo,
+            'tipo_label' => $g->first()->tipo_label,
+            'manutencoes' => $g->count(),
+            'tempo_total_min' => $g->sum('duracao_periodo_min'),
+        ])->sortByDesc('tempo_total_min')->values();
+
         $em_andamento = DB::table('veiculo_manutencoes as vm')
             ->join('veiculos as v', 'vm.veiculo_id', '=', 'v.id')
+            ->leftJoin('usuarios as ua', 'vm.aberta_por_id', '=', 'ua.id')
             ->whereNull('vm.fim')
             ->orderBy('vm.inicio')
-            ->get(['v.placa', 'v.modelo', 'vm.inicio', 'vm.motivo'])
+            ->get(['v.placa', 'v.modelo', 'vm.inicio', 'vm.tipo', 'vm.motivo', 'vm.origem', 'vm.local', 'ua.nome as aberta_por'])
             ->map(function ($m) use ($agora) {
+                $m->tipo_label = VeiculoManutencao::rotuloTipo($m->tipo);
                 $m->duracao_min = (int) Carbon::parse($m->inicio)->diffInMinutes($agora);
 
                 return $m;
             });
 
-        return compact('rows', 'totais', 'por_veiculo', 'em_andamento', 'de', 'ate');
+        return compact('rows', 'totais', 'por_veiculo', 'por_tipo', 'em_andamento', 'de', 'ate');
     }
 
     public function manutencoes(Request $r)

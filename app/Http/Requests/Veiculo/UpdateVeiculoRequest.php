@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Veiculo;
 
+use App\Models\VeiculoManutencao;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateVeiculoRequest extends FormRequest
@@ -28,6 +29,7 @@ class UpdateVeiculoRequest extends FormRequest
             'status' => 'sometimes|in:disponivel,em_uso,manutencao,inativo',
             'observacoes' => 'nullable|string',
             'manutencao_motivo' => 'nullable|string|max:255',
+            'manutencao_tipo' => 'nullable|in:'.implode(',', array_keys(VeiculoManutencao::TIPOS)),
         ];
     }
 

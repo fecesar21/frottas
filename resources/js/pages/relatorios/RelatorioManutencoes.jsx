@@ -52,11 +52,26 @@ export default function RelatorioManutencoes() {
         <>
           <ManutencaoResumo data={data} loading={isLoading} />
 
+          {(data?.por_tipo ?? []).length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Por tipo de manutenção</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                {data.por_tipo.map(t => (
+                  <div key={t.tipo ?? 'nao_informado'} className="border border-gray-100 rounded-lg p-3">
+                    <p className="text-xs text-gray-500">{t.tipo_label}</p>
+                    <p className="text-lg font-semibold text-gray-800">{t.manutencoes}</p>
+                    <p className="text-xs text-gray-500">{fmtDuracao(t.tempo_total_min)} parado</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                 <tr>
-                  {['Placa', 'Modelo', 'Início', 'Fim', 'Motivo', 'Duração total', 'No período'].map(h => (
+                  {['Placa', 'Modelo', 'Tipo', 'Motivo', 'Início', 'Fim', 'Aberta por', 'Fechada por', 'Duração total', 'No período'].map(h => (
                     <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -66,19 +81,25 @@ export default function RelatorioManutencoes() {
                   <tr key={m.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-mono font-semibold text-gray-800">{m.placa}</td>
                     <td className="px-4 py-3 text-gray-600">{m.modelo}</td>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{m.tipo_label}</td>
+                    <td className="px-4 py-3 text-gray-600">{m.motivo || '—'}{m.local ? <span className="block text-xs text-gray-400">{m.local}</span> : null}</td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(m.inicio)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {m.em_andamento
                         ? <span className="text-xs font-medium text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-2 py-0.5">Em andamento</span>
                         : <span className="text-gray-500">{fmtDt(m.fim)}</span>}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{m.motivo || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      {m.aberta_por || '—'}
+                      {m.origem === 'motorista' && <span className="ml-1 text-xs text-blue-600">(motorista)</span>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{m.fechada_por || '—'}</td>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtDuracao(m.duracao_min)}</td>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtDuracao(m.duracao_periodo_min)}</td>
                   </tr>
                 ))}
                 {!isLoading && (data?.rows ?? []).length === 0 && (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Sem manutenções no período</td></tr>
+                  <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">Sem manutenções no período</td></tr>
                 )}
               </tbody>
             </table>

@@ -7,6 +7,9 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import VeiculoForm from './VeiculoForm'
+import ManutencaoModal from '../../components/manutencoes/ManutencaoModal'
+import EncerrarManutencaoModal from '../../components/manutencoes/EncerrarManutencaoModal'
+import { rotuloTipo } from '../../components/manutencoes/tipos'
 import { useAuth } from '../../contexts/AuthContext'
 
 const fmt = (n) => Number(n ?? 0).toLocaleString('pt-BR')
@@ -27,7 +30,7 @@ export default function VeiculosList() {
   const [editTarget, setEditTarget] = useState(null)
   const [statusError, setStatusError] = useState('')
   const [manutencaoTarget, setManutencaoTarget] = useState(null)
-  const [motivo, setMotivo] = useState('')
+  const [encerrarTarget, setEncerrarTarget] = useState(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['veiculos', statusFilter],
@@ -53,20 +56,11 @@ export default function VeiculosList() {
     mudarStatus.mutate({ id: v.id, status: novoStatus })
   }
 
-  // Entrar em manutenção pede um motivo (opcional); sair é direto.
+  // Entrar pede tipo/motivo (e KM de chegada se houver viagem); sair pede KM.
   const toggleManutencao = (v) => {
-    if (v.status === 'manutencao') {
-      mudarStatus.mutate({ id: v.id, status: 'disponivel' })
-      return
-    }
     setStatusError('')
-    setMotivo('')
-    setManutencaoTarget(v)
-  }
-
-  const confirmarManutencao = (e) => {
-    e.preventDefault()
-    mudarStatus.mutate({ id: manutencaoTarget.id, status: 'manutencao', motivo: motivo.trim() || undefined })
+    if (v.status === 'manutencao') setEncerrarTarget(v)
+    else setManutencaoTarget(v)
   }
 
   if (isLoading) return <LoadingSpinner />
@@ -135,16 +129,19 @@ export default function VeiculosList() {
                       <input
                         type="checkbox"
                         checked={v.status === 'manutencao'}
-                        disabled={v.status === 'inativo' || v.status === 'em_uso' || mudarStatus.isPending}
+                        disabled={v.status === 'inativo' || mudarStatus.isPending}
                         onChange={() => toggleManutencao(v)}
-                        title={v.status === 'inativo' ? 'Veículo inativo' : v.status === 'em_uso' ? 'Veículo em uso' : v.status === 'manutencao' ? 'Tirar da manutenção' : 'Colocar em manutenção'}
+                        title={v.status === 'inativo' ? 'Veículo inativo' : v.status === 'manutencao' ? 'Tirar da manutenção' : 'Colocar em manutenção'}
                         className="w-4 h-4 accent-yellow-500 cursor-pointer disabled:cursor-not-allowed"
                       />
                     ) : (
                       <span className={`inline-block w-2 h-2 rounded-full ${v.status === 'manutencao' ? 'bg-yellow-500' : 'bg-gray-200'}`} />
                     )}
                     {v.status === 'manutencao' && v.manutencao_inicio && (
-                      <span className="text-xs text-yellow-600 font-medium">{tempoDecorrido(v.manutencao_inicio)}</span>
+                      <span className="text-xs text-yellow-600 font-medium" title={[v.manutencao_atual?.motivo, v.manutencao_atual?.aberta_por && `por ${v.manutencao_atual.aberta_por}`].filter(Boolean).join(' · ')}>
+                        {tempoDecorrido(v.manutencao_inicio)}
+                        {v.manutencao_atual && <> · {rotuloTipo(v.manutencao_atual.tipo)}{v.manutencao_atual.origem === 'motorista' ? ' (motorista)' : ''}</>}
+                      </span>
                     )}
                   </div>
                 </td>
@@ -165,35 +162,8 @@ export default function VeiculosList() {
         </table>
       </div>
 
-      <Modal open={!!manutencaoTarget} onClose={() => setManutencaoTarget(null)} title="Colocar em manutenção" size="sm">
-        <form onSubmit={confirmarManutencao} className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Veículo: <strong className="font-mono">{manutencaoTarget?.placa}</strong> — {manutencaoTarget?.modelo}
-          </p>
-          <div>
-            <label htmlFor="manutencao-motivo" className="block text-sm font-medium text-gray-700 mb-1">Motivo (opcional)</label>
-            <input
-              id="manutencao-motivo"
-              type="text"
-              maxLength={255}
-              autoFocus
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Ex.: troca de óleo, pneus, funilaria"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-            />
-          </div>
-          {statusError && <Alert type="error" message={statusError} />}
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setManutencaoTarget(null)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">
-              Cancelar
-            </button>
-            <button type="submit" disabled={mudarStatus.isPending} className="px-4 py-2 text-sm rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-60">
-              {mudarStatus.isPending ? 'Salvando...' : 'Confirmar'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <ManutencaoModal veiculo={manutencaoTarget} onClose={() => setManutencaoTarget(null)} />
+      <EncerrarManutencaoModal veiculo={encerrarTarget} onClose={() => setEncerrarTarget(null)} />
 
       <Modal open={formOpen} onClose={closeForm} title={editTarget ? 'Editar veículo' : 'Novo veículo'} size="lg">
         <VeiculoForm veiculo={editTarget} onSuccess={closeForm} />

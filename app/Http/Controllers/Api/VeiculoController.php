@@ -7,6 +7,7 @@ use App\Http\Requests\Veiculo\StoreVeiculoRequest;
 use App\Http\Requests\Veiculo\UpdateVeiculoRequest;
 use App\Http\Resources\VeiculoResource;
 use App\Models\Veiculo;
+use App\Services\ManutencaoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ class VeiculoController extends Controller
         $perPage = max(1, min((int) $request->integer('per_page', 25), 100));
 
         $veiculos = Veiculo::query()
-            ->with(['checkinAtivo.motorista'])
+            ->with(['checkinAtivo.motorista', 'manutencaoAberta.abertaPor'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('placa')
@@ -47,28 +48,30 @@ class VeiculoController extends Controller
         return (new VeiculoResource(Veiculo::create($data)))->response()->setStatusCode(201);
     }
 
-    public function update(UpdateVeiculoRequest $request, Veiculo $veiculo)
+    public function update(UpdateVeiculoRequest $request, Veiculo $veiculo, ManutencaoService $manutencao)
     {
         $data = $request->validated();
-        $motivo = $data['manutencao_motivo'] ?? null;
-        unset($data['manutencao_motivo']);
+        $dadosManutencao = [
+            'tipo' => $data['manutencao_tipo'] ?? null,
+            'motivo' => $data['manutencao_motivo'] ?? null,
+        ];
+        unset($data['manutencao_motivo'], $data['manutencao_tipo']);
 
-        DB::transaction(function () use ($veiculo, $data, $motivo) {
-            $entrando = ($data['status'] ?? null) === 'manutencao' && $veiculo->status !== 'manutencao';
-            $saindo = isset($data['status']) && $data['status'] !== 'manutencao' && $veiculo->status === 'manutencao';
+        DB::transaction(function () use ($veiculo, $data, $dadosManutencao, $manutencao, $request) {
+            $status = $data['status'] ?? null;
+            unset($data['status']);
 
-            if ($entrando) {
-                $data['manutencao_inicio'] = now();
-                $veiculo->manutencoes()->create(['inicio' => $data['manutencao_inicio'], 'motivo' => $motivo]);
-            } elseif (isset($data['status']) && $data['status'] !== 'manutencao') {
+            // Entrada/saída de manutenção passa pelo service, que grava o histórico.
+            if ($status === 'manutencao' && $veiculo->status !== 'manutencao') {
+                $manutencao->iniciar($veiculo, $request->user(), $dadosManutencao, 'gestor', finalizarViagem: false);
+            } elseif ($status !== null && $status !== 'manutencao' && $veiculo->status === 'manutencao') {
+                $manutencao->encerrar($veiculo, $request->user(), [], $status);
+            } elseif ($status !== null && $status !== 'manutencao') {
+                $data['status'] = $status;
                 $data['manutencao_inicio'] = null;
             }
 
-            if ($saindo) {
-                $veiculo->manutencoes()->whereNull('fim')->update(['fim' => now()]);
-            }
-
-            $veiculo->update($data);
+            $veiculo->refresh()->update($data);
         });
 
         return new VeiculoResource($veiculo->fresh());
@@ -77,7 +80,7 @@ class VeiculoController extends Controller
     public function destroy(Veiculo $veiculo)
     {
         DB::transaction(function () use ($veiculo) {
-            $veiculo->manutencoes()->whereNull('fim')->update(['fim' => now()]);
+            $veiculo->manutencoes()->whereNull('fim')->update(['fim' => now(), 'fechada_por_id' => auth()->id()]);
             $veiculo->update(['status' => 'inativo', 'manutencao_inicio' => null]);
         });
 

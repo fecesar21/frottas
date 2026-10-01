@@ -46,7 +46,7 @@ export default function ManutencaoResumo({ data, loading }) {
                 <li key={i} className="py-2.5 flex items-start justify-between gap-3 text-sm">
                   <div className="min-w-0">
                     <p className="font-mono font-semibold text-gray-800">{m.placa} <span className="font-sans font-normal text-gray-500">— {m.modelo}</span></p>
-                    <p className="text-xs text-gray-500 truncate">{m.motivo || 'Sem motivo informado'} · desde {fmtData(m.inicio)}</p>
+                    <p className="text-xs text-gray-500 truncate">{[m.tipo_label !== 'Não informado' ? m.tipo_label : null, m.motivo].filter(Boolean).join(' – ') || 'Sem motivo informado'} · desde {fmtData(m.inicio)}{m.aberta_por ? ` · por ${m.aberta_por}` : ''}</p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-2 py-0.5">
                     {fmtDuracao(m.duracao_min)}

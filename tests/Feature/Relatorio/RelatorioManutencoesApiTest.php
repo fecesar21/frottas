@@ -105,4 +105,27 @@ class RelatorioManutencoesApiTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_relatorio_agrega_por_tipo_e_informa_responsavel(): void
+    {
+        Carbon::setTestNow('2026-09-20 12:00:00');
+        $gestor = $this->loginGestor();
+        $veiculo = Veiculo::factory()->create();
+        VeiculoManutencao::factory()->create([
+            'veiculo_id' => $veiculo->id, 'tipo' => 'troca_oleo', 'aberta_por_id' => $gestor->id,
+            'inicio' => '2026-09-10 08:00:00', 'fim' => '2026-09-10 10:00:00',
+        ]);
+        VeiculoManutencao::factory()->create([
+            'veiculo_id' => $veiculo->id, 'tipo' => null,
+            'inicio' => '2026-09-11 08:00:00', 'fim' => '2026-09-11 09:00:00',
+        ]);
+
+        $json = $this->getJson('/api/relatorios/manutencoes?de=2026-09-01&ate=2026-09-30')->assertOk()->json();
+
+        $this->assertSame('Troca de óleo do motor', $json['por_tipo'][0]['tipo_label']);
+        $this->assertSame(120, $json['por_tipo'][0]['tempo_total_min']);
+        $this->assertSame('Não informado', $json['por_tipo'][1]['tipo_label']);
+        $linha = collect($json['rows'])->firstWhere('tipo', 'troca_oleo');
+        $this->assertSame($gestor->nome, $linha['aberta_por']);
+    }
 }

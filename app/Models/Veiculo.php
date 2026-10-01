@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class Veiculo extends Model
 {
@@ -94,5 +95,33 @@ class Veiculo extends Model
     public function manutencoes(): HasMany
     {
         return $this->hasMany(VeiculoManutencao::class);
+    }
+
+    public function manutencaoAberta(): HasOne
+    {
+        return $this->hasOne(VeiculoManutencao::class)->whereNull('fim')->latestOfMany('inicio');
+    }
+
+    public function emManutencao(): bool
+    {
+        return $this->status === 'manutencao';
+    }
+
+    /**
+     * Veículo em manutenção não recebe solicitações nem registra viagens.
+     */
+    public function garantirForaDeManutencao(string $campo = 'veiculo_id'): void
+    {
+        if (! $this->emManutencao()) {
+            return;
+        }
+
+        $aberta = $this->manutencaoAberta;
+        $desde = ($aberta?->inicio ?? $this->manutencao_inicio)?->format('d/m H:i');
+        $tipo = $aberta?->tipo ? ' ('.VeiculoManutencao::rotuloTipo($aberta->tipo).')' : '';
+
+        throw ValidationException::withMessages([
+            $campo => "Veículo {$this->placa} em manutenção".($desde ? " desde {$desde}" : '').$tipo.'.',
+        ]);
     }
 }

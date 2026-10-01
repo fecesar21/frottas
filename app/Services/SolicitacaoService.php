@@ -51,6 +51,8 @@ class SolicitacaoService
      */
     public function aceitar(Solicitacao $solicitacao, string $motoristaId, string $veiculoId): Solicitacao
     {
+        Veiculo::findOrFail($veiculoId)->garantirForaDeManutencao();
+
         $solicitacao->update([
             'status' => 'pendente_motorista',
             'motorista_pendente_id' => $motoristaId,
@@ -178,6 +180,29 @@ class SolicitacaoService
         return $solicitacao;
     }
 
+    /**
+     * Veículo designado entrou em manutenção: a solicitação volta a ficar aberta
+     * para outro motorista/veículo e a gestão e os motoristas elegíveis são avisados.
+     */
+    public function devolverParaFila(Solicitacao $solicitacao): Solicitacao
+    {
+        $solicitacao->update([
+            'status' => 'aberto',
+            'motorista_pendente_id' => null,
+            'veiculo_pendente_id' => null,
+        ]);
+        $solicitacao = $solicitacao->fresh();
+
+        Notification::send($this->destinatariosGestao($solicitacao), new NovaSolicitacaoTransporte($solicitacao));
+
+        $usuariosMotoristas = $this->roteamento->motoristasElegiveis($solicitacao)->pluck('usuario')->filter();
+        if ($usuariosMotoristas->isNotEmpty()) {
+            Notification::send($usuariosMotoristas, new NovaSolicitacaoDisponivel($solicitacao));
+        }
+
+        return $solicitacao;
+    }
+
     public function cancelar(Solicitacao $solicitacao): Solicitacao
     {
         $solicitacao->update(['status' => 'cancelado']);
@@ -203,6 +228,8 @@ class SolicitacaoService
 
     private function efetivarAceite(Solicitacao $solicitacao, string $motoristaId, string $veiculoId, int $kmSaida): Solicitacao
     {
+        Veiculo::findOrFail($veiculoId)->garantirForaDeManutencao();
+
         $motorista = Motorista::with('checkinsAtivos')->findOrFail($motoristaId);
         // Com check-in duplo, usa o check-in que já está no veículo da viagem.
         $checkin = $motorista->checkinsAtivos->firstWhere('veiculo_id', $veiculoId)

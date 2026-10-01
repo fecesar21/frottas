@@ -6,6 +6,7 @@ import { useNotificacoes } from '../../hooks/useNotificacoes'
 import NovaSolicitacaoPopup from '../notificacoes/NovaSolicitacaoPopup'
 import NovaViagemDesignadaPopup from '../notificacoes/NovaViagemDesignadaPopup'
 import SolicitacaoDisponivelPopup from '../notificacoes/SolicitacaoDisponivelPopup'
+import { descreverNotificacao } from '../notificacoes/descreverNotificacao'
 import * as viagensApi from '../../api/viagens'
 
 const perfilLabel = { admin: 'Administrador', gestor: 'Gestor', operador: 'Operador' }
@@ -82,12 +83,15 @@ export default function Header({ title, onMenuClick }) {
                   {notificacoes.length === 0 && (
                     <div className="px-4 py-6 text-center text-sm text-gray-400">Nenhuma notificação nova</div>
                   )}
-                  {notificacoes.map(n => (
-                    <div key={n.id} className="px-4 py-3 text-sm">
-                      <p className="font-medium text-gray-800">{n.data?.solicitante_nome ?? 'Nova solicitação'}</p>
-                      <p className="text-gray-500 text-xs">{n.data?.detalhe}</p>
-                    </div>
-                  ))}
+                  {notificacoes.map(n => {
+                    const { titulo, detalhe } = descreverNotificacao(n)
+                    return (
+                      <div key={n.id} className="px-4 py-3 text-sm">
+                        <p className="font-medium text-gray-800">{titulo}</p>
+                        <p className="text-gray-500 text-xs">{detalhe}</p>
+                      </div>
+                    )
+                  })}
                 </div>
                 <div className="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">
                   Acesse Solicitações de Transporte para tratar e marcar como lido.

@@ -3,11 +3,12 @@
 use App\Http\Controllers\Api\AbastecimentoController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckinController;
-use App\Http\Controllers\Api\ColaboradorController;
 use App\Http\Controllers\Api\ChecklistVeiculoController;
+use App\Http\Controllers\Api\ColaboradorController;
 use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\LocalidadeController;
+use App\Http\Controllers\Api\ManutencaoController;
 use App\Http\Controllers\Api\MotoristaController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
@@ -48,6 +49,8 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
 
     // Veículos
     Route::get('veiculos/posicoes', [VeiculoController::class, 'posicoes']);
+    Route::post('veiculos/{veiculo}/manutencao', [ManutencaoController::class, 'iniciar']);
+    Route::post('veiculos/{veiculo}/manutencao/encerrar', [ManutencaoController::class, 'encerrar']);
     Route::apiResource('veiculos', VeiculoController::class);
 
     // Motoristas

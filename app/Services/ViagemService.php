@@ -24,6 +24,8 @@ class ViagemService
         }
 
         $veiculo = Veiculo::findOrFail($data['veiculo_id']);
+        $veiculo->garantirForaDeManutencao();
+
         if ($data['km_saida'] < $veiculo->km_atual) {
             throw ValidationException::withMessages([
                 'km_saida' => 'KM de saída menor que o KM atual do veículo.',

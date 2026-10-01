@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, LogOut } from 'lucide-react'
+import { Plus, LogOut, Wrench } from 'lucide-react'
 import { format } from 'date-fns'
 import * as checkinsApi from '../../api/checkins'
 import { useAuth } from '../../contexts/AuthContext'
@@ -9,6 +9,9 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import CheckinForm from './CheckinForm'
+import ManutencaoModal from '../../components/manutencoes/ManutencaoModal'
+import EncerrarManutencaoModal from '../../components/manutencoes/EncerrarManutencaoModal'
+import { rotuloTipo, tempoDecorrido } from '../../components/manutencoes/tipos'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm') : '—'
 const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
@@ -21,6 +24,32 @@ export default function CheckinsList() {
   const [checkoutTarget, setCheckoutTarget] = useState(null)
   const [checkoutForm, setCheckoutForm] = useState({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' })
   const [error, setError] = useState('')
+  const [manutencaoVeiculo, setManutencaoVeiculo] = useState(null)
+  const [encerrarVeiculo, setEncerrarVeiculo] = useState(null)
+
+  // Botão de manutenção do veículo do check-in ativo (motorista ou gestão).
+  const acaoManutencao = (c) => {
+    if (c.status !== 'ativo' || !c.veiculo) return null
+    return c.veiculo.status === 'manutencao' ? (
+      <button onClick={() => setEncerrarVeiculo(c.veiculo)} title="Retirar da manutenção"
+        className="flex items-center gap-1 text-xs text-green-700 hover:text-green-900 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors w-fit whitespace-nowrap">
+        <Wrench size={12} /> Liberar
+      </button>
+    ) : (
+      <button onClick={() => setManutencaoVeiculo(c.veiculo)}
+        className="flex items-center gap-1 text-xs text-yellow-700 hover:text-yellow-900 border border-yellow-300 rounded px-2 py-1 hover:bg-yellow-50 transition-colors w-fit whitespace-nowrap">
+        <Wrench size={12} /> Manutenção
+      </button>
+    )
+  }
+
+  const avisoManutencao = (c) => c.status === 'ativo' && c.veiculo?.status === 'manutencao' && (
+    <p className="text-xs text-yellow-800 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+      Em manutenção há {tempoDecorrido(c.veiculo.manutencao_atual?.inicio ?? c.veiculo.manutencao_inicio)}
+      {' – '}{rotuloTipo(c.veiculo.manutencao_atual?.tipo)}
+      {c.veiculo.manutencao_atual?.motivo ? ` (${c.veiculo.manutencao_atual.motivo})` : ''}
+    </p>
+  )
 
   const { data, isLoading } = useQuery({
     queryKey: ['checkins', statusFilter],
@@ -86,11 +115,15 @@ export default function CheckinsList() {
               <p>Check-in: <span className="text-gray-700">{fmtDt(c.checkin_at)}</span></p>
               <p>Check-out: <span className="text-gray-700">{fmtDt(c.checkout_at)}</span></p>
             </div>
+            {avisoManutencao(c)}
             {c.status === 'ativo' && (
-              <button onClick={() => { setCheckoutTarget(c); setCheckoutForm({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' }) }}
-                className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
-                <LogOut size={12} /> Checkout
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => { setCheckoutTarget(c); setCheckoutForm({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' }) }}
+                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
+                  <LogOut size={12} /> Checkout
+                </button>
+                {acaoManutencao(c)}
+              </div>
             )}
           </div>
         ))}
@@ -113,7 +146,14 @@ export default function CheckinsList() {
             {checkinsFiltrados.map((c) => (
               <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{c.motorista?.nome ?? '—'}</td>
-                <td className="px-4 py-3 font-mono text-gray-600 whitespace-nowrap">{c.veiculo?.placa ?? '—'}</td>
+                <td className="px-4 py-3 font-mono text-gray-600 whitespace-nowrap">
+                  {c.veiculo?.placa ?? '—'}
+                  {c.status === 'ativo' && c.veiculo?.status === 'manutencao' && (
+                    <span className="ml-2 font-sans text-xs text-yellow-700" title={rotuloTipo(c.veiculo.manutencao_atual?.tipo)}>
+                      em manutenção · {tempoDecorrido(c.veiculo.manutencao_atual?.inicio ?? c.veiculo.manutencao_inicio)}
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-3 capitalize text-gray-500 whitespace-nowrap">{c.turno}</td>
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(c.km_saida)}</td>
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{c.km_retorno ? fmtKm(c.km_retorno) : '—'}</td>
@@ -122,10 +162,13 @@ export default function CheckinsList() {
                 <td className="px-4 py-3"><Badge value={c.status} /></td>
                 <td className="px-4 py-3">
                   {c.status === 'ativo' && (
-                    <button onClick={() => { setCheckoutTarget(c); setCheckoutForm({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' }) }}
-                      className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors">
-                      <LogOut size={12} /> Checkout
-                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setCheckoutTarget(c); setCheckoutForm({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' }) }}
+                        className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors">
+                        <LogOut size={12} /> Checkout
+                      </button>
+                      {acaoManutencao(c)}
+                    </div>
                   )}
                 </td>
               </tr>
@@ -144,6 +187,9 @@ export default function CheckinsList() {
           qc.invalidateQueries({ queryKey: ['checklist-veiculo'] })
         }} />
       </Modal>
+
+      <ManutencaoModal veiculo={manutencaoVeiculo} onClose={() => setManutencaoVeiculo(null)} />
+      <EncerrarManutencaoModal veiculo={encerrarVeiculo} onClose={() => setEncerrarVeiculo(null)} />
 
       <Modal open={!!checkoutTarget} onClose={() => setCheckoutTarget(null)} title="Encerrar check-in">
         <form onSubmit={(e) => { e.preventDefault(); doCheckout.mutate({ id: checkoutTarget.id, data: checkoutForm }) }} className="space-y-4">

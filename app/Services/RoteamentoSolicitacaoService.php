@@ -89,7 +89,7 @@ class RoteamentoSolicitacaoService
 
     private function veiculoAtende(Motorista $motorista, ?Veiculo $veiculo, array $regra): bool
     {
-        if (! $veiculo) {
+        if (! $veiculo || $veiculo->emManutencao()) {
             return false;
         }
 

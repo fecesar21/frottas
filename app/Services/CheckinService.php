@@ -30,6 +30,7 @@ class CheckinService
         }
 
         $veiculo = Veiculo::findOrFail($data['veiculo_id']);
+        $veiculo->garantirForaDeManutencao();
 
         if ($data['km_saida'] < $veiculo->km_atual) {
             throw ValidationException::withMessages(['km_saida' => 'KM de saída menor que KM atual do veículo.']);
@@ -91,8 +92,9 @@ class CheckinService
             ]);
 
             $veiculo = Veiculo::find($checkin->veiculo_id);
+            // Em manutenção o veículo continua indisponível mesmo após o check-out.
             $veiculo->update([
-                'status' => 'disponivel',
+                'status' => $veiculo->status === 'manutencao' ? 'manutencao' : 'disponivel',
                 'km_atual' => $data['km_retorno'] ?? $veiculo->km_atual,
             ]);
 
