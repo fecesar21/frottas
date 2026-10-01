@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -29,6 +31,20 @@ class Viagem extends Model
     protected $casts = ['saida_at' => 'datetime', 'chegada_at' => 'datetime'];
 
     /**
+     * Origem e destino são sempre gravados em maiúsculas (padronização),
+     * independentemente de onde a viagem foi criada.
+     */
+    protected function origem(): Attribute
+    {
+        return Attribute::make(set: fn (?string $v) => $v === null ? null : mb_strtoupper(trim($v)));
+    }
+
+    protected function destino(): Attribute
+    {
+        return Attribute::make(set: fn (?string $v) => $v === null ? null : mb_strtoupper(trim($v)));
+    }
+
+    /**
      * @return BelongsTo<Veiculo, $this>
      */
     public function veiculo(): BelongsTo
@@ -50,6 +66,16 @@ class Viagem extends Model
     public function pontos(): HasMany
     {
         return $this->hasMany(ViagemPonto::class)->orderBy('capturado_at');
+    }
+
+    /**
+     * Colaboradores transportados (motivo transporte_colaborador).
+     *
+     * @return BelongsToMany<Colaborador, $this>
+     */
+    public function colaboradores(): BelongsToMany
+    {
+        return $this->belongsToMany(Colaborador::class, 'viagem_colaborador')->orderBy('nome');
     }
 
     /**

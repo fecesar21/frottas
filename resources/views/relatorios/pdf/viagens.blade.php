@@ -32,7 +32,7 @@
         <thead>
             <tr>
                 <th>Saída</th><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Origem → Destino</th>
-                <th>Motivo</th><th>Nº Atend.</th><th>KM perc.</th><th>Duração</th><th>Status</th>
+                <th>Motivo</th><th>Nº Atend.</th><th>Colaboradores</th><th>KM perc.</th><th>Duração</th><th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -45,12 +45,13 @@
                     <td>{{ $r->origem }} → {{ $r->destino }}</td>
                     <td>{{ $motivos[$r->motivo_viagem] ?? '—' }}</td>
                     <td>{{ $r->numero_atendimento ?? '—' }}</td>
+                    <td>{{ $r->colaboradores ?? '—' }}</td>
                     <td>{{ $r->km_percorrido !== null ? number_format($r->km_percorrido, 0, ',', '.') : '—' }}</td>
                     <td>{{ $r->duracao_min ? $r->duracao_min.' min' : '—' }}</td>
                     <td>{{ $r->status }}</td>
                 </tr>
             @empty
-                <tr><td colspan="10" class="sem-dados">Sem dados no período</td></tr>
+                <tr><td colspan="11" class="sem-dados">Sem dados no período</td></tr>
             @endforelse
         </tbody>
     </table>

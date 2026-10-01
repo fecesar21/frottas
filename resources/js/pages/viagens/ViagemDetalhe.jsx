@@ -76,6 +76,12 @@ export default function ViagemDetalhe({ viagem }) {
           <p className="text-xs text-gray-400 mb-0.5">Destino</p>
           <p className="text-gray-700">{viagem.destino}</p>
         </div>
+        {viagem.colaboradores?.length > 0 && (
+          <div className="col-span-full">
+            <p className="text-xs text-gray-400 mb-0.5">Colaboradores transportados</p>
+            <p className="text-gray-700">{viagem.colaboradores.map(c => c.nome).join(', ')}</p>
+          </div>
+        )}
         <div>
           <p className="text-xs text-gray-400 mb-0.5">Saída</p>
           <p className="text-gray-700">{fmtDt(viagem.saida_at)}</p>

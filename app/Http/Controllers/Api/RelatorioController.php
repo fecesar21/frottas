@@ -326,8 +326,20 @@ class RelatorioController extends Controller
                 'vg.motivo_viagem', 'vg.numero_atendimento',
                 'vg.km_saida', 'vg.km_chegada', 'vg.status'
             )
-            ->get()
-            ->map(function ($vg) {
+            ->get();
+
+        // Nomes dos colaboradores transportados, carregados em lote.
+        $colaboradoresPorViagem = DB::table('viagem_colaborador as vc')
+            ->join('colaboradores as c', 'vc.colaborador_id', '=', 'c.id')
+            ->whereIn('vc.viagem_id', $rows->pluck('id'))
+            ->orderBy('c.nome')
+            ->get(['vc.viagem_id', 'c.nome'])
+            ->groupBy('viagem_id')
+            ->map(fn ($g) => $g->pluck('nome')->implode(', '));
+
+        $rows = $rows
+            ->map(function ($vg) use ($colaboradoresPorViagem) {
+                $vg->colaboradores = $colaboradoresPorViagem[$vg->id] ?? null;
                 $vg->km_percorrido = $vg->km_chegada !== null ? $vg->km_chegada - $vg->km_saida : null;
                 $vg->duracao_min = $vg->saida_at && $vg->chegada_at
                     ? (int) Carbon::parse($vg->saida_at)->diffInMinutes(Carbon::parse($vg->chegada_at))

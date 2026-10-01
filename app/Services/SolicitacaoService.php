@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Checkin;
+use App\Models\Colaborador;
 use App\Models\Motorista;
 use App\Models\Solicitacao;
 use App\Models\Usuario;
@@ -230,6 +231,10 @@ class SolicitacaoService
             'status' => 'em_andamento',
         ]);
 
+        if ($solicitacao->motivo === 'transporte_colaborador' && $colaborador = $this->colaboradorDoSolicitante($solicitacao)) {
+            $viagem->colaboradores()->sync([$colaborador->id]);
+        }
+
         $solicitacao->update([
             'viagem_id' => $viagem->id,
             'status' => 'em_trajeto',
@@ -238,6 +243,37 @@ class SolicitacaoService
         ]);
 
         return $solicitacao->fresh();
+    }
+
+    /**
+     * Em transporte de colaborador, o próprio solicitante é o colaborador
+     * transportado. Ele entrou via AD, então é casado pelo objectGUID; se a
+     * sincronização ainda não o trouxe, é criado a partir do cadastro do usuário.
+     */
+    private function colaboradorDoSolicitante(Solicitacao $solicitacao): ?Colaborador
+    {
+        $usuario = Usuario::find($solicitacao->usuario_id);
+
+        if (! $usuario?->ldap_guid) {
+            return null;
+        }
+
+        $existente = Colaborador::where('ldap_guid', $usuario->ldap_guid)->first();
+        $unidadeId = $usuario->unidade_id ?? $solicitacao->unidade_id;
+
+        // Sem unidade não há como cadastrá-lo; a viagem segue sem o vínculo
+        // em vez de impedir o aceite.
+        if ($existente || ! $unidadeId) {
+            return $existente;
+        }
+
+        return Colaborador::create([
+            'ldap_guid' => $usuario->ldap_guid,
+            'unidade_id' => $unidadeId,
+            'nome' => mb_strtoupper($usuario->nome),
+            'email' => $usuario->email,
+            'ativo' => true,
+        ]);
     }
 
     private function trocarVeiculoDoCheckin(Checkin $checkin, string $veiculoId, ?int $kmRetorno = null): Checkin

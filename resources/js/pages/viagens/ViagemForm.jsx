@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import MotoristaSelect from '../../components/shared/MotoristaSelect'
 import VeiculoSelect from '../../components/shared/VeiculoSelect'
 import VeiculoCheckinSelect from '../../components/shared/VeiculoCheckinSelect'
+import ColaboradorSelect from '../../components/shared/ColaboradorSelect'
 import Alert from '../../components/ui/Alert'
 
 export default function ViagemForm({ onSuccess }) {
@@ -20,6 +21,7 @@ export default function ViagemForm({ onSuccess }) {
     numero_atendimento: '',
     km_saida: '',
   })
+  const [colaboradores, setColaboradores] = useState([])
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
 
@@ -40,8 +42,18 @@ export default function ViagemForm({ onSuccess }) {
       setFieldErrors({ veiculo_id: ['Selecione o veículo da viagem.'] })
       return
     }
+    if (form.numero_atendimento && (form.numero_atendimento.length < 6 || Number(form.numero_atendimento) < 100000)) {
+      setFieldErrors({ numero_atendimento: ['O número do atendimento deve ter exatamente 6 dígitos e não pode ser 000000.'] })
+      return
+    }
+    const transporteColaborador = form.motivo_viagem === 'transporte_colaborador'
+    if (transporteColaborador && colaboradores.length === 0) {
+      setFieldErrors({ colaborador_ids: ['Selecione ao menos um colaborador transportado.'] })
+      return
+    }
     criar.mutate({
       ...form,
+      colaborador_ids: transporteColaborador ? colaboradores.map(c => c.id) : undefined,
       km_saida: Number(form.km_saida),
       numero_atendimento: form.numero_atendimento ? Number(form.numero_atendimento) : null,
     })
@@ -78,14 +90,14 @@ export default function ViagemForm({ onSuccess }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Origem *</label>
-          <input type="text" required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input type="text" required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value.toUpperCase() }))}
+            className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           {fe('origem')}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Destino *</label>
-          <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value.toUpperCase() }))}
+            className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           {fe('destino')}
         </div>
       </div>
@@ -106,14 +118,26 @@ export default function ViagemForm({ onSuccess }) {
         {fe('motivo_viagem')}
       </div>
 
+      {form.motivo_viagem === 'transporte_colaborador' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Colaboradores transportados *</label>
+          <ColaboradorSelect value={colaboradores} onChange={setColaboradores} />
+          {fe('colaborador_ids')}
+          {Object.keys(fieldErrors).some(k => k.startsWith('colaborador_ids.')) &&
+            <p className="text-red-500 text-xs mt-1">Um dos colaboradores selecionados está inválido ou inativo.</p>}
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Número do Atendimento {form.motivo_viagem === 'transferencia_paciente' && '*'}
         </label>
-        <input type="number" min={0} max={999999} required={form.motivo_viagem === 'transferencia_paciente'}
+        <input type="text" inputMode="numeric" pattern="[0-9]{6}" minLength={6} maxLength={6}
+          title="Exatamente 6 dígitos"
+          required={form.motivo_viagem === 'transferencia_paciente'}
           value={form.numero_atendimento}
           onChange={e => {
-            const v = e.target.value.slice(0, 6)
+            const v = e.target.value.replace(/\D/g, '').slice(0, 6)
             setForm(f => ({ ...f, numero_atendimento: v }))
           }}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />

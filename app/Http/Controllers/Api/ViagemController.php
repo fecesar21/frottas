@@ -41,7 +41,7 @@ class ViagemController extends Controller
             abort(403);
         }
 
-        return new ViagemResource($viagem->load(['veiculo', 'motorista']));
+        return new ViagemResource($viagem->load(['veiculo', 'motorista', 'colaboradores.unidade:id,nome']));
     }
 
     public function store(StoreViagemRequest $request)
@@ -67,7 +67,7 @@ class ViagemController extends Controller
 
         $viagem = $this->service->store($data);
 
-        return (new ViagemResource($viagem->load(['veiculo', 'motorista'])))->response()->setStatusCode(201);
+        return (new ViagemResource($viagem->load(['veiculo', 'motorista', 'colaboradores.unidade:id,nome'])))->response()->setStatusCode(201);
     }
 
     public function update(UpdateViagemRequest $request, Viagem $viagem)

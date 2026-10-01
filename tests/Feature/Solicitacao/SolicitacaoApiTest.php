@@ -144,6 +144,28 @@ class SolicitacaoApiTest extends TestCase
         ]);
     }
 
+    public function test_viagem_de_transporte_de_colaborador_vincula_o_solicitante(): void
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculo = Veiculo::factory()->create();
+        $solicitante = Usuario::factory()->create(['perfil' => 'solicitante', 'nome' => 'Carla Dias', 'ldap_guid' => 'guid-carla', 'unidade_id' => Unidade::factory()->create()->id]);
+        $solicitacao = Solicitacao::factory()->create([
+            'usuario_id' => $solicitante->id,
+            'motivo' => 'transporte_colaborador',
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculo->id,
+        ]);
+
+        $this->withToken($usuarioMotorista->createToken('test')->plainTextToken);
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 1500])->assertOk();
+
+        $viagem = $solicitacao->fresh()->viagem;
+        $this->assertSame(['CARLA DIAS'], $viagem->colaboradores->pluck('nome')->all());
+        $this->assertDatabaseHas('colaboradores', ['ldap_guid' => 'guid-carla']);
+    }
+
     public function test_motorista_aceita_com_viagem_ativa_fica_aguardando_sem_km(): void
     {
         $motorista = Motorista::factory()->create();

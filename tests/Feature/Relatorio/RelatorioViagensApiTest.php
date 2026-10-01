@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Relatorio;
 
+use App\Models\Colaborador;
 use App\Models\Viagem;
 use Tests\TestCase;
 
@@ -38,6 +39,22 @@ class RelatorioViagensApiTest extends TestCase
         $this->assertSame(2, $resposta->json('totais.total_viagens'));
         $this->assertSame(120, (int) $resposta->json('totais.km_total'));
         $this->assertEquals(95, $resposta->json('totais.duracao_media_min'));
+    }
+
+    public function test_relatorio_lista_colaboradores_transportados(): void
+    {
+        $this->loginGestor();
+        $comColaboradores = Viagem::factory()->create(['saida_at' => now(), 'motivo_viagem' => 'transporte_colaborador']);
+        $comColaboradores->colaboradores()->sync([
+            Colaborador::factory()->create(['nome' => 'BRUNO LIMA'])->id,
+            Colaborador::factory()->create(['nome' => 'ANA PAULA'])->id,
+        ]);
+        $semColaboradores = Viagem::factory()->create(['saida_at' => now()]);
+
+        $linhas = collect($this->getJson('/api/relatorios/viagens')->assertOk()->json('rows'))->keyBy('id');
+
+        $this->assertSame('ANA PAULA, BRUNO LIMA', $linhas[$comColaboradores->id]['colaboradores']);
+        $this->assertNull($linhas[$semColaboradores->id]['colaboradores']);
     }
 
     public function test_pdf_do_relatorio_de_viagens_e_gerado(): void

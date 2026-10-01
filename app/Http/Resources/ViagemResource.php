@@ -27,6 +27,12 @@ class ViagemResource extends JsonResource
             'observacoes' => $this->observacoes,
             'motorista' => $this->whenLoaded('motorista', fn () => new MotoristaResource($this->motorista)),
             'veiculo' => $this->whenLoaded('veiculo', fn () => new VeiculoResource($this->veiculo)),
+            'colaboradores' => $this->whenLoaded('colaboradores', fn () => $this->colaboradores->map(fn ($c) => [
+                'id' => $c->id,
+                'nome' => $c->nome,
+                'departamento' => $c->departamento,
+                'unidade' => $c->relationLoaded('unidade') ? $c->unidade?->nome : null,
+            ])),
             'criado_em' => $this->created_at,
         ];
     }

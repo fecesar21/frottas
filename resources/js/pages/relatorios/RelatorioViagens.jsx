@@ -77,7 +77,7 @@ export default function RelatorioViagens() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                 <tr>
-                  {['Saída', 'Chegada', 'Placa', 'Motorista', 'Origem → Destino', 'Motivo', 'Nº Atendimento', 'KM perc.', 'Duração', 'Status'].map(h => (
+                  {['Saída', 'Chegada', 'Placa', 'Motorista', 'Origem → Destino', 'Motivo', 'Nº Atendimento', 'Colaboradores', 'KM perc.', 'Duração', 'Status'].map(h => (
                     <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
                   ))}
                 </tr>
@@ -94,6 +94,7 @@ export default function RelatorioViagens() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{fmtMotivo(r.motivo_viagem)}</td>
                     <td className="px-4 py-3 text-gray-600">{r.numero_atendimento ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600 max-w-xs">{r.colaboradores ?? '—'}</td>
                     <td className="px-4 py-3">{fmtKm(r.km_percorrido)}</td>
                     <td className="px-4 py-3 text-gray-500">{r.duracao_min ? `${r.duracao_min} min` : '—'}</td>
                     <td className="px-4 py-3"><Badge value={r.status} /></td>

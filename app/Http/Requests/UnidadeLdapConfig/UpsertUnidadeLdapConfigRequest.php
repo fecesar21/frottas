@@ -17,6 +17,7 @@ class UpsertUnidadeLdapConfigRequest extends FormRequest
             'host' => 'required|string|max:255',
             'port' => 'required|integer|min:1|max:65535',
             'base_dn' => 'required|string|max:500',
+            'ou_colaboradores' => 'nullable|string|max:500',
             'username' => 'required|string|max:255',
             'password' => 'nullable|string|max:255',
             'use_ssl' => 'boolean',

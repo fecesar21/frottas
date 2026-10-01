@@ -127,6 +127,7 @@ class UnidadeLdapConfigController extends Controller
             'host' => $config->host,
             'port' => $config->port,
             'base_dn' => $config->base_dn,
+            'ou_colaboradores' => $config->ou_colaboradores,
             'username' => $config->username,
             'use_ssl' => $config->use_ssl,
             'use_starttls' => $config->use_starttls,

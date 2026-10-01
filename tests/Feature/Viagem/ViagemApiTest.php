@@ -4,6 +4,7 @@ namespace Tests\Feature\Viagem;
 
 use App\Models\Checkin;
 use App\Models\ChecklistVeiculo;
+use App\Models\Colaborador;
 use App\Models\Motorista;
 use App\Models\Veiculo;
 use App\Models\Viagem;
@@ -54,8 +55,62 @@ class ViagemApiTest extends TestCase
             'motivo_viagem' => 'buscar_medico',
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.origem', 'São Paulo');
-        $this->assertDatabaseHas('viagens', ['origem' => 'São Paulo', 'destino' => 'Campinas']);
+        $response->assertCreated()->assertJsonPath('data.origem', 'SÃO PAULO');
+        $this->assertDatabaseHas('viagens', ['origem' => 'SÃO PAULO', 'destino' => 'CAMPINAS']);
+    }
+
+    public function test_transporte_de_colaborador_exige_e_vincula_colaboradores(): void
+    {
+        $this->loginGestor();
+        $veiculo = Veiculo::factory()->create(['km_atual' => 4000]);
+        $motorista = Motorista::factory()->create();
+        $this->liberarChecklist($veiculo, $motorista);
+        [$c1, $c2] = Colaborador::factory()->count(2)->create();
+        $inativo = Colaborador::factory()->create(['ativo' => false]);
+
+        $payload = fn (array $extra) => array_merge([
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+            'origem' => 'a',
+            'destino' => 'b',
+            'km_saida' => 5000,
+            'motivo_viagem' => 'transporte_colaborador',
+        ], $extra);
+
+        $this->postJson('/api/viagens', $payload([]))->assertJsonValidationErrors(['colaborador_ids']);
+        $this->postJson('/api/viagens', $payload(['colaborador_ids' => []]))->assertJsonValidationErrors(['colaborador_ids']);
+        $this->postJson('/api/viagens', $payload(['colaborador_ids' => [$inativo->id]]))->assertJsonValidationErrors(['colaborador_ids.0']);
+
+        $this->postJson('/api/viagens', $payload(['colaborador_ids' => [$c1->id, $c2->id]]))
+            ->assertCreated()
+            ->assertJsonCount(2, 'data.colaboradores');
+
+        $this->assertDatabaseCount('viagem_colaborador', 2);
+    }
+
+    public function test_numero_atendimento_exige_exatamente_6_digitos_e_nao_aceita_zeros(): void
+    {
+        $this->loginGestor();
+        $veiculo = Veiculo::factory()->create(['km_atual' => 4000]);
+        $motorista = Motorista::factory()->create();
+        $this->liberarChecklist($veiculo, $motorista);
+
+        $payload = fn ($numero) => [
+            'veiculo_id' => $veiculo->id,
+            'motorista_id' => $motorista->id,
+            'origem' => 'a',
+            'destino' => 'b',
+            'km_saida' => 5000,
+            'motivo_viagem' => 'transferencia_paciente',
+            'numero_atendimento' => $numero,
+        ];
+
+        foreach ([1, 12345, '000000', 0, 1234567] as $invalido) {
+            $this->postJson('/api/viagens', $payload($invalido))
+                ->assertJsonValidationErrors(['numero_atendimento']);
+        }
+
+        $this->postJson('/api/viagens', $payload(123456))->assertCreated();
     }
 
     public function test_operador_sem_checkin_ativo_recebe_403_ao_criar_viagem(): void

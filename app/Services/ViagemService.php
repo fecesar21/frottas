@@ -33,7 +33,17 @@ class ViagemService
         $data['saida_at'] = $data['saida_at'] ?? now();
         $data['status'] = 'em_andamento';
 
-        return DB::transaction(fn () => Viagem::create($data));
+        $colaboradorIds = $data['colaborador_ids'] ?? [];
+        unset($data['colaborador_ids']);
+
+        return DB::transaction(function () use ($data, $colaboradorIds) {
+            $viagem = Viagem::create($data);
+            if ($colaboradorIds) {
+                $viagem->colaboradores()->sync($colaboradorIds);
+            }
+
+            return $viagem;
+        });
     }
 
     public function chegada(Viagem $viagem, array $data): Viagem

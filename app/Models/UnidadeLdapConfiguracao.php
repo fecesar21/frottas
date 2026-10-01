@@ -14,7 +14,7 @@ class UnidadeLdapConfiguracao extends Model
     protected $table = 'unidade_ldap_configuracoes';
 
     protected $fillable = [
-        'unidade_id', 'host', 'port', 'base_dn', 'username', 'password',
+        'unidade_id', 'host', 'port', 'base_dn', 'ou_colaboradores', 'username', 'password',
         'use_ssl', 'use_starttls', 'unidade_attribute', 'valores_ad', 'ativo',
     ];
 

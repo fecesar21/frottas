@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AbastecimentoController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckinController;
+use App\Http\Controllers\Api\ColaboradorController;
 use App\Http\Controllers\Api\ChecklistVeiculoController;
 use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\KmController;
@@ -76,6 +77,9 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::patch('plantao/{plantao}/finalizar', [PlantaoController::class, 'finalizar']);
     Route::patch('plantao/{plantao}/encerrar', [PlantaoController::class, 'encerrar']);
     Route::apiResource('plantao', PlantaoController::class)->only(['index', 'show', 'store']);
+
+    // Colaboradores (cópia local do AD) — usados em viagens de transporte de colaborador
+    Route::get('colaboradores', [ColaboradorController::class, 'index']);
 
     // Viagens
     Route::patch('viagens/{viagem}/chegada', [ViagemController::class, 'chegada']);
@@ -154,5 +158,6 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
         Route::put('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'upsert']);
         Route::delete('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'destroy']);
         Route::post('unidades/{unidade}/ldap-config/testar', [UnidadeLdapConfigController::class, 'testar']);
+        Route::post('colaboradores/sincronizar', [ColaboradorController::class, 'sincronizar']);
     });
 });

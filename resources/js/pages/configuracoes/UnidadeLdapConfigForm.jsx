@@ -9,6 +9,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
     host: config?.host ?? '',
     port: config?.port ?? 636,
     base_dn: config?.base_dn ?? '',
+    ou_colaboradores: config?.ou_colaboradores ?? '',
     username: config?.username ?? '',
     password: '',
     use_ssl: config?.use_ssl ?? true,
@@ -28,6 +29,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
     host: form.host,
     port: Number(form.port),
     base_dn: form.base_dn,
+    ou_colaboradores: form.ou_colaboradores || null,
     username: form.username,
     password: form.password || undefined,
     use_ssl: form.use_ssl,
@@ -105,6 +107,17 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.base_dn && <p className="text-red-500 text-xs mt-1">{fieldErrors.base_dn[0]}</p>}
+        </div>
+
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">OU dos colaboradores</label>
+          <input
+            type="text" value={form.ou_colaboradores} onChange={set('ou_colaboradores')}
+            placeholder='Ex: OU=Colaboradores,OU=Unidade,DC=empresa,DC=local'
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p className="text-gray-500 text-xs mt-1">Usuários desta OU aparecem como colaboradores da unidade em viagens de transporte de colaborador. Em branco, usa o Base DN.</p>
+          {fieldErrors.ou_colaboradores && <p className="text-red-500 text-xs mt-1">{fieldErrors.ou_colaboradores[0]}</p>}
         </div>
 
         <div className="col-span-2">

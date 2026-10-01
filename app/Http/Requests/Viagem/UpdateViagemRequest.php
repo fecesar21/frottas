@@ -19,11 +19,19 @@ class UpdateViagemRequest extends FormRequest
             'origem' => 'sometimes|string|max:150',
             'destino' => 'sometimes|string|max:150',
             'motivo_viagem' => 'sometimes|in:transferencia_paciente,buscar_medico,material_outro_hospital,transporte_colaborador,buscar_material_fornecedor,tfd',
-            'numero_atendimento' => 'required_if:motivo_viagem,transferencia_paciente|nullable|integer|digits_between:1,6',
+            'numero_atendimento' => 'required_if:motivo_viagem,transferencia_paciente|nullable|integer|min:100000|max:999999',
             'km_saida' => 'sometimes|integer|min:0',
             'km_chegada' => 'nullable|integer|min:0',
             'status' => 'sometimes|in:em_andamento,concluida,cancelada',
             'observacoes' => 'nullable|string',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'numero_atendimento.min' => 'O número do atendimento deve ter exatamente 6 dígitos e não pode ser 000000.',
+            'numero_atendimento.max' => 'O número do atendimento deve ter exatamente 6 dígitos.',
         ];
     }
 }
