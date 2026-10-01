@@ -23,6 +23,7 @@ const colorMap = {
   em_trajeto:  'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-500/20',
   pendente_motorista: 'bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20',
   recusada:    'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
+  recusada_gestao: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
   cancelado:   'bg-gray-100 text-gray-500 ring-1 ring-inset ring-gray-400/20',
   aguardando_finalizacao_trajeto: 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20',
 }
@@ -52,6 +53,7 @@ const labelMap = {
   aguardando_finalizacao_trajeto: 'Aguardando Finalização do Trajeto Anterior',
   pendente_motorista: 'Aguardando motorista',
   recusada:    'Recusada pelo motorista',
+  recusada_gestao: 'Recusada pela gestão',
   cancelado:   'Cancelado',
 }
 

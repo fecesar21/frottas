@@ -10,6 +10,14 @@ export function descreverNotificacao(n) {
     }
   }
 
+  if (d.tipo === 'solicitacao_recusada_gestao') {
+    return {
+      cabecalho: 'Solicitação recusada',
+      titulo: `Recusada por ${d.gestor_nome ?? 'gestão'}`,
+      detalhe: d.motivo_recusa,
+    }
+  }
+
   return {
     cabecalho: 'Nova solicitação de transporte',
     titulo: d.solicitante_nome ?? 'Nova solicitação de transporte',

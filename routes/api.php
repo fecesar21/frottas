@@ -92,6 +92,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
 
     // Solicitações de Transporte
     Route::patch('solicitacoes/{solicitacao}/aceitar', [SolicitacaoController::class, 'aceitar'])->name('solicitacoes.aceitar');
+    Route::patch('solicitacoes/{solicitacao}/recusar', [SolicitacaoController::class, 'recusar'])->name('solicitacoes.recusar');
     Route::patch('solicitacoes/{solicitacao}/cancelar', [SolicitacaoController::class, 'cancelar'])->name('solicitacoes.cancelar');
     Route::patch('solicitacoes/{solicitacao}/motorista-aceitar', [SolicitacaoController::class, 'motoristaAceitar'])->name('solicitacoes.motorista-aceitar');
     Route::patch('solicitacoes/{solicitacao}/assumir', [SolicitacaoController::class, 'assumir'])->name('solicitacoes.assumir');

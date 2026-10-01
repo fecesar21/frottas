@@ -12,6 +12,7 @@ use App\Models\Viagem;
 use App\Notifications\NovaSolicitacaoDisponivel;
 use App\Notifications\NovaSolicitacaoTransporte;
 use App\Notifications\NovaViagemDesignada;
+use App\Notifications\SolicitacaoRecusadaPelaGestao;
 use App\Notifications\SolicitacaoRecusadaPeloMotorista;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -155,6 +156,27 @@ class SolicitacaoService
         Notification::send($this->destinatariosGestao($solicitacao), new SolicitacaoRecusadaPeloMotorista($solicitacao->fresh(), $motorista->nome, $motivo));
 
         return $solicitacao->fresh();
+    }
+
+    /**
+     * Gestor/admin recusa a solicitação antes do despacho. Status terminal;
+     * o solicitante é avisado com o motivo.
+     */
+    public function recusarPelaGestao(Solicitacao $solicitacao, Usuario $gestor, string $motivo): Solicitacao
+    {
+        $solicitacao->update([
+            'status' => 'recusada_gestao',
+            'motivo_recusa' => $motivo,
+            'motorista_pendente_id' => null,
+            'veiculo_pendente_id' => null,
+        ]);
+        $solicitacao = $solicitacao->fresh();
+
+        if ($solicitante = Usuario::find($solicitacao->usuario_id)) {
+            Notification::send($solicitante, new SolicitacaoRecusadaPelaGestao($solicitacao, $gestor->nome, $motivo));
+        }
+
+        return $solicitacao;
     }
 
     /**

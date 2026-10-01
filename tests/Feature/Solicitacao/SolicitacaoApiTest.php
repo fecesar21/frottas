@@ -12,6 +12,7 @@ use App\Models\Veiculo;
 use App\Models\Viagem;
 use App\Notifications\NovaSolicitacaoTransporte;
 use App\Notifications\NovaViagemDesignada;
+use App\Notifications\SolicitacaoRecusadaPelaGestao;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -495,5 +496,76 @@ class SolicitacaoApiTest extends TestCase
             'status' => 'encerrado',
             'km_retorno' => 1050,
         ]);
+    }
+
+    public function test_gestor_recusa_solicitacao_com_motivo_e_solicitante_e_notificado(): void
+    {
+        Notification::fake();
+        $solicitante = Usuario::factory()->create(['perfil' => 'operador']);
+        $solicitacao = Solicitacao::factory()->create(['usuario_id' => $solicitante->id, 'status' => 'aberto']);
+        $this->loginGestor();
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/recusar", ['motivo' => 'Sem veículo disponível no horário'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'recusada_gestao');
+
+        $this->assertDatabaseHas('solicitacoes', [
+            'id' => $solicitacao->id,
+            'status' => 'recusada_gestao',
+            'motivo_recusa' => 'Sem veículo disponível no horário',
+        ]);
+        Notification::assertSentTo($solicitante, SolicitacaoRecusadaPelaGestao::class,
+            fn ($n) => $n->toArray($solicitante)['motivo_recusa'] === 'Sem veículo disponível no horário');
+    }
+
+    public function test_recusa_pela_gestao_exige_motivo(): void
+    {
+        $solicitacao = Solicitacao::factory()->create(['status' => 'aberto']);
+        $this->loginGestor();
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/recusar", [])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('motivo');
+    }
+
+    public function test_operador_nao_pode_recusar_solicitacao(): void
+    {
+        $solicitacao = Solicitacao::factory()->create(['status' => 'aberto']);
+        $this->loginOperador();
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/recusar", ['motivo' => 'x'])->assertForbidden();
+    }
+
+    public function test_nao_recusa_solicitacao_ja_despachada(): void
+    {
+        $solicitacao = Solicitacao::factory()->create(['status' => 'em_trajeto']);
+        $this->loginGestor();
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/recusar", ['motivo' => 'x'])->assertStatus(422);
+    }
+
+    public function test_solicitacao_recusada_pela_gestao_nao_pode_ser_aceita(): void
+    {
+        $solicitacao = Solicitacao::factory()->create(['status' => 'recusada_gestao']);
+        $this->loginGestor();
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
+            'motorista_id' => Motorista::factory()->create()->id,
+            'veiculo_id' => Veiculo::factory()->create()->id,
+        ])->assertStatus(422);
+    }
+
+    public function test_solicitante_ve_motivo_da_recusa_pela_gestao(): void
+    {
+        $usuario = $this->loginOperador();
+        $solicitacao = Solicitacao::factory()->create([
+            'usuario_id' => $usuario->id,
+            'status' => 'recusada_gestao',
+            'motivo_recusa' => 'Fora do horário de atendimento',
+        ]);
+
+        $this->getJson("/api/solicitacoes/{$solicitacao->id}")
+            ->assertOk()
+            ->assertJsonPath('data.motivo_recusa', 'Fora do horário de atendimento');
     }
 }

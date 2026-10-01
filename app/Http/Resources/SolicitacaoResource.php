@@ -38,7 +38,10 @@ class SolicitacaoResource extends JsonResource
             'hospital_destino' => $this->hospital_destino,
             'fornecedor_nome' => $this->fornecedor_nome,
             'status' => $this->status,
-            'motivo_recusa' => $this->when(in_array($request->user()?->perfil, ['admin', 'gestor']), $this->motivo_recusa),
+            'motivo_recusa' => $this->when(
+                $this->status === 'recusada_gestao' || in_array($request->user()?->perfil, ['admin', 'gestor']),
+                $this->motivo_recusa
+            ),
             'viagem_id' => $this->viagem_id,
             'observacoes' => $this->observacoes,
             'usuario_nome' => $this->whenLoaded('usuario', fn () => $this->usuario->nome),

@@ -18,6 +18,7 @@ const STATUS = {
   em_trajeto: { label: 'Motorista em Trajeto', className: 'bg-blue-50 text-blue-700 border-blue-200' },
   aguardando_finalizacao_trajeto: { label: 'Aguardando Finalização do Trajeto Anterior', className: 'bg-orange-50 text-orange-700 border-orange-200' },
   finalizado: { label: 'Finalizado', className: 'bg-green-50 text-green-700 border-green-200' },
+  recusada_gestao: { label: 'Recusada', className: 'bg-red-50 text-red-700 border-red-200' },
   cancelado: { label: 'Cancelado', className: 'bg-gray-100 text-gray-600 border-gray-200' },
 }
 
@@ -29,6 +30,9 @@ export default function MinhasSolicitacoes() {
 
   useEffect(() => {
     carregar().finally(() => setLoading(false))
+    // Atualiza periodicamente para o solicitante acompanhar despacho/recusa.
+    const timer = setInterval(() => { carregar().catch(() => {}) }, 30_000)
+    return () => clearInterval(timer)
   }, [])
 
   return (
@@ -65,6 +69,9 @@ export default function MinhasSolicitacoes() {
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS[s.status]?.className ?? ''}`}>
                       {STATUS[s.status]?.label ?? s.status}
                     </span>
+                    {s.status === 'recusada_gestao' && s.motivo_recusa && (
+                      <p className="mt-1 text-xs text-red-700 max-w-xs break-words">Motivo: {s.motivo_recusa}</p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-700">{s.motorista_nome ?? '—'}</td>
                 </tr>

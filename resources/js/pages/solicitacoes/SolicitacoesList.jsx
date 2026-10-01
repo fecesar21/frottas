@@ -34,6 +34,9 @@ export default function SolicitacoesList() {
   const [aceitarTarget, setAceitarTarget] = useState(null)
   const [aceitarForm, setAceitarForm] = useState({ motorista_id: '', veiculo_id: '' })
   const [error, setError] = useState('')
+  const [recusarTarget, setRecusarTarget] = useState(null)
+  const [motivoRecusa, setMotivoRecusa] = useState('')
+  const [erroRecusa, setErroRecusa] = useState('')
 
   const { marcarTodasLidas } = useNotificacoes()
 
@@ -69,6 +72,17 @@ export default function SolicitacoesList() {
     },
     onError: (e) => setError(e.response?.data?.error ?? 'Erro ao aceitar solicitação'),
   })
+
+  const doRecusar = useMutation({
+    mutationFn: ({ id, motivo }) => solicitacoesApi.recusar(id, motivo),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['solicitacoes'] })
+      setRecusarTarget(null)
+    },
+    onError: (e) => setErroRecusa(e.response?.data?.message ?? e.response?.data?.error ?? 'Erro ao recusar solicitação'),
+  })
+
+  const abrirRecusa = (s) => { setRecusarTarget(s); setMotivoRecusa(''); setErroRecusa('') }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -109,18 +123,26 @@ export default function SolicitacoesList() {
               <span className="text-gray-400 text-xs block">Motorista</span>
               {s.motorista_nome ?? '—'}
             </p>
-            {s.status === 'recusada' && (
+            {(s.status === 'recusada' || s.status === 'recusada_gestao') && (
               <p className="text-xs text-red-600" title={s.motivo_recusa}>
-                Recusada: {s.motivo_recusa}
+                Motivo: {s.motivo_recusa}
               </p>
             )}
             {(s.status === 'aberto' || s.status === 'recusada') && (
-              <button
-                onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
-                className="w-full text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-2 hover:bg-blue-50 transition-colors"
-              >
-                {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
+                  className="flex-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-2 hover:bg-blue-50 transition-colors"
+                >
+                  {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
+                </button>
+                <button
+                  onClick={() => abrirRecusa(s)}
+                  className="flex-1 text-xs text-red-600 hover:text-red-800 border border-red-200 rounded px-2 py-2 hover:bg-red-50 transition-colors"
+                >
+                  Recusar
+                </button>
+              </div>
             )}
           </div>
         ))}
@@ -158,21 +180,29 @@ export default function SolicitacoesList() {
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.chegada_at)}</td>
                 <td className="px-3 py-3">
                   <Badge value={s.status} />
-                  {s.status === 'recusada' && (
+                  {(s.status === 'recusada' || s.status === 'recusada_gestao') && (
                     <p className="text-xs text-red-600 mt-1 truncate" title={s.motivo_recusa}>
-                      Recusada: {s.motivo_recusa}
+                      Motivo: {s.motivo_recusa}
                     </p>
                   )}
                 </td>
                 <td className="px-3 py-3 text-gray-600 truncate" title={s.motorista_nome}>{s.motorista_nome ?? '—'}</td>
                 <td className="px-3 py-3">
                   {(s.status === 'aberto' || s.status === 'recusada') && (
-                    <button
-                      onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
-                      className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors whitespace-nowrap"
-                    >
-                      {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
-                    </button>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
+                        className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors whitespace-nowrap"
+                      >
+                        {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
+                      </button>
+                      <button
+                        onClick={() => abrirRecusa(s)}
+                        className="text-xs text-red-600 hover:text-red-800 border border-red-200 rounded px-2 py-1 hover:bg-red-50 transition-colors whitespace-nowrap"
+                      >
+                        Recusar
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -214,6 +244,34 @@ export default function SolicitacoesList() {
           <div className="flex justify-end">
             <button type="submit" disabled={doAceitar.isPending} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-60">
               {doAceitar.isPending ? 'Confirmando...' : 'Confirmar e despachar'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={!!recusarTarget} onClose={() => setRecusarTarget(null)} title="Recusar solicitação">
+        <form
+          onSubmit={(e) => { e.preventDefault(); doRecusar.mutate({ id: recusarTarget.id, motivo: motivoRecusa.trim() }) }}
+          className="space-y-4"
+        >
+          {erroRecusa && <Alert type="error" message={erroRecusa} />}
+          <p className="text-sm text-gray-600">
+            {recusarTarget?.usuario_nome ?? '—'} · {MOTIVOS[recusarTarget?.motivo] ?? recusarTarget?.motivo} — {recusarTarget && detalheMotivo(recusarTarget)}
+          </p>
+          <div>
+            <label htmlFor="motivo-recusa" className="block text-sm font-medium text-gray-700 mb-1">Motivo da recusa *</label>
+            <textarea id="motivo-recusa" required maxLength={500} rows={3} value={motivoRecusa}
+              onChange={e => setMotivoRecusa(e.target.value)}
+              placeholder="Explique ao solicitante por que a solicitação foi recusada"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+            <p className="text-xs text-gray-400 text-right">{motivoRecusa.length}/500</p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setRecusarTarget(null)} className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100">
+              Voltar
+            </button>
+            <button type="submit" disabled={doRecusar.isPending || !motivoRecusa.trim()} className="bg-red-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-red-700 disabled:opacity-60">
+              {doRecusar.isPending ? 'Recusando...' : 'Confirmar recusa'}
             </button>
           </div>
         </form>

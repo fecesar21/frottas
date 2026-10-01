@@ -136,6 +136,23 @@ class SolicitacaoController extends Controller
         return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
     }
 
+    public function recusar(Request $r, Solicitacao $solicitacao)
+    {
+        if (! in_array($r->user()->perfil, ['admin', 'gestor'])) {
+            return response()->json(['error' => 'Apenas gestores/admins podem recusar solicitações.'], 403);
+        }
+
+        if (! in_array($solicitacao->status, ['aberto', 'recusada'])) {
+            throw ValidationException::withMessages(['status' => 'Esta solicitação já foi tratada.']);
+        }
+
+        $data = $r->validate(['motivo' => 'required|string|max:500']);
+
+        $solicitacao = $this->service->recusarPelaGestao($solicitacao, $r->user(), $data['motivo']);
+
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+    }
+
     public function motoristaAceitar(Request $r, Solicitacao $solicitacao)
     {
         $user = $r->user();
