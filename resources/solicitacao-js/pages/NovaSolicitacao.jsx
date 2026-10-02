@@ -152,7 +152,7 @@ export default function NovaSolicitacao() {
               type="text"
               required
               value={form.cidade}
-              onChange={(e) => setField('cidade', e.target.value)}
+              onChange={(e) => setField('cidade', e.target.value.toUpperCase())}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             {fe('cidade')}
@@ -166,7 +166,7 @@ export default function NovaSolicitacao() {
               type="text"
               required
               value={form.hospital_destino}
-              onChange={(e) => setField('hospital_destino', e.target.value)}
+              onChange={(e) => setField('hospital_destino', e.target.value.toUpperCase())}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             {fe('hospital_destino')}
@@ -180,7 +180,7 @@ export default function NovaSolicitacao() {
               type="text"
               required
               value={form.fornecedor_nome}
-              onChange={(e) => setField('fornecedor_nome', e.target.value)}
+              onChange={(e) => setField('fornecedor_nome', e.target.value.toUpperCase())}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             {fe('fornecedor_nome')}
@@ -192,7 +192,7 @@ export default function NovaSolicitacao() {
           <textarea
             rows={3}
             value={form.observacoes}
-            onChange={(e) => setField('observacoes', e.target.value)}
+            onChange={(e) => setField('observacoes', e.target.value.toUpperCase())}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
         </div>
