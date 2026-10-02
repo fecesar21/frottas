@@ -20,6 +20,7 @@ class CheckinResource extends JsonResource
             'km_retorno_esperado' => $this->status === 'ativo' ? $this->kmRetornoEsperado() : $this->km_retorno_esperado,
             'divergencia_km' => $this->divergencia_km,
             'justificativa_divergencia_km' => $this->justificativa_divergencia_km,
+            'viagem_em_andamento' => $this->when($this->status === 'ativo', fn () => $this->viagemEmAndamento()?->only(['id', 'km_saida', 'destino'])),
             'km_retorno_fixo' => $this->when($this->status === 'ativo', fn () => $this->kmRetornoSemViagem()),
             'nivel_combustivel_saida' => $this->nivel_combustivel_saida,
             'nivel_combustivel_retorno' => $this->nivel_combustivel_retorno,

@@ -51,9 +51,8 @@ class Checkin extends Model
 
     /**
      * KM de retorno obrigatório quando o veículo não fez nenhuma viagem desde
-     * o check-in: o odômetro não pode ter andado. Considera o KM atual do
-     * veículo porque uma manutenção no período pode tê-lo atualizado.
-     * Retorna null quando houve viagem (qualquer KM ≥ saída é aceito).
+     * o check-in: KM de saída + o que rodou por conta de manutenção.
+     * Retorna null quando houve viagem (vale o kmRetornoEsperado()).
      */
     public function kmRetornoSemViagem(): ?int
     {
@@ -61,20 +60,54 @@ class Checkin extends Model
             return null;
         }
 
-        return max((int) $this->km_saida, (int) Veiculo::whereKey($this->veiculo_id)->value('km_atual'));
+        return (int) $this->km_saida + $this->kmManutencoesDoPeriodo();
     }
 
     /**
      * KM de retorno esperado: KM de saída + KM percorridos nas viagens
-     * concluídas do veículo desde o check-in. Diferença indica quilometragem
-     * rodada sem viagem registrada (ou KM de viagem lançado errado).
+     * concluídas e nas manutenções do veículo desde o check-in. Diferença
+     * indica quilometragem rodada sem registro (ou KM lançado errado).
      */
     public function kmRetornoEsperado(): int
     {
-        return $this->kmRetornoSemViagem()
-            ?? (int) $this->km_saida + (int) $this->viagensDoPeriodo()
-                ->whereNotNull('km_chegada')
-                ->sum(DB::raw('km_chegada - km_saida'));
+        return (int) $this->km_saida
+            + (int) $this->viagensDoPeriodo()->whereNotNull('km_chegada')->sum(DB::raw('km_chegada - km_saida'))
+            + $this->kmManutencoesDoPeriodo();
+    }
+
+    /**
+     * Cada manutenção é um trecho: do último KM conhecido antes dela (saída do
+     * check-in ou chegada das viagens anteriores) até o KM de saída da
+     * oficina. O km_atual do veículo não serve de base porque viagens não o
+     * atualizam.
+     */
+    private function kmManutencoesDoPeriodo(): int
+    {
+        if (! $this->checkin_at) {
+            return 0;
+        }
+
+        return (int) VeiculoManutencao::where('veiculo_id', $this->veiculo_id)
+            ->where('inicio', '>=', $this->checkin_at)
+            ->get()
+            ->sum(function (VeiculoManutencao $m) {
+                $kmFinal = $m->km_saida ?? $m->km_entrada;
+                if ($kmFinal === null) {
+                    return 0;
+                }
+
+                $kmAntes = max((int) $this->km_saida, (int) $this->viagensDoPeriodo()
+                    ->where('saida_at', '<=', $m->inicio)
+                    ->max('km_chegada'));
+
+                return max(0, (int) $kmFinal - $kmAntes);
+            });
+    }
+
+    /** Viagem do veículo deste check-in ainda em andamento, se houver. */
+    public function viagemEmAndamento(): ?Viagem
+    {
+        return Viagem::where('veiculo_id', $this->veiculo_id)->where('status', 'em_andamento')->first();
     }
 
     /** Viagens do veículo feitas durante este check-in. */

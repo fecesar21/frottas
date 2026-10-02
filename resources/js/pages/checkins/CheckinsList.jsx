@@ -35,8 +35,14 @@ export default function CheckinsList() {
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [checkoutTarget, setCheckoutTarget] = useState(null)
-  const [checkoutForm, setCheckoutForm] = useState({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '', justificativa_divergencia_km: '' })
-  const kmEsperado = checkoutTarget?.km_retorno_esperado
+  const [checkoutForm, setCheckoutForm] = useState({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '', justificativa_divergencia_km: '', km_chegada_viagem: '' })
+  const viagemAberta = !isOperador ? checkoutTarget?.viagem_em_andamento : null
+  // Com viagem aberta, o KM esperado soma o trecho que será encerrado agora.
+  const kmEsperado = checkoutTarget?.km_retorno_esperado == null ? null
+    : viagemAberta
+      ? (checkoutForm.km_chegada_viagem === '' ? null
+        : checkoutTarget.km_retorno_esperado + Number(checkoutForm.km_chegada_viagem) - viagemAberta.km_saida)
+      : checkoutTarget.km_retorno_esperado
   const kmDivergente = checkoutTarget?.km_retorno_fixo == null && kmEsperado != null
     && checkoutForm.km_retorno !== '' && Number(checkoutForm.km_retorno) !== kmEsperado
   const [error, setError] = useState('')
@@ -46,7 +52,7 @@ export default function CheckinsList() {
   // Sem viagem desde o check-in o KM de retorno é fixo (km_retorno_fixo).
   const abrirCheckout = (c) => {
     setCheckoutTarget(c)
-    setCheckoutForm({ km_retorno: c.km_retorno_fixo ?? '', nivel_combustivel_retorno: '', ocorrencias: '', justificativa_divergencia_km: '' })
+    setCheckoutForm({ km_retorno: c.km_retorno_fixo ?? '', nivel_combustivel_retorno: '', ocorrencias: '', justificativa_divergencia_km: '', km_chegada_viagem: '' })
   }
 
   // Botão de manutenção do veículo do check-in ativo (motorista ou gestão).
@@ -217,6 +223,17 @@ export default function CheckinsList() {
         <form onSubmit={(e) => { e.preventDefault(); doCheckout.mutate({ id: checkoutTarget.id, data: checkoutForm }) }} className="space-y-4">
           {error && <Alert type="error" message={error} />}
           <p className="text-sm text-gray-600">Motorista: <strong>{checkoutTarget?.motorista?.nome}</strong> — Veículo: <strong>{checkoutTarget?.veiculo?.placa}</strong></p>
+          {viagemAberta && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 space-y-2">
+              <p className="text-xs text-yellow-800">
+                Há uma viagem em andamento com este veículo (saída {fmtKm(viagemAberta.km_saida)}{viagemAberta.destino ? ` → ${viagemAberta.destino}` : ''}). Ela será encerrada junto com o check-out.
+              </p>
+              <label className="block text-sm font-medium text-gray-700">KM de chegada da viagem *</label>
+              <input type="number" required min={viagemAberta.km_saida} value={checkoutForm.km_chegada_viagem}
+                onChange={e => setCheckoutForm(f => ({ ...f, km_chegada_viagem: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">KM retorno</label>
             <input type="number" min={checkoutTarget?.km_saida ?? 0} value={checkoutForm.km_retorno}
@@ -224,7 +241,7 @@ export default function CheckinsList() {
               onChange={e => setCheckoutForm(f => ({ ...f, km_retorno: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:text-gray-500" />
             {checkoutTarget?.km_retorno_fixo != null && (
-              <p className="text-xs text-gray-500 mt-1">Nenhuma viagem registrada após o check-in: o KM de retorno é o mesmo da saída.</p>
+              <p className="text-xs text-gray-500 mt-1">Nenhuma viagem registrada após o check-in: o KM de retorno é o da saída{checkoutTarget.km_retorno_fixo !== checkoutTarget.km_saida ? ' somado ao KM rodado em manutenção' : ''}.</p>
             )}
             {checkoutTarget?.km_retorno_fixo == null && kmEsperado != null && (
               <p className="text-xs text-gray-500 mt-1">KM esperado: <strong>{fmtKm(kmEsperado)}</strong> (KM de saída + viagens registradas).</p>
