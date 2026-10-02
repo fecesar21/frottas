@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import * as viagensApi from '../../api/viagens'
+import * as localidadesApi from '../../api/localidades'
 import { useAuth } from '../../contexts/AuthContext'
 import MotoristaSelect from '../../components/shared/MotoristaSelect'
 import VeiculoSelect from '../../components/shared/VeiculoSelect'
@@ -85,6 +86,15 @@ export default function ViagemForm({ onSuccess }) {
     setForm(f => ({ ...f, motivo_viagem: '', numero_atendimento: '' }))
   }
 
+  // Transferência de paciente: origem e destino vêm das Localidades cadastradas.
+  const transferencia = form.motivo_viagem === 'transferencia_paciente'
+  const { data: localidades = [] } = useQuery({
+    queryKey: ['localidades'],
+    queryFn: () => localidadesApi.listar().then(r => r.data),
+    enabled: transferencia,
+  })
+  const nomesLocalidades = localidades.filter(l => l.ativo).map(l => l.nome.toUpperCase())
+
   const fe = (k) => fieldErrors[k] && <p className="text-red-500 text-xs mt-1">{fieldErrors[k][0]}</p>
 
   return (
@@ -116,14 +126,30 @@ export default function ViagemForm({ onSuccess }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Origem *</label>
-          <input type="text" required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value.toUpperCase() }))}
-            className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          {transferencia ? (
+            <select required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Selecione a localidade...</option>
+              {nomesLocalidades.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          ) : (
+            <input type="text" required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value.toUpperCase() }))}
+              className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          )}
           {fe('origem')}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Destino *</label>
-          <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value.toUpperCase() }))}
-            className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          {transferencia ? (
+            <select required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Selecione a localidade...</option>
+              {nomesLocalidades.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          ) : (
+            <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value.toUpperCase() }))}
+              className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          )}
           {fe('destino')}
         </div>
       </div>
@@ -131,7 +157,9 @@ export default function ViagemForm({ onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Motivo da Viagem *</label>
         <select required value={form.motivo_viagem}
-          onChange={e => setForm(f => ({ ...f, motivo_viagem: e.target.value, numero_atendimento: e.target.value === 'transferencia_paciente' ? f.numero_atendimento : '' }))}
+          onChange={e => setForm(f => ({ ...f, motivo_viagem: e.target.value, numero_atendimento: e.target.value === 'transferencia_paciente' ? f.numero_atendimento : '',
+            // Ao entrar/sair de transferência, origem/destino mudam de texto livre para lista.
+            ...((e.target.value === 'transferencia_paciente') !== (f.motivo_viagem === 'transferencia_paciente') ? { origem: '', destino: '' } : {}) }))}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Selecione...</option>
           {motivos.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
