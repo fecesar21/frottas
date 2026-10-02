@@ -7,16 +7,9 @@ import VeiculoSelect from '../../components/shared/VeiculoSelect'
 import VeiculoCheckinSelect from '../../components/shared/VeiculoCheckinSelect'
 import ColaboradorSelect from '../../components/shared/ColaboradorSelect'
 import Alert from '../../components/ui/Alert'
+import { opcoesMotivo } from '../../utils/solicitacao'
 
-const MOTIVOS = [
-  { value: 'transferencia_paciente', label: 'Transferência de Paciente' },
-  { value: 'buscar_medico', label: 'Buscar médico em outra cidade' },
-  { value: 'material_outro_hospital', label: 'Levar Material em outro Hospital' },
-  { value: 'transporte_colaborador', label: 'Transporte de Colaborador(es)' },
-  { value: 'buscar_material_fornecedor', label: 'Buscar materiais em fornecedor' },
-  { value: 'tfd', label: 'TFD' },
-  { value: 'alimentacao', label: 'Alimentação (Levar/Buscar)' },
-]
+const MOTIVOS = opcoesMotivo()
 
 // Motivos exclusivos de cada tipo de veículo (mesma regra de Veiculo::ehAmbulancia()).
 const SOMENTE_AMBULANCIA = ['transferencia_paciente', 'tfd']

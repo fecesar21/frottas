@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +28,27 @@ class Viagem extends Model
         'km_saida', 'km_chegada',
         'saida_at', 'chegada_at', 'status', 'observacoes',
     ];
+
+    /** Rótulos de exibição dos motivos de viagem (relatórios). */
+    public const ROTULOS_MOTIVO = [
+        'transferencia_paciente' => 'Transferência de Paciente',
+        'buscar_medico' => 'Buscar Médico em Outra Cidade',
+        'material_outro_hospital' => 'Levar Material em Outro Hospital',
+        'transporte_colaborador' => 'Transporte de Colaborador(es)',
+        'buscar_material_fornecedor' => 'Buscar Materiais em Fornecedor',
+        'tfd' => 'TFD',
+        'alimentacao' => 'Alimentação (Levar/Buscar)',
+    ];
+
+    public static function rotuloMotivo(?string $motivo): string
+    {
+        $motivo = trim((string) $motivo);
+        if ($motivo === '') {
+            return 'Não informado';
+        }
+
+        return self::ROTULOS_MOTIVO[$motivo] ?? Str::title(str_replace('_', ' ', $motivo));
+    }
 
     protected $casts = ['saida_at' => 'datetime', 'chegada_at' => 'datetime'];
 

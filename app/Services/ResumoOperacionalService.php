@@ -2,31 +2,50 @@
 
 namespace App\Services;
 
+use App\Models\Viagem;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Resumo operacional de um intervalo (plantão ou mês), com recorte por
- * data e hora: viagens contam pela saída dentro da janela; o tempo de
- * manutenção é a parte de cada manutenção que cai dentro da janela.
+ * data e hora: viagens contam pela saída dentro da janela, desde que
+ * encerradas até MARGEM_ENCERRAMENTO_MIN após o fim (as não encerradas a
+ * tempo ficam fora dos totais e viram observação); o tempo de manutenção
+ * é a parte de cada manutenção que cai dentro da janela.
  */
 class ResumoOperacionalService
 {
+    public const MARGEM_ENCERRAMENTO_MIN = 30;
+
     public function gerar(CarbonInterface $inicio, CarbonInterface $fim): array
     {
-        $viagens = DB::table('viagens as vg')
+        $limiteEncerramento = $fim->copy()->addMinutes(self::MARGEM_ENCERRAMENTO_MIN);
+
+        $todas = DB::table('viagens as vg')
             ->join('veiculos as v', 'v.id', '=', 'vg.veiculo_id')
             ->join('motoristas as m', 'm.id', '=', 'vg.motorista_id')
             ->whereBetween('vg.saida_at', [$inicio, $fim])
             ->select('vg.veiculo_id', 'v.placa', 'v.modelo', 'vg.motorista_id', 'm.nome',
-                'vg.motivo_viagem', 'vg.km_saida', 'vg.km_chegada')
-            ->get()
-            ->map(function ($vg) {
-                $vg->km = $vg->km_chegada !== null ? max(0, $vg->km_chegada - $vg->km_saida) : 0;
+                'vg.motivo_viagem', 'vg.km_saida', 'vg.km_chegada', 'vg.saida_at', 'vg.chegada_at')
+            ->orderBy('vg.saida_at')
+            ->get();
 
-                return $vg;
-            });
+        [$viagens, $naoEncerradas] = $todas->partition(fn ($vg) => $vg->chegada_at !== null
+            && $vg->km_chegada !== null
+            && Carbon::parse($vg->chegada_at)->lte($limiteEncerramento));
+
+        $viagens = $viagens->map(function ($vg) {
+            $vg->km = max(0, $vg->km_chegada - $vg->km_saida);
+
+            return $vg;
+        });
+
+        $observacoes = $naoEncerradas->map(fn ($vg) => sprintf(
+            'O motorista %s não encerrou a viagem com o veículo %s (%s), iniciada em %s, até %d minutos após o fim do período; ela não foi contabilizada.',
+            $vg->nome, $vg->placa, $vg->modelo,
+            Carbon::parse($vg->saida_at)->format('d/m/Y H:i'), self::MARGEM_ENCERRAMENTO_MIN,
+        ))->values()->all();
 
         $kmPorVeiculo = $viagens->groupBy('veiculo_id')->map(fn ($g) => [
             'placa' => $g->first()->placa,
@@ -42,7 +61,7 @@ class ResumoOperacionalService
         ]);
 
         $porMotivo = $viagens
-            ->groupBy(fn ($vg) => trim((string) $vg->motivo_viagem) !== '' ? trim($vg->motivo_viagem) : 'Não informado')
+            ->groupBy(fn ($vg) => Viagem::rotuloMotivo($vg->motivo_viagem))
             ->map(fn ($g, $motivo) => ['motivo' => $motivo, 'viagens' => $g->count()])
             ->sortByDesc('viagens')->values()->all();
 
@@ -79,6 +98,7 @@ class ResumoOperacionalService
             'km_por_motorista' => $porMotorista->sortByDesc('km')->values()->all(),
             'manutencao_por_veiculo' => $manutencaoPorVeiculo,
             'viagens_por_motivo' => $porMotivo,
+            'observacoes' => $observacoes,
         ];
     }
 }

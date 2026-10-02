@@ -22,7 +22,7 @@ describe('SolicitacaoDisponivelPopup', () => {
   it('exibe motivo, detalhe e ações', () => {
     renderPopup()
 
-    expect(screen.getByText('Buscar médico em outra cidade')).toBeInTheDocument()
+    expect(screen.getByText('Buscar Médico em Outra Cidade')).toBeInTheDocument()
     expect(screen.getByText('Cidade Teste')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Assumir' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Dispensar' })).toBeInTheDocument()

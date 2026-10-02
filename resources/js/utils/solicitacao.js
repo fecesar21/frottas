@@ -1,14 +1,21 @@
+// Rótulos dos motivos de viagem/solicitação — manter igual a Viagem::ROTULOS_MOTIVO (backend).
 export const MOTIVOS_SOLICITACAO = {
-  transferencia_paciente: 'Transferência de Paciente',
-  buscar_medico: 'Buscar médico em outra cidade',
-  material_outro_hospital: 'Levar material em outro hospital',
-  transporte_colaborador: 'Transporte de colaborador(es)',
-  buscar_material_fornecedor: 'Buscar materiais em fornecedor',
-  tfd: 'TFD',
   alimentacao: 'Alimentação (Levar/Buscar)',
+  buscar_material_fornecedor: 'Buscar Materiais em Fornecedor',
+  buscar_medico: 'Buscar Médico em Outra Cidade',
+  material_outro_hospital: 'Levar Material em Outro Hospital',
+  tfd: 'TFD',
+  transferencia_paciente: 'Transferência de Paciente',
+  transporte_colaborador: 'Transporte de Colaborador(es)',
 }
 
 export const rotuloMotivo = (motivo) => MOTIVOS_SOLICITACAO[motivo] ?? motivo ?? 'Viagem'
+
+// Opções de select em ordem alfabética do rótulo; `valores` restringe a quais motivos.
+export const opcoesMotivo = (valores = Object.keys(MOTIVOS_SOLICITACAO)) =>
+  valores
+    .map(value => ({ value, label: MOTIVOS_SOLICITACAO[value] }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))
 
 // Complemento que identifica a solicitação: trajeto quando houver origem/destino,
 // senão o campo específico do motivo (cidade, hospital, fornecedor).

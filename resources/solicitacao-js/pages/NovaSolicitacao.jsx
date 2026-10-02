@@ -3,15 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import * as solicitacoesApi from '../api/solicitacoes'
 import * as pontosViagemApi from '../api/pontosViagem'
 import Layout from '../components/Layout'
+import { opcoesMotivo } from '../../js/utils/solicitacao'
 
-const MOTIVOS = [
-  { value: 'transferencia_paciente', label: 'Transferência de Paciente' },
-  { value: 'buscar_medico', label: 'Buscar Médicos em outra cidade' },
-  { value: 'material_outro_hospital', label: 'Levar Material em outro Hospital' },
-  { value: 'transporte_colaborador', label: 'Transporte de Colaborador(es)' },
-  { value: 'buscar_material_fornecedor', label: 'Buscar materiais em fornecedor' },
-  { value: 'tfd', label: 'TFD' },
-]
+const MOTIVOS = opcoesMotivo(['transferencia_paciente', 'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'tfd'])
 
 const INITIAL = {
   motivo: '',

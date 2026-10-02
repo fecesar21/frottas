@@ -15,7 +15,7 @@ describe('NovaViagemDesignadaPopup', () => {
   it('exibe o motivo da viagem e o detalhe', () => {
     renderPopup({ solicitacao_id: 's1', motivo: 'buscar_medico', detalhe: 'Cidade Teste' })
 
-    expect(screen.getByText('Buscar médico em outra cidade')).toBeInTheDocument()
+    expect(screen.getByText('Buscar Médico em Outra Cidade')).toBeInTheDocument()
     expect(screen.getByText('Cidade Teste')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Aceitar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Recusar' })).toBeInTheDocument()

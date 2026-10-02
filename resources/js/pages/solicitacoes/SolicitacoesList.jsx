@@ -9,16 +9,8 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import { useNotificacoes } from '../../hooks/useNotificacoes'
+import { MOTIVOS_SOLICITACAO } from '../../utils/solicitacao'
 
-const MOTIVOS = {
-  transferencia_paciente: 'Transferência de Paciente',
-  buscar_medico: 'Buscar médico em outra cidade',
-  material_outro_hospital: 'Levar Material em outro Hospital',
-  transporte_colaborador: 'Transporte de Colaborador(es)',
-  buscar_material_fornecedor: 'Buscar materiais em fornecedor',
-  tfd: 'TFD',
-  alimentacao: 'Alimentação (Levar/Buscar)',
-}
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 
@@ -108,7 +100,7 @@ export default function SolicitacoesList() {
               </div>
               <Badge value={s.status} />
             </div>
-            <p className="text-sm text-gray-600">{MOTIVOS[s.motivo] ?? s.motivo}</p>
+            <p className="text-sm text-gray-600">{MOTIVOS_SOLICITACAO[s.motivo] ?? s.motivo}</p>
             <p className="text-sm text-gray-500 break-words">{detalheMotivo(s)}</p>
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
               <div>
@@ -175,7 +167,7 @@ export default function SolicitacoesList() {
               <tr key={s.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.criado_em)}</td>
                 <td className="px-3 py-3 font-medium text-gray-800 truncate" title={s.usuario_nome}>{s.usuario_nome ?? '—'}</td>
-                <td className="px-3 py-3 text-gray-600 truncate" title={MOTIVOS[s.motivo] ?? s.motivo}>{MOTIVOS[s.motivo] ?? s.motivo}</td>
+                <td className="px-3 py-3 text-gray-600 truncate" title={MOTIVOS_SOLICITACAO[s.motivo] ?? s.motivo}>{MOTIVOS_SOLICITACAO[s.motivo] ?? s.motivo}</td>
                 <td className="px-3 py-3 text-gray-500 truncate" title={detalheMotivo(s)}>{detalheMotivo(s)}</td>
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.saida_at)}</td>
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.chegada_at)}</td>
@@ -222,7 +214,7 @@ export default function SolicitacoesList() {
         >
           {error && <Alert type="error" message={error} />}
           <p className="text-sm text-gray-600">
-            {MOTIVOS[aceitarTarget?.motivo] ?? aceitarTarget?.motivo} — {aceitarTarget && detalheMotivo(aceitarTarget)}
+            {MOTIVOS_SOLICITACAO[aceitarTarget?.motivo] ?? aceitarTarget?.motivo} — {aceitarTarget && detalheMotivo(aceitarTarget)}
           </p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Motorista *</label>
@@ -257,7 +249,7 @@ export default function SolicitacoesList() {
         >
           {erroRecusa && <Alert type="error" message={erroRecusa} />}
           <p className="text-sm text-gray-600">
-            {recusarTarget?.usuario_nome ?? '—'} · {MOTIVOS[recusarTarget?.motivo] ?? recusarTarget?.motivo} — {recusarTarget && detalheMotivo(recusarTarget)}
+            {recusarTarget?.usuario_nome ?? '—'} · {MOTIVOS_SOLICITACAO[recusarTarget?.motivo] ?? recusarTarget?.motivo} — {recusarTarget && detalheMotivo(recusarTarget)}
           </p>
           <div>
             <label htmlFor="motivo-recusa" className="block text-sm font-medium text-gray-700 mb-1">Motivo da recusa *</label>

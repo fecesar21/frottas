@@ -81,5 +81,14 @@
             @endforelse
         </tbody>
     </table>
+
+    @if (! empty($observacoes))
+        <h2>Observações</h2>
+        <ul>
+            @foreach ($observacoes as $obs)
+                <li>{{ $obs }}</li>
+            @endforeach
+        </ul>
+    @endif
 </body>
 </html>

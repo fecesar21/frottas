@@ -4,7 +4,7 @@ import { rotuloMotivo, detalheSolicitacao } from './solicitacao'
 describe('utils de solicitação', () => {
   it('traduz o motivo e mantém valores desconhecidos', () => {
     expect(rotuloMotivo('tfd')).toBe('TFD')
-    expect(rotuloMotivo('buscar_medico')).toBe('Buscar médico em outra cidade')
+    expect(rotuloMotivo('buscar_medico')).toBe('Buscar Médico em Outra Cidade')
     expect(rotuloMotivo('outro')).toBe('outro')
   })
 

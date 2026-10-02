@@ -5,4 +5,12 @@
     <li>KM rodados: <strong>{{ number_format($totais['km'], 1, ',', '.') }}</strong></li>
     <li>Tempo em manutenção: <strong>{{ intdiv($totais['manutencao_minutos'], 60) }}h {{ $totais['manutencao_minutos'] % 60 }}min</strong></li>
 </ul>
+@if (! empty($observacoes))
+<p><strong>Observações:</strong></p>
+<ul>
+    @foreach ($observacoes as $obs)
+        <li>{{ $obs }}</li>
+    @endforeach
+</ul>
+@endif
 <p>Mensagem automática do Health Drive.</p>

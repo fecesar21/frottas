@@ -5,19 +5,11 @@ import * as relatoriosApi from '../../api/relatorios'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Badge from '../../components/ui/Badge'
 import { downloadBlob } from '../../utils/downloadBlob'
+import { MOTIVOS_SOLICITACAO } from '../../utils/solicitacao'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 const fmtKm = (n) => n != null ? Number(n).toLocaleString('pt-BR') : '—'
-const MOTIVOS = {
-  transferencia_paciente: 'Transferência de Paciente',
-  buscar_medico: 'Buscar médico em outra cidade',
-  material_outro_hospital: 'Levar Material em outro Hospital',
-  transporte_colaborador: 'Transporte de Colaborador(es)',
-  buscar_material_fornecedor: 'Buscar materiais em fornecedor',
-  tfd: 'TFD',
-  alimentacao: 'Alimentação (Levar/Buscar)',
-}
-const fmtMotivo = (m) => MOTIVOS[m] ?? '—'
+const fmtMotivo = (m) => MOTIVOS_SOLICITACAO[m] ?? '—'
 
 export default function RelatorioViagens() {
   const [de, setDe] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))

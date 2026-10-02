@@ -1,15 +1,8 @@
 import { useEffect, useState } from 'react'
 import * as solicitacoesApi from '../api/solicitacoes'
 import Layout from '../components/Layout'
+import { MOTIVOS_SOLICITACAO } from '../../js/utils/solicitacao'
 
-const MOTIVOS = {
-  transferencia_paciente: 'Transferência de Paciente',
-  buscar_medico: 'Buscar Médicos em outra cidade',
-  material_outro_hospital: 'Levar Material em outro Hospital',
-  transporte_colaborador: 'Transporte de Colaborador(es)',
-  buscar_material_fornecedor: 'Buscar materiais em fornecedor',
-  tfd: 'TFD',
-}
 
 const STATUS = {
   pendente_motorista: { label: 'Aguardando motorista', className: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -62,7 +55,7 @@ export default function MinhasSolicitacoes() {
               {solicitacoes.map(s => (
                 <tr key={s.id}>
                   <td className="px-4 py-3 text-gray-700">{new Date(s.criado_em).toLocaleDateString('pt-BR')}</td>
-                  <td className="px-4 py-3 text-gray-700">{MOTIVOS[s.motivo] ?? s.motivo}</td>
+                  <td className="px-4 py-3 text-gray-700">{MOTIVOS_SOLICITACAO[s.motivo] ?? s.motivo}</td>
                   <td className="px-4 py-3 text-gray-700">{s.saida_at ? new Date(s.saida_at).toLocaleString('pt-BR') : '—'}</td>
                   <td className="px-4 py-3 text-gray-700">{s.chegada_at ? new Date(s.chegada_at).toLocaleString('pt-BR') : '—'}</td>
                   <td className="px-4 py-3">
