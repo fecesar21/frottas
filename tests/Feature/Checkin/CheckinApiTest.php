@@ -111,6 +111,7 @@ class CheckinApiTest extends TestCase
             'veiculo_id' => $veiculo->id,
             'checkin_id' => $checkin->id,
             'km_saida' => 1000,
+            'km_chegada' => 1200,
         ]);
 
         $this->patchJson("/api/checkins/{$checkin->id}/checkout", [
@@ -200,5 +201,73 @@ class CheckinApiTest extends TestCase
         $this->getJson("/api/checkins/{$checkin->id}")
             ->assertOk()
             ->assertJsonPath('data.km_retorno_fixo', 1000);
+    }
+
+    /** Check-in em 1000 com duas viagens (1000→1080 e 1100→1150): esperado 1130. */
+    private function checkinComViagens(): Checkin
+    {
+        $checkin = $this->checkinAtivo();
+        foreach ([[1000, 1080], [1100, 1150]] as [$saida, $chegada]) {
+            Viagem::factory()->concluida()->create([
+                'motorista_id' => $checkin->motorista_id,
+                'veiculo_id' => $checkin->veiculo_id,
+                'checkin_id' => $checkin->id,
+                'km_saida' => $saida,
+                'km_chegada' => $chegada,
+            ]);
+        }
+
+        return $checkin;
+    }
+
+    public function test_km_igual_a_saida_mais_viagens_encerra_sem_divergencia(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinComViagens();
+
+        $this->getJson("/api/checkins/{$checkin->id}")->assertJsonPath('data.km_retorno_esperado', 1130);
+
+        $this->patchJson("/api/checkins/{$checkin->id}/checkout", ['km_retorno' => 1130])->assertOk();
+
+        $this->assertDatabaseHas('checkins', [
+            'id' => $checkin->id,
+            'status' => 'encerrado',
+            'km_retorno_esperado' => 1130,
+            'divergencia_km' => 0,
+            'justificativa_divergencia_km' => null,
+        ]);
+    }
+
+    public function test_km_divergente_sem_justificativa_retorna_erro(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinComViagens();
+
+        $this->patchJson("/api/checkins/{$checkin->id}/checkout", ['km_retorno' => 1150])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('justificativa_divergencia_km');
+
+        $this->assertDatabaseHas('checkins', ['id' => $checkin->id, 'status' => 'ativo']);
+    }
+
+    public function test_km_divergente_com_justificativa_registra_divergencia(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinComViagens();
+
+        $this->patchJson("/api/checkins/{$checkin->id}/checkout", [
+            'km_retorno' => 1150,
+            'justificativa_divergencia_km' => 'Deslocamento até o posto sem viagem registrada',
+        ])->assertOk()
+            ->assertJsonPath('data.divergencia_km', 20);
+
+        $this->assertDatabaseHas('checkins', [
+            'id' => $checkin->id,
+            'status' => 'encerrado',
+            'km_retorno' => 1150,
+            'km_retorno_esperado' => 1130,
+            'divergencia_km' => 20,
+            'justificativa_divergencia_km' => 'Deslocamento até o posto sem viagem registrada',
+        ]);
     }
 }

@@ -77,6 +77,7 @@ class CheckinServiceTest extends TestCase
             'veiculo_id' => $veiculo->id,
             'checkin_id' => $checkin->id,
             'km_saida' => 1000,
+            'km_chegada' => 1500,
         ]);
 
         $this->service->checkout($checkin, ['km_retorno' => 1500]);

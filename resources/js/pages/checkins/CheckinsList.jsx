@@ -16,13 +16,29 @@ import { rotuloTipo, tempoDecorrido } from '../../components/manutencoes/tipos'
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm') : '—'
 const fmtKm = (n) => Number(n ?? 0).toLocaleString('pt-BR')
 
+// KM de retorno com sinal de divergência (KM informado ≠ saída + viagens).
+const KmRetorno = ({ c }) => (
+  <>
+    {c.km_retorno ? fmtKm(c.km_retorno) : '—'}
+    {!!c.divergencia_km && (
+      <span title={`Esperado ${fmtKm(c.km_retorno_esperado)} — ${c.justificativa_divergencia_km ?? ''}`}
+        className="ml-1 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-1">
+        {c.divergencia_km > 0 ? '+' : ''}{fmtKm(c.divergencia_km)} km
+      </span>
+    )}
+  </>
+)
+
 export default function CheckinsList() {
   const qc = useQueryClient()
   const { isOperador, checkinAtivo, checkinsAtivos, limiteCheckins, removerCheckinAtivo } = useAuth()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [checkoutTarget, setCheckoutTarget] = useState(null)
-  const [checkoutForm, setCheckoutForm] = useState({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' })
+  const [checkoutForm, setCheckoutForm] = useState({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '', justificativa_divergencia_km: '' })
+  const kmEsperado = checkoutTarget?.km_retorno_esperado
+  const kmDivergente = checkoutTarget?.km_retorno_fixo == null && kmEsperado != null
+    && checkoutForm.km_retorno !== '' && Number(checkoutForm.km_retorno) !== kmEsperado
   const [error, setError] = useState('')
   const [manutencaoVeiculo, setManutencaoVeiculo] = useState(null)
   const [encerrarVeiculo, setEncerrarVeiculo] = useState(null)
@@ -30,7 +46,7 @@ export default function CheckinsList() {
   // Sem viagem desde o check-in o KM de retorno é fixo (km_retorno_fixo).
   const abrirCheckout = (c) => {
     setCheckoutTarget(c)
-    setCheckoutForm({ km_retorno: c.km_retorno_fixo ?? '', nivel_combustivel_retorno: '', ocorrencias: '' })
+    setCheckoutForm({ km_retorno: c.km_retorno_fixo ?? '', nivel_combustivel_retorno: '', ocorrencias: '', justificativa_divergencia_km: '' })
   }
 
   // Botão de manutenção do veículo do check-in ativo (motorista ou gestão).
@@ -117,7 +133,7 @@ export default function CheckinsList() {
             <p className="font-mono text-gray-600">{c.veiculo?.placa ?? '—'} <span className="text-gray-400 capitalize">· {c.turno}</span></p>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-gray-500 text-xs">
               <p>KM saída: <span className="text-gray-700">{fmtKm(c.km_saida)}</span></p>
-              <p>KM retorno: <span className="text-gray-700">{c.km_retorno ? fmtKm(c.km_retorno) : '—'}</span></p>
+              <p>KM retorno: <span className="text-gray-700"><KmRetorno c={c} /></span></p>
               <p>Check-in: <span className="text-gray-700">{fmtDt(c.checkin_at)}</span></p>
               <p>Check-out: <span className="text-gray-700">{fmtDt(c.checkout_at)}</span></p>
             </div>
@@ -162,7 +178,7 @@ export default function CheckinsList() {
                 </td>
                 <td className="px-4 py-3 capitalize text-gray-500 whitespace-nowrap">{c.turno}</td>
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(c.km_saida)}</td>
-                <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{c.km_retorno ? fmtKm(c.km_retorno) : '—'}</td>
+                <td className="px-4 py-3 text-gray-700 whitespace-nowrap"><KmRetorno c={c} /></td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(c.checkin_at)}</td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(c.checkout_at)}</td>
                 <td className="px-4 py-3"><Badge value={c.status} /></td>
@@ -210,7 +226,20 @@ export default function CheckinsList() {
             {checkoutTarget?.km_retorno_fixo != null && (
               <p className="text-xs text-gray-500 mt-1">Nenhuma viagem registrada após o check-in: o KM de retorno é o mesmo da saída.</p>
             )}
+            {checkoutTarget?.km_retorno_fixo == null && kmEsperado != null && (
+              <p className="text-xs text-gray-500 mt-1">KM esperado: <strong>{fmtKm(kmEsperado)}</strong> (KM de saída + viagens registradas).</p>
+            )}
           </div>
+          {kmDivergente && (
+            <div>
+              <label className="block text-sm font-medium text-red-700 mb-1">
+                Justificativa da diferença de {fmtKm(Number(checkoutForm.km_retorno) - kmEsperado)} km *
+              </label>
+              <textarea required rows={2} maxLength={500} value={checkoutForm.justificativa_divergencia_km}
+                onChange={e => setCheckoutForm(f => ({ ...f, justificativa_divergencia_km: e.target.value }))}
+                className="w-full border border-red-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nível combustível retorno (%)</label>
             <input type="number" min={0} max={100} value={checkoutForm.nivel_combustivel_retorno}

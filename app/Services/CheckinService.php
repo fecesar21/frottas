@@ -73,6 +73,18 @@ class CheckinService
             ]);
         }
 
+        // Com viagens no período, KM diferente do esperado é aceito, mas exige
+        // justificativa e fica registrado para a gestão.
+        $kmEsperado = isset($data['km_retorno']) ? $checkin->kmRetornoEsperado() : null;
+        $divergencia = $kmEsperado !== null ? (int) $data['km_retorno'] - $kmEsperado : null;
+        $justificativa = trim((string) ($data['justificativa_divergencia_km'] ?? ''));
+
+        if ($divergencia && $justificativa === '') {
+            throw ValidationException::withMessages([
+                'justificativa_divergencia_km' => "KM de retorno diferente do esperado ({$kmEsperado}: KM de saída + viagens registradas). Informe a justificativa.",
+            ]);
+        }
+
         if ($iniciadoPeloOperador) {
             // Só bloqueia por viagem feita com o veículo deste check-in: quem tem
             // check-in duplo pode liberar um carro enquanto viaja com o outro.
@@ -88,11 +100,14 @@ class CheckinService
             }
         }
 
-        return DB::transaction(function () use ($data, $checkin) {
+        return DB::transaction(function () use ($data, $checkin, $kmEsperado, $divergencia, $justificativa) {
             $checkin->update([
                 'status' => 'encerrado',
                 'checkout_at' => now(),
                 'km_retorno' => $data['km_retorno'] ?? null,
+                'km_retorno_esperado' => $kmEsperado,
+                'divergencia_km' => $divergencia,
+                'justificativa_divergencia_km' => $divergencia ? $justificativa : null,
                 'nivel_combustivel_retorno' => $data['nivel_combustivel_retorno'] ?? null,
                 'ocorrencias' => $data['ocorrencias'] ?? null,
             ]);

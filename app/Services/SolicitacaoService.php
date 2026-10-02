@@ -330,7 +330,12 @@ class SolicitacaoService
 
     private function trocarVeiculoDoCheckin(Checkin $checkin, string $veiculoId, ?int $kmRetorno = null): Checkin
     {
-        $this->checkinService->checkout($checkin, $kmRetorno !== null ? ['km_retorno' => $kmRetorno] : []);
+        // Check-out automático: a divergência de KM, se houver, fica registrada
+        // sem impedir o aceite da corrida.
+        $this->checkinService->checkout($checkin, $kmRetorno !== null ? [
+            'km_retorno' => $kmRetorno,
+            'justificativa_divergencia_km' => 'Check-out automático na troca de veículo ao aceitar solicitação.',
+        ] : []);
 
         $veiculo = Veiculo::findOrFail($veiculoId);
 

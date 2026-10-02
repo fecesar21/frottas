@@ -653,4 +653,32 @@ class SolicitacaoApiTest extends TestCase
         $this->assertDatabaseHas('checkins', ['id' => $checkinA->id, 'status' => 'encerrado', 'km_retorno' => 1080]);
         $this->assertDatabaseHas('veiculos', ['id' => $veiculoA->id, 'km_atual' => 1080]);
     }
+
+    public function test_aceite_com_outro_veiculo_e_km_divergente_registra_divergencia_sem_bloquear(): void
+    {
+        [$motorista, $veiculoA, $veiculoB, $checkinA, $solicitacao] = $this->cenarioTrocaDeVeiculo();
+
+        // Saída da viagem em 1020: 20 km rodados sem viagem registrada.
+        Viagem::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoA->id,
+            'checkin_id' => $checkinA->id,
+            'km_saida' => 1020,
+            'km_chegada' => 1100,
+            'saida_at' => now()->subHour(),
+            'chegada_at' => now()->subMinutes(10),
+            'status' => 'concluida',
+        ]);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 500])
+            ->assertOk();
+
+        $this->assertDatabaseHas('checkins', [
+            'id' => $checkinA->id,
+            'status' => 'encerrado',
+            'km_retorno' => 1100,
+            'km_retorno_esperado' => 1080,
+            'divergencia_km' => 20,
+        ]);
+    }
 }
