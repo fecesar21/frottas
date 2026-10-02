@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class PontoViagemApiTest extends TestCase
 {
-    public function test_lista_unidades_e_localidades_ativas_combinadas(): void
+    public function test_lista_somente_localidades_ativas(): void
     {
         $this->loginOperador();
 
@@ -20,21 +20,20 @@ class PontoViagemApiTest extends TestCase
         $response = $this->getJson('/api/pontos-viagem')->assertOk();
         $nomes = collect($response->json())->pluck('nome')->all();
 
-        $this->assertEqualsCanonicalizing(['Hospital Central', 'Clínica Parceira'], $nomes);
+        // Unidades não entram: a lista vem só de Configurações > Localidades,
+        // para evitar nomes duplicados entre os dois cadastros.
+        $this->assertEqualsCanonicalizing(['Clínica Parceira'], $nomes);
     }
 
     public function test_cada_item_indica_o_tipo_de_origem(): void
     {
         $this->loginOperador();
 
-        $unidade = Unidade::factory()->create(['nome' => 'Hospital A']);
         $localidade = Localidade::factory()->create(['nome' => 'Local B']);
 
         $response = $this->getJson('/api/pontos-viagem')->assertOk();
         $itens = collect($response->json())->keyBy('nome');
 
-        $this->assertSame('unidade', $itens['Hospital A']['tipo']);
-        $this->assertSame($unidade->id, $itens['Hospital A']['id']);
         $this->assertSame('localidade', $itens['Local B']['tipo']);
         $this->assertSame($localidade->id, $itens['Local B']['id']);
     }
