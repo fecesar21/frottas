@@ -5,6 +5,7 @@ export const MOTIVOS_SOLICITACAO = {
   transporte_colaborador: 'Transporte de colaborador(es)',
   buscar_material_fornecedor: 'Buscar materiais em fornecedor',
   tfd: 'TFD',
+  alimentacao: 'Alimentação (Levar/Buscar)',
 }
 
 export const rotuloMotivo = (motivo) => MOTIVOS_SOLICITACAO[motivo] ?? motivo ?? 'Viagem'

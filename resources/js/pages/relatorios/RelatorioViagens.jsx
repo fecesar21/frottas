@@ -15,6 +15,7 @@ const MOTIVOS = {
   transporte_colaborador: 'Transporte de Colaborador(es)',
   buscar_material_fornecedor: 'Buscar materiais em fornecedor',
   tfd: 'TFD',
+  alimentacao: 'Alimentação (Levar/Buscar)',
 }
 const fmtMotivo = (m) => MOTIVOS[m] ?? '—'
 

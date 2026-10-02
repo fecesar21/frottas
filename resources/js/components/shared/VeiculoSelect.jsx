@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import * as veiculosApi from '../../api/veiculos'
 
-export default function VeiculoSelect({ value, onChange, name = 'veiculo_id', required = false, filterStatus }) {
+export default function VeiculoSelect({ value, onChange, name = 'veiculo_id', required = false, filterStatus, onVeiculo }) {
   const { data } = useQuery({
     queryKey: ['veiculos', filterStatus],
     queryFn: () => veiculosApi.listar(filterStatus ? { status: filterStatus } : undefined).then(r => r.data.data ?? r.data),
@@ -12,7 +12,10 @@ export default function VeiculoSelect({ value, onChange, name = 'veiculo_id', re
     <select
       name={name}
       value={value ?? ''}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => {
+        onChange(e.target.value)
+        onVeiculo?.((data ?? []).find(v => v.id === e.target.value) ?? null)
+      }}
       required={required}
       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
     >

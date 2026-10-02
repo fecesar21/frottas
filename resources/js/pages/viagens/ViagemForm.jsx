@@ -8,6 +8,30 @@ import VeiculoCheckinSelect from '../../components/shared/VeiculoCheckinSelect'
 import ColaboradorSelect from '../../components/shared/ColaboradorSelect'
 import Alert from '../../components/ui/Alert'
 
+const MOTIVOS = [
+  { value: 'transferencia_paciente', label: 'Transferência de Paciente' },
+  { value: 'buscar_medico', label: 'Buscar médico em outra cidade' },
+  { value: 'material_outro_hospital', label: 'Levar Material em outro Hospital' },
+  { value: 'transporte_colaborador', label: 'Transporte de Colaborador(es)' },
+  { value: 'buscar_material_fornecedor', label: 'Buscar materiais em fornecedor' },
+  { value: 'tfd', label: 'TFD' },
+  { value: 'alimentacao', label: 'Alimentação (Levar/Buscar)' },
+]
+
+// Motivos exclusivos de cada tipo de veículo (mesma regra de Veiculo::ehAmbulancia()).
+const SOMENTE_AMBULANCIA = ['transferencia_paciente', 'tfd']
+const SOMENTE_ADMINISTRATIVO = ['buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'alimentacao']
+
+const ehAmbulancia = (veiculo) =>
+  (veiculo?.modelo ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().includes('AMBULANCIA')
+
+// Sem veículo selecionado mostra todos os motivos.
+export function motivosDoVeiculo(veiculo) {
+  if (!veiculo?.modelo) return MOTIVOS
+  const excluidos = ehAmbulancia(veiculo) ? SOMENTE_ADMINISTRATIVO : SOMENTE_AMBULANCIA
+  return MOTIVOS.filter(m => !excluidos.includes(m.value))
+}
+
 export default function ViagemForm({ onSuccess }) {
   const { user, isOperador, checkinsAtivos } = useAuth()
 
@@ -22,6 +46,7 @@ export default function ViagemForm({ onSuccess }) {
     km_saida: '',
   })
   const [colaboradores, setColaboradores] = useState([])
+  const [veiculoGestao, setVeiculoGestao] = useState(null)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
 
@@ -59,6 +84,14 @@ export default function ViagemForm({ onSuccess }) {
     })
   }
 
+  const veiculo = isOperador
+    ? checkinsAtivos?.find(c => c.veiculo_id === form.veiculo_id)?.veiculo
+    : veiculoGestao
+  const motivos = motivosDoVeiculo(veiculo)
+  if (form.motivo_viagem && !motivos.some(m => m.value === form.motivo_viagem)) {
+    setForm(f => ({ ...f, motivo_viagem: '', numero_atendimento: '' }))
+  }
+
   const fe = (k) => fieldErrors[k] && <p className="text-red-500 text-xs mt-1">{fieldErrors[k][0]}</p>
 
   return (
@@ -82,7 +115,7 @@ export default function ViagemForm({ onSuccess }) {
         {isOperador ? (
           <VeiculoCheckinSelect checkins={checkinsAtivos} value={form.veiculo_id} onChange={v => setForm(f => ({ ...f, veiculo_id: v }))} />
         ) : (
-          <VeiculoSelect value={form.veiculo_id} onChange={v => setForm(f => ({ ...f, veiculo_id: v }))} required filterStatus="em_uso" />
+          <VeiculoSelect value={form.veiculo_id} onChange={v => setForm(f => ({ ...f, veiculo_id: v }))} required filterStatus="em_uso" onVeiculo={setVeiculoGestao} />
         )}
         {fe('veiculo_id')}
       </div>
@@ -108,12 +141,7 @@ export default function ViagemForm({ onSuccess }) {
           onChange={e => setForm(f => ({ ...f, motivo_viagem: e.target.value, numero_atendimento: e.target.value === 'transferencia_paciente' ? f.numero_atendimento : '' }))}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Selecione...</option>
-          <option value="transferencia_paciente">Transferência de Paciente</option>
-          <option value="buscar_medico">Buscar médico em outra cidade</option>
-          <option value="material_outro_hospital">Levar Material em outro Hospital</option>
-          <option value="transporte_colaborador">Transporte de Colaborador(es)</option>
-          <option value="buscar_material_fornecedor">Buscar materiais em fornecedor</option>
-          <option value="tfd">TFD</option>
+          {motivos.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
         {fe('motivo_viagem')}
       </div>

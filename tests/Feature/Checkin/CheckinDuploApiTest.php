@@ -97,8 +97,8 @@ class CheckinDuploApiTest extends TestCase
     public function test_com_dois_checkins_viagem_usa_o_veiculo_escolhido(): void
     {
         [, $motorista] = $this->operadorCom(['permite_checkin_duplo' => true]);
-        $ambulancia = Veiculo::factory()->create(['km_atual' => 4000]);
-        $administrativo = Veiculo::factory()->create(['km_atual' => 4000]);
+        $ambulancia = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'AMBULANCIA']);
+        $administrativo = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'STRADA']);
         $this->checkinAtivo($motorista, $ambulancia);
         $checkinAdm = $this->checkinAtivo($motorista, $administrativo);
 

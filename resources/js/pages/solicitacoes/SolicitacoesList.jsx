@@ -17,6 +17,7 @@ const MOTIVOS = {
   transporte_colaborador: 'Transporte de Colaborador(es)',
   buscar_material_fornecedor: 'Buscar materiais em fornecedor',
   tfd: 'TFD',
+  alimentacao: 'Alimentação (Levar/Buscar)',
 }
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'

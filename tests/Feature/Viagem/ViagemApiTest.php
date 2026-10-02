@@ -42,7 +42,7 @@ class ViagemApiTest extends TestCase
     public function test_cria_viagem(): void
     {
         $this->loginGestor();
-        $veiculo = Veiculo::factory()->create(['km_atual' => 4000]);
+        $veiculo = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'STRADA']);
         $motorista = Motorista::factory()->create();
         $this->liberarChecklist($veiculo, $motorista);
 
@@ -62,7 +62,7 @@ class ViagemApiTest extends TestCase
     public function test_transporte_de_colaborador_exige_e_vincula_colaboradores(): void
     {
         $this->loginGestor();
-        $veiculo = Veiculo::factory()->create(['km_atual' => 4000]);
+        $veiculo = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'STRADA']);
         $motorista = Motorista::factory()->create();
         $this->liberarChecklist($veiculo, $motorista);
         [$c1, $c2] = Colaborador::factory()->count(2)->create();
@@ -91,7 +91,7 @@ class ViagemApiTest extends TestCase
     public function test_numero_atendimento_exige_exatamente_6_digitos_e_nao_aceita_zeros(): void
     {
         $this->loginGestor();
-        $veiculo = Veiculo::factory()->create(['km_atual' => 4000]);
+        $veiculo = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'AMBULANCIA']);
         $motorista = Motorista::factory()->create();
         $this->liberarChecklist($veiculo, $motorista);
 
@@ -133,7 +133,7 @@ class ViagemApiTest extends TestCase
     public function test_operador_com_checkin_ativo_cria_viagem_vinculada_ao_veiculo_do_checkin(): void
     {
         $usuario = $this->loginOperador();
-        $veiculo = Veiculo::factory()->create(['km_atual' => 4000]);
+        $veiculo = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'STRADA']);
         $motorista = Motorista::factory()->create();
         $usuario->update(['motorista_id' => $motorista->id]);
 
@@ -202,5 +202,24 @@ class ViagemApiTest extends TestCase
             ->assertJsonPath('data.status', 'concluida');
 
         $this->assertDatabaseHas('viagens', ['id' => $viagem->id, 'km_chegada' => 5120, 'status' => 'concluida']);
+    }
+
+    public function test_motivo_respeita_tipo_do_veiculo(): void
+    {
+        $this->loginGestor();
+        $ambulancia = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'AMBULÂNCIA SPRINTER']);
+        $strada = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'STRADA']);
+        $motorista = Motorista::factory()->create();
+        $this->liberarChecklist($ambulancia, $motorista);
+        $this->liberarChecklist($strada, $motorista);
+
+        $payload = fn ($veiculo, $motivo) => [
+            'veiculo_id' => $veiculo->id, 'motorista_id' => $motorista->id,
+            'origem' => 'a', 'destino' => 'b', 'km_saida' => 5000, 'motivo_viagem' => $motivo,
+        ];
+
+        $this->postJson('/api/viagens', $payload($strada, 'tfd'))->assertJsonValidationErrors(['motivo_viagem']);
+        $this->postJson('/api/viagens', $payload($ambulancia, 'alimentacao'))->assertJsonValidationErrors(['motivo_viagem']);
+        $this->postJson('/api/viagens', $payload($strada, 'alimentacao'))->assertCreated();
     }
 }
