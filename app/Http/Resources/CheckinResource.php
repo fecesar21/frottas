@@ -17,6 +17,7 @@ class CheckinResource extends JsonResource
             'turno' => $this->turno,
             'km_saida' => $this->km_saida,
             'km_retorno' => $this->km_retorno,
+            'km_retorno_fixo' => $this->when($this->status === 'ativo', fn () => $this->kmRetornoSemViagem()),
             'nivel_combustivel_saida' => $this->nivel_combustivel_saida,
             'nivel_combustivel_retorno' => $this->nivel_combustivel_retorno,
             'checkin_at' => $this->checkin_at,

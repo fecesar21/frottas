@@ -258,11 +258,14 @@ class SolicitacaoService
             ?? $motorista->checkinsAtivos->first();
 
         if ($checkin && $checkin->veiculo_id !== $veiculoId) {
-            $kmRetornoTrajetoAnterior = Viagem::where('motorista_id', $motoristaId)
-                ->where('status', 'concluida')
-                ->whereNotNull('km_chegada')
-                ->latest('chegada_at')
-                ->value('km_chegada');
+            // KM de retorno vem da última viagem feita com o veículo deste
+            // check-in; sem viagem, o odômetro não andou.
+            $kmRetornoTrajetoAnterior = $checkin->kmRetornoSemViagem()
+                ?? Viagem::where('veiculo_id', $checkin->veiculo_id)
+                    ->where('status', 'concluida')
+                    ->whereNotNull('km_chegada')
+                    ->latest('chegada_at')
+                    ->value('km_chegada');
 
             $checkin = $this->trocarVeiculoDoCheckin($checkin, $veiculoId, $kmRetornoTrajetoAnterior);
         }

@@ -106,6 +106,13 @@ class CheckinApiTest extends TestCase
             'status' => 'ativo',
         ]);
 
+        Viagem::factory()->concluida()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculo->id,
+            'checkin_id' => $checkin->id,
+            'km_saida' => 1000,
+        ]);
+
         $this->patchJson("/api/checkins/{$checkin->id}/checkout", [
             'km_retorno' => 1200,
         ])->assertOk();
@@ -141,5 +148,57 @@ class CheckinApiTest extends TestCase
         ])->assertUnprocessable();
 
         $this->assertDatabaseHas('checkins', ['id' => $checkin->id, 'status' => 'ativo']);
+    }
+
+    private function checkinAtivo(int $kmSaida = 1000): Checkin
+    {
+        $veiculo = Veiculo::factory()->create(['km_atual' => $kmSaida, 'status' => 'em_uso']);
+
+        return Checkin::factory()->create([
+            'motorista_id' => Motorista::factory()->create()->id,
+            'veiculo_id' => $veiculo->id,
+            'km_saida' => $kmSaida,
+            'checkin_at' => now()->subHour(),
+            'status' => 'ativo',
+        ]);
+    }
+
+    public function test_sem_viagem_km_retorno_diferente_da_saida_retorna_erro(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinAtivo();
+
+        $this->patchJson("/api/checkins/{$checkin->id}/checkout", ['km_retorno' => 1050])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('km_retorno');
+
+        $this->assertDatabaseHas('checkins', ['id' => $checkin->id, 'status' => 'ativo']);
+    }
+
+    public function test_sem_viagem_km_retorno_igual_a_saida_permite_checkout(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinAtivo();
+
+        $this->patchJson("/api/checkins/{$checkin->id}/checkout", ['km_retorno' => 1000])->assertOk();
+    }
+
+    public function test_sem_viagem_aceita_km_atual_do_veiculo_apos_manutencao(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinAtivo();
+        $checkin->veiculo->update(['km_atual' => 1030]);
+
+        $this->patchJson("/api/checkins/{$checkin->id}/checkout", ['km_retorno' => 1030])->assertOk();
+    }
+
+    public function test_resource_informa_km_retorno_fixo_sem_viagem(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinAtivo();
+
+        $this->getJson("/api/checkins/{$checkin->id}")
+            ->assertOk()
+            ->assertJsonPath('data.km_retorno_fixo', 1000);
     }
 }

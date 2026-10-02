@@ -27,6 +27,12 @@ export default function CheckinsList() {
   const [manutencaoVeiculo, setManutencaoVeiculo] = useState(null)
   const [encerrarVeiculo, setEncerrarVeiculo] = useState(null)
 
+  // Sem viagem desde o check-in o KM de retorno é fixo (km_retorno_fixo).
+  const abrirCheckout = (c) => {
+    setCheckoutTarget(c)
+    setCheckoutForm({ km_retorno: c.km_retorno_fixo ?? '', nivel_combustivel_retorno: '', ocorrencias: '' })
+  }
+
   // Botão de manutenção do veículo do check-in ativo (motorista ou gestão).
   const acaoManutencao = (c) => {
     if (c.status !== 'ativo' || !c.veiculo) return null
@@ -118,7 +124,7 @@ export default function CheckinsList() {
             {avisoManutencao(c)}
             {c.status === 'ativo' && (
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => { setCheckoutTarget(c); setCheckoutForm({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' }) }}
+                <button onClick={() => abrirCheckout(c)}
                   className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
                   <LogOut size={12} /> Checkout
                 </button>
@@ -163,7 +169,7 @@ export default function CheckinsList() {
                 <td className="px-4 py-3">
                   {c.status === 'ativo' && (
                     <div className="flex gap-2">
-                      <button onClick={() => { setCheckoutTarget(c); setCheckoutForm({ km_retorno: '', nivel_combustivel_retorno: '', ocorrencias: '' }) }}
+                      <button onClick={() => abrirCheckout(c)}
                         className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors">
                         <LogOut size={12} /> Checkout
                       </button>
@@ -198,8 +204,12 @@ export default function CheckinsList() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">KM retorno</label>
             <input type="number" min={checkoutTarget?.km_saida ?? 0} value={checkoutForm.km_retorno}
+              readOnly={checkoutTarget?.km_retorno_fixo != null}
               onChange={e => setCheckoutForm(f => ({ ...f, km_retorno: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:text-gray-500" />
+            {checkoutTarget?.km_retorno_fixo != null && (
+              <p className="text-xs text-gray-500 mt-1">Nenhuma viagem registrada após o check-in: o KM de retorno é o mesmo da saída.</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nível combustível retorno (%)</label>

@@ -5,6 +5,7 @@ namespace Tests\Unit\Services;
 use App\Models\Checkin;
 use App\Models\Motorista;
 use App\Models\Veiculo;
+use App\Models\Viagem;
 use App\Services\CheckinService;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -69,6 +70,13 @@ class CheckinServiceTest extends TestCase
             'veiculo_id' => $veiculo->id,
             'km_saida' => 1000,
             'status' => 'ativo',
+        ]);
+
+        Viagem::factory()->concluida()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculo->id,
+            'checkin_id' => $checkin->id,
+            'km_saida' => 1000,
         ]);
 
         $this->service->checkout($checkin, ['km_retorno' => 1500]);

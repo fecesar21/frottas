@@ -46,4 +46,28 @@ class Checkin extends Model
     {
         return $this->hasOne(ChecklistVeiculo::class, 'checkin_id');
     }
+
+    /**
+     * KM de retorno obrigatório quando o veículo não fez nenhuma viagem desde
+     * o check-in: o odômetro não pode ter andado. Considera o KM atual do
+     * veículo porque uma manutenção no período pode tê-lo atualizado.
+     * Retorna null quando houve viagem (qualquer KM ≥ saída é aceito).
+     */
+    public function kmRetornoSemViagem(): ?int
+    {
+        $teveViagem = Viagem::where('veiculo_id', $this->veiculo_id)
+            ->where(function ($q) {
+                $q->where('checkin_id', $this->id);
+                if ($this->checkin_at) {
+                    $q->orWhere('saida_at', '>=', $this->checkin_at);
+                }
+            })
+            ->exists();
+
+        if ($teveViagem) {
+            return null;
+        }
+
+        return max((int) $this->km_saida, (int) Veiculo::whereKey($this->veiculo_id)->value('km_atual'));
+    }
 }

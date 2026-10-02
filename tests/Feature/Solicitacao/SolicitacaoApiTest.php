@@ -439,7 +439,7 @@ class SolicitacaoApiTest extends TestCase
         $veiculoAtual = Veiculo::factory()->create(['status' => 'em_uso', 'km_atual' => 1000]);
         $veiculoNovo = Veiculo::factory()->create(['status' => 'disponivel', 'km_atual' => 500]);
 
-        Checkin::factory()->create([
+        $checkinAtual = Checkin::factory()->create([
             'motorista_id' => $motorista->id,
             'veiculo_id' => $veiculoAtual->id,
             'km_saida' => 1000,
@@ -448,6 +448,7 @@ class SolicitacaoApiTest extends TestCase
 
         $viagemEmAndamento = Viagem::factory()->create([
             'motorista_id' => $motorista->id,
+            'checkin_id' => $checkinAtual->id,
             'veiculo_id' => $veiculoAtual->id,
             'km_saida' => 1000,
             'status' => 'em_andamento',
@@ -567,5 +568,89 @@ class SolicitacaoApiTest extends TestCase
         $this->getJson("/api/solicitacoes/{$solicitacao->id}")
             ->assertOk()
             ->assertJsonPath('data.motivo_recusa', 'Fora do horário de atendimento');
+    }
+
+    /**
+     * Motorista com check-in no veículo A aceita corrida com o veículo B.
+     * Retorna [motorista, veiculoA, veiculoB, checkinA, solicitacao] já logado como o motorista.
+     */
+    private function cenarioTrocaDeVeiculo(): array
+    {
+        $motorista = Motorista::factory()->create();
+        $usuarioMotorista = Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $motorista->id]);
+        $veiculoA = Veiculo::factory()->create(['status' => 'em_uso', 'km_atual' => 1000]);
+        $veiculoB = Veiculo::factory()->create(['status' => 'disponivel', 'km_atual' => 500]);
+
+        $checkinA = Checkin::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoA->id,
+            'km_saida' => 1000,
+            'checkin_at' => now()->subHours(2),
+            'status' => 'ativo',
+        ]);
+
+        // Última viagem do motorista foi em OUTRO veículo, antes deste check-in:
+        // seu km_chegada (9000) não pode ser usado como retorno do veículo A.
+        Viagem::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => Veiculo::factory()->create(['km_atual' => 9000])->id,
+            'km_saida' => 8900,
+            'km_chegada' => 9000,
+            'saida_at' => now()->subDays(1),
+            'chegada_at' => now()->subHours(3),
+            'status' => 'concluida',
+        ]);
+
+        $solicitacao = Solicitacao::factory()->create([
+            'status' => 'pendente_motorista',
+            'motorista_pendente_id' => $motorista->id,
+            'veiculo_pendente_id' => $veiculoB->id,
+        ]);
+
+        $this->withToken($usuarioMotorista->createToken('test')->plainTextToken);
+
+        return [$motorista, $veiculoA, $veiculoB, $checkinA, $solicitacao];
+    }
+
+    public function test_aceite_com_outro_veiculo_sem_viagem_encerra_checkin_com_km_de_saida(): void
+    {
+        [$motorista, $veiculoA, $veiculoB, $checkinA, $solicitacao] = $this->cenarioTrocaDeVeiculo();
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 500])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'em_trajeto');
+
+        $this->assertDatabaseHas('checkins', ['id' => $checkinA->id, 'status' => 'encerrado', 'km_retorno' => 1000]);
+        $this->assertDatabaseHas('veiculos', ['id' => $veiculoA->id, 'status' => 'disponivel', 'km_atual' => 1000]);
+        $this->assertDatabaseHas('checkins', ['motorista_id' => $motorista->id, 'veiculo_id' => $veiculoB->id, 'status' => 'ativo']);
+        $this->assertDatabaseHas('viagens', [
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoB->id,
+            'km_saida' => 500,
+            'status' => 'em_andamento',
+        ]);
+    }
+
+    public function test_aceite_com_outro_veiculo_usa_km_da_ultima_viagem_do_veiculo_do_checkin(): void
+    {
+        [$motorista, $veiculoA, $veiculoB, $checkinA, $solicitacao] = $this->cenarioTrocaDeVeiculo();
+
+        Viagem::factory()->create([
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculoA->id,
+            'checkin_id' => $checkinA->id,
+            'km_saida' => 1000,
+            'km_chegada' => 1080,
+            'saida_at' => now()->subHour(),
+            'chegada_at' => now()->subMinutes(10),
+            'status' => 'concluida',
+        ]);
+        $veiculoA->update(['km_atual' => 1080]);
+
+        $this->patchJson("/api/solicitacoes/{$solicitacao->id}/motorista-aceitar", ['km_saida' => 500])
+            ->assertOk();
+
+        $this->assertDatabaseHas('checkins', ['id' => $checkinA->id, 'status' => 'encerrado', 'km_retorno' => 1080]);
+        $this->assertDatabaseHas('veiculos', ['id' => $veiculoA->id, 'km_atual' => 1080]);
     }
 }

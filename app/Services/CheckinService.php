@@ -67,6 +67,12 @@ class CheckinService
             throw ValidationException::withMessages(['km_retorno' => 'KM de retorno menor que KM de saída.']);
         }
 
+        if (isset($data['km_retorno']) && ($kmFixo = $checkin->kmRetornoSemViagem()) !== null && (int) $data['km_retorno'] !== $kmFixo) {
+            throw ValidationException::withMessages([
+                'km_retorno' => "Nenhuma viagem registrada após o check-in: o KM de retorno deve ser igual a {$kmFixo}.",
+            ]);
+        }
+
         if ($iniciadoPeloOperador) {
             // Só bloqueia por viagem feita com o veículo deste check-in: quem tem
             // check-in duplo pode liberar um carro enquanto viaja com o outro.
