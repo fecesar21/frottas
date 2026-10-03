@@ -3,6 +3,7 @@
 namespace Tests\Feature\Correcao;
 
 use App\Models\Abastecimento;
+use App\Models\AuditoriaCorrecao;
 use App\Models\Motorista;
 use App\Models\Veiculo;
 use App\Models\Viagem;
@@ -92,5 +93,53 @@ class CorrecaoLancamentoApiTest extends TestCase
             $this->patchJson("/api/abastecimentos/{$a->id}", ['litros' => 1, 'valor_litro' => 1, 'km_momento' => 1])->assertForbidden();
             $this->deleteJson("/api/abastecimentos/{$a->id}")->assertForbidden();
         }
+    }
+
+    public function test_correcao_de_viagem_gera_auditoria_so_dos_campos_alterados(): void
+    {
+        $admin = $this->loginAdmin();
+        $viagem = $this->viagem();
+
+        $this->patchJson("/api/viagens/{$viagem->id}/correcao", ['km_saida' => 1000, 'km_chegada' => 1080])->assertOk();
+
+        $log = AuditoriaCorrecao::sole();
+        $this->assertSame($admin->id, $log->usuario_id);
+        $this->assertSame('viagem', $log->entidade);
+        $this->assertSame($viagem->id, $log->entidade_id);
+        $this->assertSame('correcao', $log->acao);
+        $this->assertSame(['km_chegada' => 1050], $log->antes);
+        $this->assertSame(['km_chegada' => 1080], $log->depois);
+    }
+
+    public function test_correcao_sem_mudanca_nao_gera_auditoria(): void
+    {
+        $this->loginAdmin();
+        $viagem = $this->viagem();
+
+        $this->patchJson("/api/viagens/{$viagem->id}/correcao", ['km_saida' => 1000, 'km_chegada' => 1050])->assertOk();
+
+        $this->assertSame(0, AuditoriaCorrecao::count());
+    }
+
+    public function test_correcao_e_exclusao_de_abastecimento_geram_auditoria(): void
+    {
+        $this->loginAdmin();
+        $a = $this->abastecimento();
+
+        $this->patchJson("/api/abastecimentos/{$a->id}", ['litros' => 40, 'valor_litro' => 5.50, 'km_momento' => 1000])->assertOk();
+        $this->deleteJson("/api/abastecimentos/{$a->id}")->assertOk();
+
+        $this->getJson("/api/auditoria-correcoes?entidade=abastecimento&entidade_id={$a->id}")
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.1.acao', 'correcao')
+            ->assertJsonPath('data.1.depois', ['litros' => 40])
+            ->assertJsonPath('data.0.acao', 'exclusao');
+    }
+
+    public function test_nao_admin_nao_consulta_auditoria(): void
+    {
+        $this->loginGestor();
+        $this->getJson('/api/auditoria-correcoes')->assertForbidden();
     }
 }

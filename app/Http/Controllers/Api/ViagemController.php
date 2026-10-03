@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Viagem\StoreViagemRequest;
 use App\Http\Requests\Viagem\UpdateViagemRequest;
 use App\Http\Resources\ViagemResource;
+use App\Models\AuditoriaCorrecao;
 use App\Models\Motorista;
 use App\Models\Viagem;
 use App\Services\ChecklistVeiculoService;
@@ -72,7 +73,10 @@ class ViagemController extends Controller
 
     public function update(UpdateViagemRequest $request, Viagem $viagem)
     {
-        $viagem->update($request->validated());
+        $data = $request->validated();
+        $antes = $viagem->only(array_keys($data));
+        $viagem->update($data);
+        AuditoriaCorrecao::registrar($viagem, 'viagem', 'correcao', $antes, $viagem->only(array_keys($data)));
 
         return new ViagemResource($viagem->fresh());
     }
@@ -94,7 +98,9 @@ class ViagemController extends Controller
             return response()->json(['message' => 'KM de chegada menor que KM de saída.', 'errors' => ['km_chegada' => ['KM de chegada menor que KM de saída.']]], 422);
         }
 
+        $antes = $viagem->only(array_keys($data));
         $viagem->update($data);
+        AuditoriaCorrecao::registrar($viagem, 'viagem', 'correcao', $antes, $viagem->only(array_keys($data)));
 
         return new ViagemResource($viagem->fresh(['veiculo', 'motorista', 'colaboradores.unidade:id,nome']));
     }

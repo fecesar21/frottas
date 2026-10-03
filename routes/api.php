@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AbastecimentoController;
+use App\Http\Controllers\Api\AuditoriaCorrecaoController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckinController;
 use App\Http\Controllers\Api\ChecklistVeiculoController;
@@ -168,5 +169,6 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
         Route::patch('viagens/{viagem}/correcao', [ViagemController::class, 'corrigir']);
         Route::patch('abastecimentos/{abastecimento}', [AbastecimentoController::class, 'update']);
         Route::delete('abastecimentos/{abastecimento}', [AbastecimentoController::class, 'destroy']);
+        Route::get('auditoria-correcoes', [AuditoriaCorrecaoController::class, 'index']);
     });
 });

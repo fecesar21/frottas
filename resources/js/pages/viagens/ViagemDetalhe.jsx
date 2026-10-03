@@ -8,6 +8,7 @@ import * as viagensApi from '../../api/viagens'
 import * as solicitacoesApi from '../../api/solicitacoes'
 import Badge from '../../components/ui/Badge'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import HistoricoCorrecoes from '../../components/shared/HistoricoCorrecoes'
 import { useAuth } from '../../contexts/AuthContext'
 
 const fmtDt  = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '—'
@@ -39,6 +40,7 @@ function CorrecaoKm({ viagem, onCorrigido }) {
     }).then(r => r.data.data ?? r.data),
     onSuccess: (atualizada) => {
       qc.invalidateQueries({ queryKey: ['viagens'] })
+      qc.invalidateQueries({ queryKey: ['auditoria-correcoes'] })
       onCorrigido(atualizada)
       setAberto(false)
     },
@@ -49,9 +51,12 @@ function CorrecaoKm({ viagem, onCorrigido }) {
 
   if (!aberto) {
     return (
+      <div className="space-y-2">
       <button onClick={() => setAberto(true)} className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors">
         Corrigir KM (admin)
       </button>
+      <HistoricoCorrecoes entidade="viagem" entidadeId={viagem.id} />
+      </div>
     )
   }
 

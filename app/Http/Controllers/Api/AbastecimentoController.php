@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Abastecimento\StoreAbastecimentoRequest;
 use App\Http\Resources\AbastecimentoResource;
 use App\Models\Abastecimento;
+use App\Models\AuditoriaCorrecao;
 use App\Models\Motorista;
 use App\Services\ChecklistVeiculoService;
 use Illuminate\Http\Request;
@@ -76,13 +77,16 @@ class AbastecimentoController extends Controller
             'km_momento' => 'required|integer|min:0',
         ]);
 
+        $antes = $abastecimento->only(array_keys($data));
         $abastecimento->update($data);
+        AuditoriaCorrecao::registrar($abastecimento, 'abastecimento', 'correcao', $antes, $abastecimento->only(array_keys($data)));
 
         return new AbastecimentoResource($abastecimento->fresh(['veiculo', 'motorista']));
     }
 
     public function destroy(Abastecimento $abastecimento)
     {
+        AuditoriaCorrecao::registrar($abastecimento, 'abastecimento', 'exclusao', $abastecimento->attributesToArray());
         $abastecimento->delete();
 
         return response()->json(['message' => 'Abastecimento excluído']);

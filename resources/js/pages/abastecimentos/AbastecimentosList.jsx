@@ -6,6 +6,7 @@ import * as abastecimentosApi from '../../api/abastecimentos'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import AbastecimentoForm from './AbastecimentoForm'
+import HistoricoCorrecoes from '../../components/shared/HistoricoCorrecoes'
 import { useAuth } from '../../contexts/AuthContext'
 
 const fmtBrl = (n) => Number(n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -45,6 +46,7 @@ function CorrecaoAbastecimento({ abastecimento, onSuccess }) {
       </div>
       <p className="text-gray-600">Novo total: <strong>{fmtBrl(Number(litros) * Number(valorLitro))}</strong></p>
       {msgErro && <p className="text-xs text-red-600">{msgErro}</p>}
+      <HistoricoCorrecoes entidade="abastecimento" entidadeId={abastecimento.id} />
       <div className="flex justify-end">
         <button type="submit" disabled={salvar.isPending} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
           {salvar.isPending ? 'Salvando…' : 'Salvar correção'}
@@ -181,7 +183,7 @@ export default function AbastecimentosList() {
 
       <Modal open={!!editTarget} onClose={() => setEditTarget(null)} title="Corrigir abastecimento">
         {editTarget && (
-          <CorrecaoAbastecimento abastecimento={editTarget} onSuccess={() => { setEditTarget(null); qc.invalidateQueries({ queryKey: ['abastecimentos'] }) }} />
+          <CorrecaoAbastecimento abastecimento={editTarget} onSuccess={() => { setEditTarget(null); qc.invalidateQueries({ queryKey: ['abastecimentos'] }); qc.invalidateQueries({ queryKey: ['auditoria-correcoes'] }) }} />
         )}
       </Modal>
     </div>
