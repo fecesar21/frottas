@@ -34,7 +34,7 @@ class AbastecimentoApiTest extends TestCase
 
     public function test_remover_abastecimento_e_soft_delete(): void
     {
-        $this->loginGestor();
+        $this->loginAdmin();
         $veiculo = Veiculo::factory()->create();
         $motorista = Motorista::factory()->create();
         $abastecimento = Abastecimento::create([

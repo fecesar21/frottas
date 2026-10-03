@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css'
-import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -25,8 +25,67 @@ function AjustarMapa({ pontos }) {
   return null
 }
 
-export default function ViagemDetalhe({ viagem }) {
-  const { user } = useAuth()
+function CorrecaoKm({ viagem, onCorrigido }) {
+  const qc = useQueryClient()
+  const concluida = viagem.status === 'concluida'
+  const [aberto, setAberto] = useState(false)
+  const [kmSaida, setKmSaida] = useState(viagem.km_saida ?? '')
+  const [kmChegada, setKmChegada] = useState(viagem.km_chegada ?? '')
+
+  const salvar = useMutation({
+    mutationFn: () => viagensApi.corrigir(viagem.id, {
+      km_saida: Number(kmSaida),
+      ...(concluida ? { km_chegada: Number(kmChegada) } : {}),
+    }).then(r => r.data.data ?? r.data),
+    onSuccess: (atualizada) => {
+      qc.invalidateQueries({ queryKey: ['viagens'] })
+      onCorrigido(atualizada)
+      setAberto(false)
+    },
+  })
+
+  const erro = salvar.error?.response?.data
+  const msgErro = erro?.errors ? Object.values(erro.errors).flat()[0] : (erro?.message ?? erro?.error)
+
+  if (!aberto) {
+    return (
+      <button onClick={() => setAberto(true)} className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors">
+        Corrigir KM (admin)
+      </button>
+    )
+  }
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); salvar.mutate() }} className="border border-amber-200 bg-amber-50 rounded-lg p-3 space-y-2 text-sm">
+      <p className="text-xs font-semibold text-amber-800">Correção de KM — somente administrador</p>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block">
+          <span className="text-xs text-gray-500">KM de saída</span>
+          <input type="number" min="0" required value={kmSaida} onChange={(e) => setKmSaida(e.target.value)}
+            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-1.5" />
+        </label>
+        {concluida && (
+          <label className="block">
+            <span className="text-xs text-gray-500">KM de chegada</span>
+            <input type="number" min="0" required value={kmChegada} onChange={(e) => setKmChegada(e.target.value)}
+              className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-1.5" />
+          </label>
+        )}
+      </div>
+      {msgErro && <p className="text-xs text-red-600">{msgErro}</p>}
+      <div className="flex justify-end gap-2">
+        <button type="button" onClick={() => setAberto(false)} className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800">Cancelar</button>
+        <button type="submit" disabled={salvar.isPending} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+          {salvar.isPending ? 'Salvando…' : 'Salvar correção'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+export default function ViagemDetalhe({ viagem: viagemInicial }) {
+  const { user, isAdmin } = useAuth()
+  const [viagem, setViagem] = useState(viagemInicial)
   const ehMotorista = user?.perfil === 'operador' && !!user?.motorista_id && user.motorista_id === viagem.motorista_id
 
   const { data: pontos, isLoading } = useQuery({
@@ -91,6 +150,10 @@ export default function ViagemDetalhe({ viagem }) {
           <p className="text-gray-700">{fmtDt(viagem.chegada_at)}</p>
         </div>
         <div>
+          <p className="text-xs text-gray-400 mb-0.5">KM saída / chegada</p>
+          <p className="text-gray-700">{fmtKm(viagem.km_saida)} / {fmtKm(viagem.km_chegada)}</p>
+        </div>
+        <div>
           <p className="text-xs text-gray-400 mb-0.5">KM percorrido</p>
           <p className="text-gray-700">{fmtKm(viagem.km_percorrido)}</p>
         </div>
@@ -99,6 +162,10 @@ export default function ViagemDetalhe({ viagem }) {
           <Badge value={viagem.status} />
         </div>
       </div>
+
+      {isAdmin && viagem.status !== 'cancelada' && (
+        <CorrecaoKm viagem={viagem} onCorrigido={(v) => setViagem(prev => ({ ...prev, ...v }))} />
+      )}
 
       {/* Mapa */}
       <div>

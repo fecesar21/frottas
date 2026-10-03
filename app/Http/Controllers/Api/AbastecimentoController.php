@@ -68,6 +68,19 @@ class AbastecimentoController extends Controller
         return (new AbastecimentoResource(Abastecimento::create($data)))->response()->setStatusCode(201);
     }
 
+    public function update(Request $r, Abastecimento $abastecimento)
+    {
+        $data = $r->validate([
+            'litros' => 'required|numeric|min:0.001',
+            'valor_litro' => 'required|numeric|min:0.001',
+            'km_momento' => 'required|integer|min:0',
+        ]);
+
+        $abastecimento->update($data);
+
+        return new AbastecimentoResource($abastecimento->fresh(['veiculo', 'motorista']));
+    }
+
     public function destroy(Abastecimento $abastecimento)
     {
         $abastecimento->delete();

@@ -77,6 +77,28 @@ class ViagemController extends Controller
         return new ViagemResource($viagem->fresh());
     }
 
+    public function corrigir(Request $r, Viagem $viagem)
+    {
+        $data = $r->validate([
+            'km_saida' => 'required|integer|min:0',
+            'km_chegada' => 'nullable|integer|min:0',
+        ]);
+
+        if ($viagem->status !== 'concluida') {
+            unset($data['km_chegada']);
+        } elseif (! isset($data['km_chegada'])) {
+            return response()->json(['message' => 'Informe o KM de chegada.', 'errors' => ['km_chegada' => ['Informe o KM de chegada.']]], 422);
+        }
+
+        if (isset($data['km_chegada']) && $data['km_chegada'] < $data['km_saida']) {
+            return response()->json(['message' => 'KM de chegada menor que KM de saída.', 'errors' => ['km_chegada' => ['KM de chegada menor que KM de saída.']]], 422);
+        }
+
+        $viagem->update($data);
+
+        return new ViagemResource($viagem->fresh(['veiculo', 'motorista', 'colaboradores.unidade:id,nome']));
+    }
+
     public function chegada(Request $r, Viagem $viagem)
     {
         $data = $r->validate(['km_chegada' => 'required|integer|min:0', 'observacoes' => 'nullable|string']);

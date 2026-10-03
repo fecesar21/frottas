@@ -88,7 +88,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::patch('viagens/{viagem}/chegada', [ViagemController::class, 'chegada']);
     Route::post('viagens/{viagem}/pontos', [ViagemPontoController::class, 'store']);
     Route::get('viagens/{viagem}/pontos', [ViagemPontoController::class, 'index']);
-    Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store', 'update']);
+    Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store']);
 
     // Solicitações de Transporte
     Route::patch('solicitacoes/{solicitacao}/aceitar', [SolicitacaoController::class, 'aceitar'])->name('solicitacoes.aceitar');
@@ -102,7 +102,6 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     // Abastecimentos
     Route::get('abastecimentos/resumo', [AbastecimentoController::class, 'resumo']);
     Route::apiResource('abastecimentos', AbastecimentoController::class)->only(['index', 'show', 'store']);
-    Route::delete('abastecimentos/{abastecimento}', [AbastecimentoController::class, 'destroy']);
 
     // KM / Hodômetro
     Route::apiResource('km', KmController::class)->only(['index', 'store']);
@@ -163,5 +162,11 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
         Route::delete('unidades/{unidade}/ldap-config', [UnidadeLdapConfigController::class, 'destroy']);
         Route::post('unidades/{unidade}/ldap-config/testar', [UnidadeLdapConfigController::class, 'testar']);
         Route::post('colaboradores/sincronizar', [ColaboradorController::class, 'sincronizar']);
+
+        // Correção de lançamentos errados (KM da viagem, litros/valor do abastecimento)
+        Route::put('viagens/{viagem}', [ViagemController::class, 'update']);
+        Route::patch('viagens/{viagem}/correcao', [ViagemController::class, 'corrigir']);
+        Route::patch('abastecimentos/{abastecimento}', [AbastecimentoController::class, 'update']);
+        Route::delete('abastecimentos/{abastecimento}', [AbastecimentoController::class, 'destroy']);
     });
 });

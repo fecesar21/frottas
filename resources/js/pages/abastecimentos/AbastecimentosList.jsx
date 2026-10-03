@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 import { format } from 'date-fns'
 import * as abastecimentosApi from '../../api/abastecimentos'
 import Modal from '../../components/ui/Modal'
@@ -11,10 +11,54 @@ import { useAuth } from '../../contexts/AuthContext'
 const fmtBrl = (n) => Number(n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm') : '—'
 
+function CorrecaoAbastecimento({ abastecimento, onSuccess }) {
+  const [litros, setLitros] = useState(abastecimento.litros)
+  const [valorLitro, setValorLitro] = useState(abastecimento.valor_litro)
+  const [km, setKm] = useState(abastecimento.km_momento)
+
+  const salvar = useMutation({
+    mutationFn: () => abastecimentosApi.corrigir(abastecimento.id, {
+      litros: Number(litros), valor_litro: Number(valorLitro), km_momento: Number(km),
+    }),
+    onSuccess,
+  })
+
+  const erro = salvar.error?.response?.data
+  const msgErro = erro?.errors ? Object.values(erro.errors).flat()[0] : (erro?.message ?? erro?.error)
+  const campo = 'mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm'
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); salvar.mutate() }} className="space-y-4 text-sm">
+      <p className="text-gray-500">
+        {abastecimento.veiculo?.placa ?? '—'} · {fmtDt(abastecimento.abastecido_at)} · {abastecimento.motorista?.nome ?? '—'}
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label className="block"><span className="text-xs text-gray-500">Litros</span>
+          <input type="number" step="0.001" min="0.001" required value={litros} onChange={(e) => setLitros(e.target.value)} className={campo} />
+        </label>
+        <label className="block"><span className="text-xs text-gray-500">Valor por litro (R$)</span>
+          <input type="number" step="0.001" min="0.001" required value={valorLitro} onChange={(e) => setValorLitro(e.target.value)} className={campo} />
+        </label>
+        <label className="block"><span className="text-xs text-gray-500">KM no momento</span>
+          <input type="number" min="0" required value={km} onChange={(e) => setKm(e.target.value)} className={campo} />
+        </label>
+      </div>
+      <p className="text-gray-600">Novo total: <strong>{fmtBrl(Number(litros) * Number(valorLitro))}</strong></p>
+      {msgErro && <p className="text-xs text-red-600">{msgErro}</p>}
+      <div className="flex justify-end">
+        <button type="submit" disabled={salvar.isPending} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+          {salvar.isPending ? 'Salvando…' : 'Salvar correção'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
 export default function AbastecimentosList() {
-  const { isGestor } = useAuth()
+  const { isAdmin } = useAuth()
   const qc = useQueryClient()
   const [formOpen, setFormOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState(null)
 
   const { data: lista, isLoading } = useQuery({
     queryKey: ['abastecimentos'],
@@ -73,11 +117,18 @@ export default function AbastecimentosList() {
               <p>R$/L: <span className="text-gray-700">{fmtBrl(a.valor_litro)}</span></p>
               <p>KM: <span className="text-gray-700">{Number(a.km_momento).toLocaleString('pt-BR')}</span></p>
             </div>
-            {isGestor && (
+            <div className="flex gap-2">
+            {isAdmin && (
+              <button onClick={() => setEditTarget(a)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors w-fit">
+                <Pencil size={12} /> Corrigir
+              </button>
+            )}
+            {isAdmin && (
               <button onClick={() => excluir.mutate(a.id)} className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-200 rounded px-2 py-1 hover:bg-red-50 transition-colors w-fit">
                 <Trash2 size={12} /> Excluir
               </button>
             )}
+            </div>
           </div>
         ))}
         {(lista ?? []).length === 0 && (
@@ -107,8 +158,11 @@ export default function AbastecimentosList() {
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtBrl(a.valor_litro)}</td>
                 <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">{fmtBrl(a.valor_total)}</td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{Number(a.km_momento).toLocaleString('pt-BR')}</td>
-                <td className="px-4 py-3">
-                  {isGestor && (
+                <td className="px-4 py-3 whitespace-nowrap space-x-3">
+                  {isAdmin && (
+                    <button onClick={() => setEditTarget(a)} title="Corrigir lançamento" className="text-gray-400 hover:text-blue-600 transition-colors"><Pencil size={14} /></button>
+                  )}
+                  {isAdmin && (
                     <button onClick={() => excluir.mutate(a.id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
                   )}
                 </td>
@@ -123,6 +177,12 @@ export default function AbastecimentosList() {
 
       <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Novo abastecimento" size="lg">
         <AbastecimentoForm onSuccess={() => { setFormOpen(false); qc.invalidateQueries({ queryKey: ['abastecimentos'] }) }} />
+      </Modal>
+
+      <Modal open={!!editTarget} onClose={() => setEditTarget(null)} title="Corrigir abastecimento">
+        {editTarget && (
+          <CorrecaoAbastecimento abastecimento={editTarget} onSuccess={() => { setEditTarget(null); qc.invalidateQueries({ queryKey: ['abastecimentos'] }) }} />
+        )}
       </Modal>
     </div>
   )
