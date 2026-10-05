@@ -3,6 +3,7 @@
 namespace Tests\Feature\Relatorio;
 
 use App\Mail\ResumoOperacionalMail;
+use App\Models\Checkin;
 use App\Models\Motorista;
 use App\Models\Usuario;
 use App\Models\Veiculo;
@@ -78,6 +79,31 @@ class ResumoOperacionalTest extends TestCase
         $this->assertCount(2, $r['observacoes']);
         $this->assertStringContainsString('LUCAS', $r['observacoes'][0]);
         $this->assertStringContainsString('CGL2J92', $r['observacoes'][0]);
+    }
+
+    public function test_check_in_sem_check_out_ate_30min_apos_o_fim_vira_observacao(): void
+    {
+        $this->travelTo('2026-10-05 08:00');
+        $v = Veiculo::factory()->create(['placa' => 'RIN9A91']);
+        $m = Motorista::factory()->create(['nome' => 'DEMILSON']);
+        $outro = Motorista::factory()->create(['nome' => 'PONTUAL']);
+        $base = ['veiculo_id' => $v->id, 'km_saida' => 88719, 'turno' => 'noite'];
+
+        Checkin::factory()->create($base + ['motorista_id' => $m->id, 'checkin_at' => '2026-10-04 19:51',
+            'checkout_at' => null, 'km_retorno' => null, 'status' => 'ativo']);
+        Checkin::factory()->create($base + ['motorista_id' => $outro->id, 'checkin_at' => '2026-10-04 19:10',
+            'checkout_at' => '2026-10-05 07:20', 'km_retorno' => 88720, 'status' => 'encerrado']);
+        // Check-in adiantado do plantão seguinte, ainda ativo: não é pendência.
+        Checkin::factory()->create($base + ['motorista_id' => $outro->id, 'checkin_at' => '2026-10-05 06:39',
+            'checkout_at' => null, 'km_retorno' => null, 'status' => 'ativo']);
+
+        $r = app(ResumoOperacionalService::class)
+            ->gerar(Carbon::parse('2026-10-04 19:00'), Carbon::parse('2026-10-05 06:59:59'));
+
+        $this->assertCount(1, $r['observacoes']);
+        $this->assertStringContainsString('DEMILSON', $r['observacoes'][0]);
+        $this->assertStringContainsString('RIN9A91', $r['observacoes'][0]);
+        $this->assertStringContainsString('check-out', $r['observacoes'][0]);
     }
 
     public function test_plantao_diurno_enviado_as_20h_para_admins_e_gestores_com_email(): void

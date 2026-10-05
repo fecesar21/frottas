@@ -47,6 +47,26 @@ class ResumoOperacionalService
             Carbon::parse($vg->saida_at)->format('d/m/Y H:i'), self::MARGEM_ENCERRAMENTO_MIN,
         ))->values()->all();
 
+        // Check-ins vigentes no período sem check-out até a margem: o veículo
+        // fica preso ao motorista e indisponível para o plantão seguinte.
+        // Check-in feito na margem antes do fim é adiantamento do próximo plantão.
+        $semCheckout = DB::table('checkins as c')
+            ->join('veiculos as v', 'v.id', '=', 'c.veiculo_id')
+            ->join('motoristas as m', 'm.id', '=', 'c.motorista_id')
+            ->where('c.checkin_at', '<', $fim->copy()->subMinutes(self::MARGEM_ENCERRAMENTO_MIN))
+            ->where(fn ($q) => $q->whereNull('c.checkout_at')->orWhere('c.checkout_at', '>', $limiteEncerramento))
+            ->orderBy('c.checkin_at')
+            ->select('m.nome', 'v.placa', 'v.modelo', 'c.checkin_at')
+            ->get();
+
+        foreach ($semCheckout as $c) {
+            $observacoes[] = sprintf(
+                'O motorista %s não realizou o check-out do veículo %s (%s), com check-in em %s, até %d minutos após o fim do período; o veículo ficou indisponível para o plantão seguinte.',
+                $c->nome, $c->placa, $c->modelo,
+                Carbon::parse($c->checkin_at)->format('d/m/Y H:i'), self::MARGEM_ENCERRAMENTO_MIN,
+            );
+        }
+
         $kmPorVeiculo = $viagens->groupBy('veiculo_id')->map(fn ($g) => [
             'placa' => $g->first()->placa,
             'modelo' => $g->first()->modelo,
