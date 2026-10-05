@@ -4,6 +4,7 @@ namespace Tests\Feature\Correcao;
 
 use App\Models\Abastecimento;
 use App\Models\AuditoriaCorrecao;
+use App\Models\Checkin;
 use App\Models\Motorista;
 use App\Models\Veiculo;
 use App\Models\Viagem;
@@ -141,5 +142,66 @@ class CorrecaoLancamentoApiTest extends TestCase
     {
         $this->loginGestor();
         $this->getJson('/api/auditoria-correcoes')->assertForbidden();
+    }
+
+    private function checkin(array $attrs = []): Checkin
+    {
+        return Checkin::create(array_merge([
+            'veiculo_id' => Veiculo::factory()->create()->id,
+            'motorista_id' => Motorista::factory()->create()->id,
+            'turno' => 'dia',
+            'km_saida' => 1000,
+            'km_retorno' => 1000,
+            'km_retorno_esperado' => 1000,
+            'divergencia_km' => 0,
+            'checkin_at' => now()->subHours(2),
+            'checkout_at' => now(),
+            'status' => 'encerrado',
+        ], $attrs));
+    }
+
+    public function test_admin_corrige_km_do_checkin_e_recalcula_divergencia(): void
+    {
+        $this->loginAdmin();
+        $c = $this->checkin(['km_retorno' => 1100, 'km_retorno_esperado' => 1000, 'divergencia_km' => 100, 'justificativa_divergencia_km' => 'erro']);
+
+        $this->patchJson("/api/checkins/{$c->id}/correcao", ['km_saida' => 1100, 'km_retorno' => 1100])
+            ->assertOk()
+            ->assertJsonPath('data.divergencia_km', 0);
+
+        $this->assertDatabaseHas('checkins', ['id' => $c->id, 'km_saida' => 1100, 'km_retorno' => 1100, 'km_retorno_esperado' => 1100, 'justificativa_divergencia_km' => null]);
+
+        $log = AuditoriaCorrecao::sole();
+        $this->assertSame('checkin', $log->entidade);
+        $this->assertSame(['km_saida' => 1000], $log->antes);
+        $this->assertSame(['km_saida' => 1100], $log->depois);
+    }
+
+    public function test_correcao_de_checkin_rejeita_retorno_menor_que_saida(): void
+    {
+        $this->loginAdmin();
+        $c = $this->checkin();
+
+        $this->patchJson("/api/checkins/{$c->id}/correcao", ['km_saida' => 1200, 'km_retorno' => 1100])->assertStatus(422);
+    }
+
+    public function test_checkin_ativo_so_corrige_km_saida(): void
+    {
+        $this->loginAdmin();
+        $c = $this->checkin(['status' => 'ativo', 'km_retorno' => null, 'km_retorno_esperado' => null, 'divergencia_km' => null, 'checkout_at' => null]);
+
+        $this->patchJson("/api/checkins/{$c->id}/correcao", ['km_saida' => 990, 'km_retorno' => 2000])->assertOk();
+
+        $this->assertDatabaseHas('checkins', ['id' => $c->id, 'km_saida' => 990, 'km_retorno' => null]);
+    }
+
+    public function test_nao_admin_nao_corrige_checkin(): void
+    {
+        $c = $this->checkin();
+
+        foreach (['loginGestor', 'loginOperador'] as $login) {
+            $this->$login();
+            $this->patchJson("/api/checkins/{$c->id}/correcao", ['km_saida' => 1, 'km_retorno' => 2])->assertForbidden();
+        }
     }
 }

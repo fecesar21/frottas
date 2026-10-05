@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, LogOut, Wrench } from 'lucide-react'
+import { Plus, LogOut, Wrench, Pencil } from 'lucide-react'
 import { format } from 'date-fns'
 import * as checkinsApi from '../../api/checkins'
 import { useAuth } from '../../contexts/AuthContext'
@@ -9,6 +9,7 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import CheckinForm from './CheckinForm'
+import HistoricoCorrecoes from '../../components/shared/HistoricoCorrecoes'
 import ManutencaoModal from '../../components/manutencoes/ManutencaoModal'
 import EncerrarManutencaoModal from '../../components/manutencoes/EncerrarManutencaoModal'
 import { rotuloTipo, tempoDecorrido } from '../../components/manutencoes/tipos'
@@ -29,9 +30,61 @@ const KmRetorno = ({ c }) => (
   </>
 )
 
+// Correção de KM lançado errado pelo motorista — somente admin.
+function CorrecaoKmCheckin({ checkin, onClose }) {
+  const qc = useQueryClient()
+  const encerrado = checkin.status !== 'ativo'
+  const [kmSaida, setKmSaida] = useState(checkin.km_saida ?? '')
+  const [kmRetorno, setKmRetorno] = useState(checkin.km_retorno ?? '')
+
+  const salvar = useMutation({
+    mutationFn: () => checkinsApi.corrigir(checkin.id, {
+      km_saida: Number(kmSaida),
+      ...(encerrado && kmRetorno !== '' ? { km_retorno: Number(kmRetorno) } : {}),
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['checkins'] })
+      qc.invalidateQueries({ queryKey: ['auditoria-correcoes'] })
+      onClose()
+    },
+  })
+
+  const erro = salvar.error?.response?.data
+  const msgErro = erro?.errors ? Object.values(erro.errors).flat()[0] : (erro?.message ?? erro?.error)
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); salvar.mutate() }} className="space-y-4">
+      <p className="text-sm text-gray-600">Motorista: <strong>{checkin.motorista?.nome}</strong> — Veículo: <strong>{checkin.veiculo?.placa}</strong></p>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">KM de saída</span>
+          <input type="number" min="0" required value={kmSaida} onChange={(e) => setKmSaida(e.target.value)}
+            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </label>
+        {encerrado && (
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">KM de retorno</span>
+            <input type="number" min="0" required={checkin.km_retorno != null} value={kmRetorno} onChange={(e) => setKmRetorno(e.target.value)}
+              className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </label>
+        )}
+      </div>
+      {encerrado && <p className="text-xs text-gray-500">O KM esperado e a divergência são recalculados ao salvar.</p>}
+      {msgErro && <Alert type="error" message={msgErro} />}
+      <HistoricoCorrecoes entidade="checkin" entidadeId={checkin.id} />
+      <div className="flex justify-end gap-2">
+        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancelar</button>
+        <button type="submit" disabled={salvar.isPending} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-60">
+          {salvar.isPending ? 'Salvando…' : 'Salvar correção'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
 export default function CheckinsList() {
   const qc = useQueryClient()
-  const { isOperador, checkinAtivo, checkinsAtivos, limiteCheckins, removerCheckinAtivo } = useAuth()
+  const { isOperador, isAdmin, checkinAtivo, checkinsAtivos, limiteCheckins, removerCheckinAtivo } = useAuth()
   const [statusFilter, setStatusFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [checkoutTarget, setCheckoutTarget] = useState(null)
@@ -48,6 +101,14 @@ export default function CheckinsList() {
   const [error, setError] = useState('')
   const [manutencaoVeiculo, setManutencaoVeiculo] = useState(null)
   const [encerrarVeiculo, setEncerrarVeiculo] = useState(null)
+  const [correcaoTarget, setCorrecaoTarget] = useState(null)
+
+  const botaoCorrecao = (c) => isAdmin && (
+    <button onClick={() => setCorrecaoTarget(c)} title="Corrigir KM lançado"
+      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors w-fit whitespace-nowrap">
+      <Pencil size={12} /> Corrigir KM
+    </button>
+  )
 
   // Sem viagem desde o check-in o KM de retorno é fixo (km_retorno_fixo).
   const abrirCheckout = (c) => {
@@ -144,13 +205,16 @@ export default function CheckinsList() {
               <p>Check-out: <span className="text-gray-700">{fmtDt(c.checkout_at)}</span></p>
             </div>
             {avisoManutencao(c)}
-            {c.status === 'ativo' && (
+            {(c.status === 'ativo' || isAdmin) && (
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => abrirCheckout(c)}
-                  className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
-                  <LogOut size={12} /> Checkout
-                </button>
+                {c.status === 'ativo' && (
+                  <button onClick={() => abrirCheckout(c)}
+                    className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
+                    <LogOut size={12} /> Checkout
+                  </button>
+                )}
                 {acaoManutencao(c)}
+                {botaoCorrecao(c)}
               </div>
             )}
           </div>
@@ -189,15 +253,16 @@ export default function CheckinsList() {
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(c.checkout_at)}</td>
                 <td className="px-4 py-3"><Badge value={c.status} /></td>
                 <td className="px-4 py-3">
-                  {c.status === 'ativo' && (
-                    <div className="flex gap-2">
+                  <div className="flex gap-2">
+                    {c.status === 'ativo' && (
                       <button onClick={() => abrirCheckout(c)}
                         className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors">
                         <LogOut size={12} /> Checkout
                       </button>
-                      {acaoManutencao(c)}
-                    </div>
-                  )}
+                    )}
+                    {acaoManutencao(c)}
+                    {botaoCorrecao(c)}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -218,6 +283,10 @@ export default function CheckinsList() {
 
       <ManutencaoModal veiculo={manutencaoVeiculo} onClose={() => setManutencaoVeiculo(null)} />
       <EncerrarManutencaoModal veiculo={encerrarVeiculo} onClose={() => setEncerrarVeiculo(null)} />
+
+      <Modal open={!!correcaoTarget} onClose={() => setCorrecaoTarget(null)} title="Corrigir KM (admin)">
+        {correcaoTarget && <CorrecaoKmCheckin key={correcaoTarget.id} checkin={correcaoTarget} onClose={() => setCorrecaoTarget(null)} />}
+      </Modal>
 
       <Modal open={!!checkoutTarget} onClose={() => setCheckoutTarget(null)} title="Encerrar check-in">
         <form onSubmit={(e) => { e.preventDefault(); doCheckout.mutate({ id: checkoutTarget.id, data: checkoutForm }) }} className="space-y-4">

@@ -164,9 +164,10 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
         Route::post('unidades/{unidade}/ldap-config/testar', [UnidadeLdapConfigController::class, 'testar']);
         Route::post('colaboradores/sincronizar', [ColaboradorController::class, 'sincronizar']);
 
-        // Correção de lançamentos errados (KM da viagem, litros/valor do abastecimento)
+        // Correção de lançamentos errados (KM da viagem e do check-in, litros/valor do abastecimento)
         Route::put('viagens/{viagem}', [ViagemController::class, 'update']);
         Route::patch('viagens/{viagem}/correcao', [ViagemController::class, 'corrigir']);
+        Route::patch('checkins/{checkin}/correcao', [CheckinController::class, 'corrigir']);
         Route::patch('abastecimentos/{abastecimento}', [AbastecimentoController::class, 'update']);
         Route::delete('abastecimentos/{abastecimento}', [AbastecimentoController::class, 'destroy']);
         Route::get('auditoria-correcoes', [AuditoriaCorrecaoController::class, 'index']);

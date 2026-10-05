@@ -5,6 +5,7 @@ import * as auditoriaApi from '../../api/auditoria'
 const ROTULOS = {
   km_saida: 'KM saída',
   km_chegada: 'KM chegada',
+  km_retorno: 'KM retorno',
   litros: 'Litros',
   valor_litro: 'R$/L',
   km_momento: 'KM',

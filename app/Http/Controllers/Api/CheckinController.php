@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Checkin\CheckoutRequest;
 use App\Http\Requests\Checkin\StoreCheckinRequest;
 use App\Http\Resources\CheckinResource;
+use App\Models\AuditoriaCorrecao;
 use App\Models\Checkin;
 use App\Models\Solicitacao;
 use App\Models\Viagem;
@@ -57,6 +58,49 @@ class CheckinController extends Controller
         $checkin = $this->service->store($data);
 
         return (new CheckinResource($checkin))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Correção de KM lançado errado (somente admin). Em check-in encerrado o
+     * KM esperado e a divergência são recalculados com o novo KM de saída.
+     */
+    public function corrigir(Request $r, Checkin $checkin)
+    {
+        $data = $r->validate([
+            'km_saida' => 'required|integer|min:0',
+            'km_retorno' => 'nullable|integer|min:0',
+        ]);
+
+        // Check-in ativo ainda não tem retorno; encerrado sem KM de retorno continua sem.
+        if ($checkin->status === 'ativo' || ! isset($data['km_retorno'])) {
+            unset($data['km_retorno']);
+        }
+
+        if (isset($data['km_retorno']) && $data['km_retorno'] < $data['km_saida']) {
+            throw ValidationException::withMessages(['km_retorno' => 'KM de retorno menor que KM de saída.']);
+        }
+
+        $antes = $checkin->only(array_keys($data));
+
+        DB::transaction(function () use ($checkin, $data) {
+            $checkin->fill($data);
+
+            if (isset($data['km_retorno'])) {
+                $esperado = $checkin->kmRetornoEsperado();
+                $divergencia = (int) $data['km_retorno'] - $esperado;
+                $checkin->km_retorno_esperado = $esperado;
+                $checkin->divergencia_km = $divergencia;
+                if (! $divergencia) {
+                    $checkin->justificativa_divergencia_km = null;
+                }
+            }
+
+            $checkin->save();
+        });
+
+        AuditoriaCorrecao::registrar($checkin, 'checkin', 'correcao', $antes, $checkin->only(array_keys($data)));
+
+        return new CheckinResource($checkin->fresh(['motorista', 'veiculo']));
     }
 
     private function encerrarViagemNoCheckout(Viagem $viagem, ?int $kmChegada): void

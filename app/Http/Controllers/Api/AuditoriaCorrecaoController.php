@@ -11,7 +11,7 @@ class AuditoriaCorrecaoController extends Controller
     public function index(Request $r)
     {
         $r->validate([
-            'entidade' => 'nullable|in:viagem,abastecimento',
+            'entidade' => 'nullable|in:viagem,abastecimento,checkin',
             'entidade_id' => 'nullable|uuid',
         ]);
 
