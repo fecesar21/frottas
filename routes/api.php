@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CheckinController;
 use App\Http\Controllers\Api\ChecklistVeiculoController;
 use App\Http\Controllers\Api\ColaboradorController;
 use App\Http\Controllers\Api\EscalaController;
+use App\Http\Controllers\Api\FrotaStatusController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\LocalidadeController;
 use App\Http\Controllers\Api\ManutencaoController;
@@ -49,6 +50,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->group(function () {
 
     // Veículos
+    Route::get('frota/status', [FrotaStatusController::class, 'status'])->name('frota.status');
     Route::get('veiculos/posicoes', [VeiculoController::class, 'posicoes']);
     Route::post('veiculos/{veiculo}/manutencao', [ManutencaoController::class, 'iniciar']);
     Route::post('veiculos/{veiculo}/manutencao/encerrar', [ManutencaoController::class, 'encerrar']);

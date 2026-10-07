@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
-import { Truck, ClipboardPlus, ClipboardList, LogOut, Menu, X } from 'lucide-react'
+import { Truck, ClipboardPlus, ClipboardList, LogOut, Menu, X, Activity } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 export function PrivateRoute() {
@@ -14,10 +14,11 @@ const items = [
   { to: '/minhas-solicitacoes', label: 'Minhas Solicitações', icon: ClipboardList },
 ]
 
-export default function Layout({ children }) {
+export default function Layout({ children, lateral }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [lateralAberta, setLateralAberta] = useState(false)
 
   const handleLogout = async () => {
     await logout()
@@ -106,7 +107,43 @@ export default function Layout({ children }) {
           <span className="font-semibold text-sm text-gray-800">Health Drive</span>
         </div>
 
-        <main className="flex-1 p-6 md:p-8 max-w-3xl mx-auto w-full">{children}</main>
+        {lateral ? (
+          <div className="flex-1 p-6 md:p-8 w-full max-w-6xl mx-auto lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8 lg:items-start">
+            <main className="max-w-3xl w-full">{children}</main>
+            <aside className="hidden lg:block sticky top-8">{lateral}</aside>
+          </div>
+        ) : (
+          <main className="flex-1 p-6 md:p-8 max-w-3xl mx-auto w-full">{children}</main>
+        )}
+
+        {lateral && (
+          <>
+            <button
+              type="button"
+              onClick={() => setLateralAberta(true)}
+              className="lg:hidden fixed bottom-5 right-5 z-20 flex items-center gap-2 bg-navy-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg"
+            >
+              <Activity size={16} />
+              Ver frota
+            </button>
+            {lateralAberta && (
+              <div className="lg:hidden fixed inset-0 z-40 flex justify-end">
+                <div className="absolute inset-0 bg-navy-950/60" onClick={() => setLateralAberta(false)} />
+                <div className="relative w-full max-w-sm h-full bg-gray-50 p-4 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => setLateralAberta(false)}
+                    aria-label="Fechar"
+                    className="mb-3 text-gray-500 hover:text-gray-800 p-1 rounded-lg hover:bg-gray-200"
+                  >
+                    <X size={18} />
+                  </button>
+                  {lateral}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

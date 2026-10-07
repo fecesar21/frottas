@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import * as solicitacoesApi from '../api/solicitacoes'
 import * as pontosViagemApi from '../api/pontosViagem'
 import Layout from '../components/Layout'
+import PainelFrota from '../components/PainelFrota'
 import { opcoesMotivo } from '../../js/utils/solicitacao'
 
 const MOTIVOS = opcoesMotivo(['transferencia_paciente', 'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'tfd'])
@@ -67,7 +68,7 @@ export default function NovaSolicitacao() {
   const precisaFornecedor = form.motivo === 'buscar_material_fornecedor'
 
   return (
-    <Layout>
+    <Layout lateral={<PainelFrota />}>
       <h1 className="text-xl font-bold text-gray-900 mb-1">Solicitação de Transporte</h1>
       <p className="text-sm text-gray-500 mb-6">Preencha os dados abaixo para solicitar um transporte.</p>
 

@@ -21,6 +21,7 @@ class RestringirSolicitante
         'unidades.index',
         'unidades.show',
         'pontos-viagem.index',
+        'frota.status',
         'notificacoes.index',
         'notificacoes.nao-lidas',
         'notificacoes.marcar-lidas',
