@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Checkin;
 
+use App\Models\Motorista;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCheckinRequest extends FormRequest
@@ -28,6 +29,12 @@ class StoreCheckinRequest extends FormRequest
         $user = auth()->user();
         if ($user?->perfil === 'operador' && $user->motorista_id) {
             $this->merge(['motorista_id' => $user->motorista_id]);
+        }
+
+        // O turno vem do cadastro do motorista: trocar de turno exigiria refazer o checklist.
+        $turnoPadrao = Motorista::whereKey($this->input('motorista_id'))->value('turno_padrao');
+        if ($turnoPadrao) {
+            $this->merge(['turno' => $turnoPadrao]);
         }
     }
 }

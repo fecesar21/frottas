@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as checkinsApi from '../../api/checkins'
+import * as motoristasApi from '../../api/motoristas'
 import { useAuth } from '../../contexts/AuthContext'
 import MotoristaSelect from '../../components/shared/MotoristaSelect'
 import VeiculoSelect from '../../components/shared/VeiculoSelect'
@@ -19,6 +20,18 @@ export default function CheckinForm({ onSuccess }) {
   })
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
+
+  // Turno fixo pelo cadastro do motorista (trocar de turno exigiria refazer o checklist)
+  const { data: motorista } = useQuery({
+    queryKey: ['motoristas', form.motorista_id],
+    queryFn: () => motoristasApi.buscar(form.motorista_id).then(r => r.data.data ?? r.data),
+    enabled: !!form.motorista_id,
+  })
+  const turnoPadrao = form.motorista_id ? motorista?.turno_padrao : null
+
+  useEffect(() => {
+    if (turnoPadrao) setForm(f => ({ ...f, turno: turnoPadrao }))
+  }, [turnoPadrao])
 
   const criar = useMutation({
     mutationFn: (data) => checkinsApi.criar(data),
@@ -67,10 +80,12 @@ export default function CheckinForm({ onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Turno *</label>
         <select value={form.turno} onChange={e => setForm(f => ({ ...f, turno: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          disabled={!!turnoPadrao}
+          className="w-full disabled:bg-gray-50 disabled:text-gray-700 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="dia">Dia</option>
           <option value="noite">Noite</option>
         </select>
+        {turnoPadrao && <p className="text-gray-500 text-xs mt-1">Definido pelo cadastro do motorista.</p>}
       </div>
 
       <div>

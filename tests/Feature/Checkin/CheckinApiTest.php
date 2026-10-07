@@ -29,6 +29,20 @@ class CheckinApiTest extends TestCase
         $this->assertDatabaseHas('veiculos', ['id' => $veiculo->id, 'status' => 'em_uso']);
     }
 
+    public function test_turno_vem_do_cadastro_do_motorista(): void
+    {
+        $this->loginAdmin();
+        $motorista = Motorista::factory()->create(['turno_padrao' => 'noite']);
+        $veiculo = Veiculo::factory()->create(['km_atual' => 1000, 'status' => 'disponivel']);
+
+        $this->postJson('/api/checkins', [
+            'motorista_id' => $motorista->id,
+            'veiculo_id' => $veiculo->id,
+            'turno' => 'dia',
+            'km_saida' => 1000,
+        ])->assertCreated()->assertJsonPath('data.turno', 'noite');
+    }
+
     public function test_segundo_checkin_do_mesmo_motorista_retorna_erro(): void
     {
         $this->loginAdmin();
