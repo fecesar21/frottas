@@ -4,7 +4,8 @@
  * Roteamento das notificações de novas solicitações para motoristas em
  * atividade (check-in ativo). Os textos são comparados sem diferenciar
  * maiúsculas/acentos e por "contém" (nome da unidade / modelo do veículo).
- * Motivos ausentes deste mapa (ex.: tfd) notificam apenas admin/gestor.
+ * Motivos ausentes deste mapa: de sistema (ex.: tfd) notificam apenas admin/gestor;
+ * cadastrados pela tela vão aos motoristas em veículo compatível.
  */
 return [
     'roteamento_motoristas' => [

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Models\Checkin;
+use App\Models\MotivoViagem;
 use App\Models\Motorista;
 use App\Models\Solicitacao;
 use App\Models\Unidade;
@@ -11,6 +12,7 @@ use App\Models\Veiculo;
 use App\Models\Viagem;
 use App\Notifications\NovaSolicitacaoDisponivel;
 use App\Notifications\NovaSolicitacaoTransporte;
+use App\Services\RoteamentoSolicitacaoService;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -175,5 +177,49 @@ class SolicitacaoRoteamentoMotoristaTest extends TestCase
             ->patchJson("/api/solicitacoes/{$solicitacao->id}/assumir")
             ->assertOk()
             ->assertJsonPath('data.status', 'aguardando_finalizacao_trajeto');
+    }
+
+    public function test_motivo_novo_administrativo_avisa_so_motorista_em_veiculo_administrativo(): void
+    {
+        MotivoViagem::factory()->create(['codigo' => 'visita_tecnica', 'tipo_veiculo' => 'administrativo', 'disponivel_solicitacao' => true]);
+        $a = $this->motoristaAtivo('STRADA');
+        $b = $this->motoristaAtivo('AMBULÂNCIA UPA');
+        $solicitacao = Solicitacao::factory()->create(['motivo' => 'visita_tecnica', 'status' => 'aberto']);
+
+        $ids = app(RoteamentoSolicitacaoService::class)->motoristasElegiveis($solicitacao)->pluck('id');
+
+        $this->assertEquals([$a->motorista_id], $ids->all());
+        $this->assertTrue(app(RoteamentoSolicitacaoService::class)->podeAssumir($solicitacao, $a->motorista));
+        $this->assertFalse(app(RoteamentoSolicitacaoService::class)->podeAssumir($solicitacao, $b->motorista));
+    }
+
+    public function test_motivo_novo_ambos_avisa_os_dois(): void
+    {
+        MotivoViagem::factory()->create(['codigo' => 'apoio_geral', 'tipo_veiculo' => 'ambos', 'disponivel_solicitacao' => true]);
+        $a = $this->motoristaAtivo('STRADA');
+        $b = $this->motoristaAtivo('AMBULÂNCIA UPA');
+        $solicitacao = Solicitacao::factory()->create(['motivo' => 'apoio_geral', 'status' => 'aberto']);
+
+        $ids = app(RoteamentoSolicitacaoService::class)->motoristasElegiveis($solicitacao)->pluck('id');
+
+        $this->assertEqualsCanonicalizing([$a->motorista_id, $b->motorista_id], $ids->all());
+    }
+
+    public function test_motivo_novo_nao_avisa_motorista_com_veiculo_em_manutencao(): void
+    {
+        MotivoViagem::factory()->create(['codigo' => 'apoio_geral', 'tipo_veiculo' => 'ambos', 'disponivel_solicitacao' => true]);
+        $this->motoristaAtivo('STRADA');
+        Veiculo::query()->update(['status' => 'manutencao']);
+        $solicitacao = Solicitacao::factory()->create(['motivo' => 'apoio_geral', 'status' => 'aberto']);
+
+        $this->assertCount(0, app(RoteamentoSolicitacaoService::class)->motoristasElegiveis($solicitacao));
+    }
+
+    public function test_tfd_continua_sem_motoristas(): void
+    {
+        $this->motoristaAtivo('COROLLA');
+        $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
+
+        $this->assertCount(0, app(RoteamentoSolicitacaoService::class)->motoristasElegiveis($solicitacao));
     }
 }

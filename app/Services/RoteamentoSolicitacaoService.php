@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Checkin;
+use App\Models\MotivoViagem;
 use App\Models\Motorista;
 use App\Models\Solicitacao;
 use App\Models\Unidade;
@@ -55,13 +56,21 @@ class RoteamentoSolicitacaoService
     }
 
     /**
-     * @return array{modelos: array<int, string>, unidade_id: ?string}|null
+     * Regra de roteamento da solicitação. Motivos do mapa de config usam modelos/unidade;
+     * motivos cadastrados pela tela (não-sistema) usam o `motivo` e seu tipo de veículo.
+     *
+     * @return array{modelos: array<int, string>, unidade_id: ?string, motivo?: MotivoViagem}|null
      */
     private function regra(Solicitacao $solicitacao): ?array
     {
         $config = config("solicitacao.roteamento_motoristas.{$solicitacao->motivo}");
         if (! $config) {
-            return null;
+            // Motivo cadastrado pela tela: avisa motoristas em veículo compatível com o tipo.
+            $motivo = MotivoViagem::porCodigo($solicitacao->motivo);
+
+            return ($motivo && ! $motivo->sistema)
+                ? ['motivo' => $motivo, 'modelos' => [], 'unidade_id' => null]
+                : null;
         }
 
         if (isset($config['modelos'])) {
@@ -91,6 +100,11 @@ class RoteamentoSolicitacaoService
     {
         if (! $veiculo || $veiculo->emManutencao()) {
             return false;
+        }
+
+        // Motivo cadastrado: decide pelo tipo de veículo (administrativo/ambulância/ambos).
+        if (isset($regra['motivo'])) {
+            return $regra['motivo']->permiteVeiculo($veiculo);
         }
 
         $modeloOk = collect($regra['modelos'])->contains(fn ($m) => $this->contem($veiculo->modelo, $m));
