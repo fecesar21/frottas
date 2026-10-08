@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Models\MotivoViagem;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -19,6 +20,8 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         Cache::flush();
+        // Cache estático de motivos poderia vazar entre testes (o banco é resetado).
+        MotivoViagem::limparCache();
     }
 
     protected function tearDown(): void
