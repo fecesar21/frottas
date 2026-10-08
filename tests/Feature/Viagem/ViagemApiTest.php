@@ -220,6 +220,7 @@ class ViagemApiTest extends TestCase
 
         $this->postJson('/api/viagens', $payload($strada, 'tfd'))->assertJsonValidationErrors(['motivo_viagem']);
         $this->postJson('/api/viagens', $payload($ambulancia, 'alimentacao'))->assertJsonValidationErrors(['motivo_viagem']);
+        $this->postJson('/api/viagens', $payload($ambulancia, 'servicos_administrativos'))->assertJsonValidationErrors(['motivo_viagem']);
         $this->postJson('/api/viagens', $payload($strada, 'alimentacao'))->assertCreated();
     }
 

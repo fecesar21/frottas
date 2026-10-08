@@ -19,7 +19,7 @@ class UpdateViagemRequest extends FormRequest
             'motorista_id' => 'sometimes|uuid|exists:motoristas,id',
             'origem' => 'sometimes|string|max:150',
             'destino' => 'sometimes|string|max:150',
-            'motivo_viagem' => 'sometimes|in:transferencia_paciente,buscar_medico,material_outro_hospital,transporte_colaborador,buscar_material_fornecedor,tfd,alimentacao',
+            'motivo_viagem' => 'sometimes|in:transferencia_paciente,buscar_medico,material_outro_hospital,transporte_colaborador,buscar_material_fornecedor,tfd,alimentacao,servicos_administrativos',
             'numero_atendimento' => 'required_if:motivo_viagem,transferencia_paciente|nullable|integer|min:100000|max:999999',
             'km_saida' => 'sometimes|integer|min:0',
             'km_chegada' => 'nullable|integer|min:0',

@@ -42,7 +42,7 @@ class Veiculo extends Model
     public const MOTIVOS_SOMENTE_AMBULANCIA = ['transferencia_paciente', 'tfd'];
 
     public const MOTIVOS_SOMENTE_ADMINISTRATIVO = [
-        'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'alimentacao',
+        'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'alimentacao', 'servicos_administrativos',
     ];
 
     public function permiteMotivoViagem(?string $motivo): bool

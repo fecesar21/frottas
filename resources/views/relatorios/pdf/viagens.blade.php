@@ -17,6 +17,7 @@
             'buscar_material_fornecedor' => 'Buscar materiais em fornecedor',
             'tfd' => 'TFD',
             'alimentacao' => 'Alimentação (Levar/Buscar)',
+            'servicos_administrativos' => 'Serviços Administrativos Diversos',
         ];
     @endphp
 

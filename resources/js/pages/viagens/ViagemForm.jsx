@@ -14,7 +14,7 @@ const MOTIVOS = opcoesMotivo()
 
 // Motivos exclusivos de cada tipo de veículo (mesma regra de Veiculo::ehAmbulancia()).
 const SOMENTE_AMBULANCIA = ['transferencia_paciente', 'tfd']
-const SOMENTE_ADMINISTRATIVO = ['buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'alimentacao']
+const SOMENTE_ADMINISTRATIVO = ['buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'alimentacao', 'servicos_administrativos']
 
 const ehAmbulancia = (veiculo) =>
   (veiculo?.modelo ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().includes('AMBULANCIA')

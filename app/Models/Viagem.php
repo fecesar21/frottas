@@ -38,6 +38,7 @@ class Viagem extends Model
         'buscar_material_fornecedor' => 'Buscar Materiais em Fornecedor',
         'tfd' => 'TFD',
         'alimentacao' => 'Alimentação (Levar/Buscar)',
+        'servicos_administrativos' => 'Serviços Administrativos Diversos',
     ];
 
     public static function rotuloMotivo(?string $motivo): string

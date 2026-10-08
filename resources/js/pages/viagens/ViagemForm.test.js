@@ -12,9 +12,10 @@ describe('motivosDoVeiculo', () => {
     expect(v).not.toContain('transferencia_paciente')
     expect(v).not.toContain('tfd')
     expect(v).toContain('alimentacao')
+    expect(v).toContain('servicos_administrativos')
   })
   it('sem veículo mostra todos', () => {
-    expect(valores(null)).toHaveLength(7)
+    expect(valores(null)).toHaveLength(8)
   })
 })
 

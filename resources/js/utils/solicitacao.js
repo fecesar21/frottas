@@ -6,6 +6,7 @@ export const MOTIVOS_SOLICITACAO = {
   material_outro_hospital: 'Levar Material em Outro Hospital',
   tfd: 'TFD',
   transferencia_paciente: 'Transferência de Paciente',
+  servicos_administrativos: 'Serviços Administrativos Diversos',
   transporte_colaborador: 'Transporte de Colaborador(es)',
 }
 
