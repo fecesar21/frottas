@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\FrotaStatusController;
 use App\Http\Controllers\Api\KmController;
 use App\Http\Controllers\Api\LocalidadeController;
 use App\Http\Controllers\Api\ManutencaoController;
+use App\Http\Controllers\Api\MotivoViagemController;
 use App\Http\Controllers\Api\MotoristaController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
@@ -146,6 +147,9 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::patch('localidades/{localidade}', [LocalidadeController::class, 'update']);
     Route::delete('localidades/{localidade}', [LocalidadeController::class, 'destroy']);
 
+    // Motivos de viagem (leitura liberada; escrita só admin, abaixo)
+    Route::get('motivos-viagem', [MotivoViagemController::class, 'index'])->name('motivos-viagem.index');
+
     // Pontos de Viagem (agregador de Unidades e Localidades)
     Route::get('pontos-viagem', [PontoViagemController::class, 'index'])->name('pontos-viagem.index');
 
@@ -157,6 +161,10 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
 
     // Usuários e configurações — somente admin
     Route::middleware('admin')->group(function () {
+        Route::post('motivos-viagem', [MotivoViagemController::class, 'store']);
+        Route::put('motivos-viagem/{motivoViagem}', [MotivoViagemController::class, 'update']);
+        Route::delete('motivos-viagem/{motivoViagem}', [MotivoViagemController::class, 'destroy']);
+
         Route::apiResource('usuarios', UsuarioController::class)
             ->only(['index', 'store', 'update', 'destroy']);
 
