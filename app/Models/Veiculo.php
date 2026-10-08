@@ -38,20 +38,6 @@ class Veiculo extends Model
         return str_contains(mb_strtoupper(Str::ascii((string) $this->modelo)), 'AMBULANCIA');
     }
 
-    /** Motivos de viagem exclusivos de cada tipo de veículo. */
-    public const MOTIVOS_SOMENTE_AMBULANCIA = ['transferencia_paciente', 'tfd'];
-
-    public const MOTIVOS_SOMENTE_ADMINISTRATIVO = [
-        'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'alimentacao', 'servicos_administrativos',
-    ];
-
-    public function permiteMotivoViagem(?string $motivo): bool
-    {
-        $excluidos = $this->ehAmbulancia() ? self::MOTIVOS_SOMENTE_ADMINISTRATIVO : self::MOTIVOS_SOMENTE_AMBULANCIA;
-
-        return ! in_array($motivo, $excluidos, true);
-    }
-
     // Relações
     public function checkinAtivo(): HasOne
     {

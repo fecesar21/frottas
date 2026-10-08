@@ -5,6 +5,7 @@ namespace Tests\Feature\Viagem;
 use App\Models\Checkin;
 use App\Models\ChecklistVeiculo;
 use App\Models\Colaborador;
+use App\Models\MotivoViagem;
 use App\Models\Motorista;
 use App\Models\Veiculo;
 use App\Models\Viagem;
@@ -222,6 +223,38 @@ class ViagemApiTest extends TestCase
         $this->postJson('/api/viagens', $payload($ambulancia, 'alimentacao'))->assertJsonValidationErrors(['motivo_viagem']);
         $this->postJson('/api/viagens', $payload($ambulancia, 'servicos_administrativos'))->assertJsonValidationErrors(['motivo_viagem']);
         $this->postJson('/api/viagens', $payload($strada, 'alimentacao'))->assertCreated();
+    }
+
+    public function test_motivo_inativo_e_recusado_e_ambos_aceito_nos_dois_tipos(): void
+    {
+        $this->loginGestor();
+        $ambulancia = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'AMBULÂNCIA SPRINTER']);
+        $strada = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'STRADA']);
+        $motorista = Motorista::factory()->create();
+        $this->liberarChecklist($ambulancia, $motorista);
+        $this->liberarChecklist($strada, $motorista);
+
+        $payload = fn ($veiculo, $motivo) => [
+            'veiculo_id' => $veiculo->id, 'motorista_id' => $motorista->id,
+            'origem' => 'a', 'destino' => 'b', 'km_saida' => 5000, 'motivo_viagem' => $motivo,
+        ];
+
+        MotivoViagem::porCodigo('alimentacao')->update(['ativo' => false]);
+        $this->postJson('/api/viagens', $payload($strada, 'alimentacao'))->assertJsonValidationErrors(['motivo_viagem']);
+
+        $ambos = MotivoViagem::factory()->create(['tipo_veiculo' => 'ambos']);
+        $this->postJson('/api/viagens', $payload($ambulancia, $ambos->codigo))->assertCreated();
+    }
+
+    public function test_editar_viagem_mantendo_motivo_inativado_continua_valido(): void
+    {
+        $this->loginAdmin();
+        $strada = Veiculo::factory()->create(['modelo' => 'STRADA']);
+        $viagem = Viagem::factory()->create(['veiculo_id' => $strada->id, 'motivo_viagem' => 'alimentacao']);
+        MotivoViagem::porCodigo('alimentacao')->update(['ativo' => false]);
+
+        $this->putJson("/api/viagens/{$viagem->id}", ['motivo_viagem' => 'alimentacao', 'origem' => 'nova'])->assertOk();
+        $this->putJson("/api/viagens/{$viagem->id}", ['motivo_viagem' => 'tfd'])->assertJsonValidationErrors(['motivo_viagem']);
     }
 
     public function test_chegada_com_retorno_abre_viagem_invertida_com_km_de_chegada(): void

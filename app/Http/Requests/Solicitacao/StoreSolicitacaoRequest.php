@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Solicitacao;
 
+use App\Rules\MotivoViagemValido;
 use App\Rules\PontoViagemExiste;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -15,7 +16,7 @@ class StoreSolicitacaoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'motivo' => 'required|in:transferencia_paciente,buscar_medico,material_outro_hospital,transporte_colaborador,buscar_material_fornecedor,tfd',
+            'motivo' => ['required', 'string', new MotivoViagemValido(solicitacao: true)],
 
             'origem_tipo' => 'required_if:motivo,transferencia_paciente,transporte_colaborador|nullable|in:unidade,localidade',
             'origem_id' => ['required_if:motivo,transferencia_paciente,transporte_colaborador', 'nullable', 'uuid', new PontoViagemExiste($this->input('origem_tipo'))],

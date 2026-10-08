@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Viagem;
 
+use App\Models\MotivoViagem;
 use App\Models\Veiculo;
+use App\Rules\MotivoViagemValido;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +23,7 @@ class StoreViagemRequest extends FormRequest
             'checkin_id' => 'nullable|uuid|exists:checkins,id',
             'origem' => 'required|string|max:150',
             'destino' => 'required|string|max:150',
-            'motivo_viagem' => 'required|in:transferencia_paciente,buscar_medico,material_outro_hospital,transporte_colaborador,buscar_material_fornecedor,tfd,alimentacao,servicos_administrativos',
+            'motivo_viagem' => ['required', 'string', new MotivoViagemValido],
             // Exatamente 6 dígitos: rejeita "1", "000000" etc.
             'numero_atendimento' => 'required_if:motivo_viagem,transferencia_paciente|nullable|integer|min:100000|max:999999',
             'km_saida' => 'required|integer|min:0',
@@ -48,7 +50,7 @@ class StoreViagemRequest extends FormRequest
                 return;
             }
             $veiculo = Veiculo::find($this->input('veiculo_id'));
-            if ($veiculo && ! $veiculo->permiteMotivoViagem($this->input('motivo_viagem'))) {
+            if ($veiculo && ! MotivoViagem::porCodigo($this->input('motivo_viagem'))?->permiteVeiculo($veiculo)) {
                 $validator->errors()->add('motivo_viagem', $veiculo->ehAmbulancia()
                     ? 'Motivo não permitido para ambulância.'
                     : 'Motivo não permitido para veículo administrativo.');

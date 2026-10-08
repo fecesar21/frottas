@@ -4,6 +4,7 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Models\Checkin;
 use App\Models\Localidade;
+use App\Models\MotivoViagem;
 use App\Models\Motorista;
 use App\Models\Solicitacao;
 use App\Models\Unidade;
@@ -18,6 +19,16 @@ use Tests\TestCase;
 
 class SolicitacaoApiTest extends TestCase
 {
+    public function test_motivo_fora_de_solicitacao_recusado_e_motivo_novo_aceito(): void
+    {
+        $this->loginOperador();
+
+        $this->postJson('/api/solicitacoes', ['motivo' => 'alimentacao'])->assertJsonValidationErrors(['motivo']);
+
+        $novo = MotivoViagem::factory()->create(['disponivel_solicitacao' => true]);
+        $this->postJson('/api/solicitacoes', ['motivo' => $novo->codigo, 'observacoes' => 'levar documentos'])->assertCreated();
+    }
+
     public function test_operador_cria_solicitacao_tfd(): void
     {
         $this->loginOperador();
