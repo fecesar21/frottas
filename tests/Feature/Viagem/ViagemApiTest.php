@@ -222,4 +222,50 @@ class ViagemApiTest extends TestCase
         $this->postJson('/api/viagens', $payload($ambulancia, 'alimentacao'))->assertJsonValidationErrors(['motivo_viagem']);
         $this->postJson('/api/viagens', $payload($strada, 'alimentacao'))->assertCreated();
     }
+
+    public function test_chegada_com_retorno_abre_viagem_invertida_com_km_de_chegada(): void
+    {
+        $this->loginGestor();
+        $viagem = Viagem::factory()->create([
+            'veiculo_id' => Veiculo::factory()->create(['km_atual' => 4000])->id,
+            'km_saida' => 5000, 'origem' => 'Hospital A', 'destino' => 'Hospital B',
+            'motivo_viagem' => 'transferencia_paciente', 'numero_atendimento' => 123456,
+        ]);
+
+        $res = $this->patchJson("/api/viagens/{$viagem->id}/chegada", ['km_chegada' => 5120, 'retornar_origem' => true])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'concluida')
+            ->assertJsonPath('viagem_retorno.origem', 'HOSPITAL B')
+            ->assertJsonPath('viagem_retorno.destino', 'HOSPITAL A');
+
+        $this->assertDatabaseHas('viagens', [
+            'id' => $res->json('viagem_retorno.id'),
+            'status' => 'em_andamento', 'km_saida' => 5120,
+            'veiculo_id' => $viagem->veiculo_id, 'motorista_id' => $viagem->motorista_id,
+            'motivo_viagem' => 'transferencia_paciente', 'numero_atendimento' => 123456,
+        ]);
+    }
+
+    public function test_chegada_sem_retorno_apenas_encerra(): void
+    {
+        $this->loginGestor();
+        $viagem = Viagem::factory()->create(['km_saida' => 5000, 'motivo_viagem' => 'transferencia_paciente', 'numero_atendimento' => 123456]);
+
+        $this->patchJson("/api/viagens/{$viagem->id}/chegada", ['km_chegada' => 5120, 'retornar_origem' => false])
+            ->assertOk()
+            ->assertJsonMissingPath('viagem_retorno');
+
+        $this->assertSame(1, Viagem::count());
+    }
+
+    public function test_retorno_so_vale_para_transferencia_de_paciente(): void
+    {
+        $this->loginGestor();
+        $viagem = Viagem::factory()->create(['km_saida' => 5000, 'motivo_viagem' => 'tfd']);
+
+        $this->patchJson("/api/viagens/{$viagem->id}/chegada", ['km_chegada' => 5120, 'retornar_origem' => true])
+            ->assertJsonValidationErrors(['retornar_origem']);
+
+        $this->assertDatabaseHas('viagens', ['id' => $viagem->id, 'status' => 'em_andamento']);
+    }
 }

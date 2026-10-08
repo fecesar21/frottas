@@ -12,6 +12,7 @@ use App\Models\Viagem;
 use App\Services\ChecklistVeiculoService;
 use App\Services\ViagemService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ViagemController extends Controller
 {
@@ -107,9 +108,41 @@ class ViagemController extends Controller
 
     public function chegada(Request $r, Viagem $viagem)
     {
-        $data = $r->validate(['km_chegada' => 'required|integer|min:0', 'observacoes' => 'nullable|string']);
-        $viagem = $this->service->chegada($viagem, $data);
+        $data = $r->validate([
+            'km_chegada' => 'required|integer|min:0',
+            'observacoes' => 'nullable|string',
+            'retornar_origem' => 'sometimes|boolean',
+        ]);
 
-        return new ViagemResource($viagem);
+        if ($r->boolean('retornar_origem') && $viagem->motivo_viagem !== 'transferencia_paciente') {
+            return response()->json([
+                'message' => 'Retorno à origem disponível apenas para transferência de paciente.',
+                'errors' => ['retornar_origem' => ['Retorno à origem disponível apenas para transferência de paciente.']],
+            ], 422);
+        }
+
+        [$viagem, $retorno] = DB::transaction(function () use ($viagem, $data, $r) {
+            $concluida = $this->service->chegada($viagem, $data);
+
+            // Volta à origem: mesma equipe/veículo/atendimento, trajeto invertido, saindo do KM de chegada.
+            $retorno = $r->boolean('retornar_origem') ? $this->service->store([
+                'veiculo_id' => $concluida->veiculo_id,
+                'motorista_id' => $concluida->motorista_id,
+                'checkin_id' => $concluida->checkin_id,
+                'origem' => $concluida->destino,
+                'destino' => $concluida->origem,
+                'motivo_viagem' => $concluida->motivo_viagem,
+                'numero_atendimento' => $concluida->numero_atendimento,
+                'km_saida' => $concluida->km_chegada,
+            ]) : null;
+
+            return [$concluida, $retorno];
+        });
+
+        $resource = new ViagemResource($viagem);
+
+        return $retorno
+            ? $resource->additional(['viagem_retorno' => new ViagemResource($retorno->load(['veiculo', 'motorista']))])
+            : $resource;
     }
 }

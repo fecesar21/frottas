@@ -23,6 +23,7 @@ export default function ViagensList() {
   const [formOpen, setFormOpen] = useState(false)
   const [chegadaTarget, setChegadaTarget] = useState(null)
   const [chegadaForm, setChegadaForm] = useState({ km_chegada: '', observacoes: '' })
+  const [perguntaRetorno, setPerguntaRetorno] = useState(false)
   const [detalhesTarget, setDetalhesTarget] = useState(null)
   const [error, setError] = useState('')
 
@@ -36,9 +37,14 @@ export default function ViagensList() {
 
   const doChegada = useMutation({
     mutationFn: ({ id, data }) => viagensApi.chegada(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['viagens'] }); setChegadaTarget(null) },
-    onError: (e) => setError(e.response?.data?.message ?? 'Erro ao registrar chegada'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['viagens'] }); setChegadaTarget(null); setPerguntaRetorno(false) },
+    onError: (e) => { setPerguntaRetorno(false); setError(e.response?.data?.message ?? 'Erro ao registrar chegada') },
   })
+
+  // Ambulância em transferência: ao chegar, o motorista decide se já volta à origem
+  const podeRetornar = chegadaTarget?.motivo_viagem === 'transferencia_paciente'
+
+  const enviarChegada = (retornar) => doChegada.mutate({ id: chegadaTarget.id, data: { ...chegadaForm, retornar_origem: retornar } })
 
   if (isLoading) return <LoadingSpinner />
 
@@ -164,8 +170,8 @@ export default function ViagensList() {
         <ViagemForm onSuccess={() => { setFormOpen(false); qc.invalidateQueries({ queryKey: ['viagens'] }) }} />
       </Modal>
 
-      <Modal open={!!chegadaTarget} onClose={() => setChegadaTarget(null)} title="Registrar chegada">
-        <form onSubmit={(e) => { e.preventDefault(); doChegada.mutate({ id: chegadaTarget.id, data: chegadaForm }) }} className="space-y-4">
+      <Modal open={!!chegadaTarget} onClose={() => { setChegadaTarget(null); setPerguntaRetorno(false) }} title="Registrar chegada">
+        <form onSubmit={(e) => { e.preventDefault(); podeRetornar ? setPerguntaRetorno(true) : enviarChegada(false) }} className="space-y-4">
           {error && <Alert type="error" message={error} />}
           <p className="text-sm text-gray-600">{chegadaTarget?.origem} → <strong>{chegadaTarget?.destino}</strong></p>
           <div>
@@ -185,6 +191,24 @@ export default function ViagensList() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={perguntaRetorno && !!chegadaTarget} onClose={() => !doChegada.isPending && setPerguntaRetorno(false)} title="Deseja retornar à origem?">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Se sim, uma nova viagem será iniciada agora de <strong>{chegadaTarget?.destino}</strong> para <strong>{chegadaTarget?.origem}</strong>, com KM inicial {chegadaForm.km_chegada}.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" disabled={doChegada.isPending} onClick={() => enviarChegada(true)}
+              className="bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 disabled:opacity-60">
+              SIM
+            </button>
+            <button type="button" disabled={doChegada.isPending} onClick={() => enviarChegada(false)}
+              className="bg-red-600 text-white font-semibold py-3 rounded-lg hover:bg-red-700 disabled:opacity-60">
+              NÃO
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <Modal open={!!detalhesTarget} onClose={() => setDetalhesTarget(null)}
