@@ -19,6 +19,7 @@ import UnidadesList from './pages/unidades/UnidadesList'
 import UnidadeDetalhes from './pages/unidades/UnidadeDetalhes'
 import ConfiguracoesHub from './pages/configuracoes/ConfiguracoesHub'
 import ConfiguracoesLdap from './pages/configuracoes/ConfiguracoesLdap'
+import MotivosViagem from './pages/configuracoes/MotivosViagem'
 import LocalidadesList from './pages/localidades/LocalidadesList'
 
 function GestorRoute({ children }) {
@@ -69,6 +70,9 @@ export default function App() {
               } />
               <Route path="/configuracoes/localidades" element={
                 <AdminRoute><LocalidadesList /></AdminRoute>
+              } />
+              <Route path="/configuracoes/motivos-viagem" element={
+                <AdminRoute><MotivosViagem /></AdminRoute>
               } />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ChevronRight, MapPin } from 'lucide-react'
+import { ShieldCheck, ChevronRight, MapPin, ListChecks } from 'lucide-react'
 
 const secoes = [
   {
@@ -13,6 +13,12 @@ const secoes = [
     titulo: 'Localidades',
     descricao: 'Cadastre locais externos (hospitais parceiros, clínicas, empresas) para usar como origem/destino nas solicitações de transporte.',
     icon: MapPin,
+  },
+  {
+    to: '/configuracoes/motivos-viagem',
+    titulo: 'Motivos de Viagem',
+    descricao: 'Cadastre os motivos de viagem, defina para quais veículos valem e quais aparecem nas solicitações.',
+    icon: ListChecks,
   },
 ]
 

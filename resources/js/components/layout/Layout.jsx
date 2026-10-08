@@ -21,6 +21,7 @@ const pageTitles = {
   '/usuarios': 'Usuários',
   '/configuracoes': 'Configurações',
   '/configuracoes/ldap': 'LDAP por Unidade',
+  '/configuracoes/motivos-viagem': 'Motivos de Viagem',
 }
 
 const ROTAS_OPERADOR_SEM_CHECKIN = ['/checkins']
