@@ -24,6 +24,8 @@ export default function NovaSolicitacao() {
   const [form, setForm] = useState(INITIAL)
   const [pontos, setPontos] = useState([])
   const [motivos, setMotivos] = useState([])
+  // 'carregando' | 'ok' | 'erro'
+  const [estadoMotivos, setEstadoMotivos] = useState('carregando')
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [sucesso, setSucesso] = useState(false)
@@ -34,7 +36,12 @@ export default function NovaSolicitacao() {
 
   // Motivos cadastrados e liberados para solicitação (este app não usa React Query).
   useEffect(() => {
-    motivosApi.listar({ solicitacao: 1 }).then(({ data }) => setMotivos(data.data ?? data)).catch(() => {})
+    motivosApi.listar({ solicitacao: 1 })
+      .then(({ data }) => {
+        setMotivos(data.data ?? data)
+        setEstadoMotivos('ok')
+      })
+      .catch(() => setEstadoMotivos('erro'))
   }, [])
 
   const setField = (field, value) => setForm(f => ({ ...f, [field]: value }))
@@ -86,6 +93,17 @@ export default function NovaSolicitacao() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Viagem *</label>
           <div className="space-y-2">
+            {estadoMotivos === 'carregando' && (
+              <p className="text-sm text-gray-500">Carregando motivos...</p>
+            )}
+            {estadoMotivos === 'erro' && (
+              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                Não foi possível carregar os motivos de viagem. Recarregue a página ou tente novamente em instantes.
+              </p>
+            )}
+            {estadoMotivos === 'ok' && motivos.length === 0 && (
+              <p className="text-sm text-gray-500">Nenhum motivo disponível para solicitação no momento. Procure a gestão da frota.</p>
+            )}
             {motivos.map(m => (
               <label key={m.codigo} className="flex items-center gap-2.5 border border-gray-200 rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50">
                 <input

@@ -92,7 +92,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::patch('viagens/{viagem}/chegada', [ViagemController::class, 'chegada']);
     Route::post('viagens/{viagem}/pontos', [ViagemPontoController::class, 'store']);
     Route::get('viagens/{viagem}/pontos', [ViagemPontoController::class, 'index']);
-    Route::apiResource('viagens', ViagemController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('viagens', ViagemController::class)->parameters(['viagens' => 'viagem'])->only(['index', 'show', 'store']);
 
     // Solicitações de Transporte
     Route::patch('solicitacoes/{solicitacao}/aceitar', [SolicitacaoController::class, 'aceitar'])->name('solicitacoes.aceitar');

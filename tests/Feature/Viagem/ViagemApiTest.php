@@ -193,6 +193,27 @@ class ViagemApiTest extends TestCase
         $this->getJson("/api/viagens/{$viagemDeOutro->id}")->assertForbidden();
     }
 
+    public function test_detalhe_da_viagem_retorna_os_dados(): void
+    {
+        $this->loginAdmin();
+        $viagem = Viagem::factory()->create(['motivo_viagem' => 'tfd']);
+
+        $this->getJson("/api/viagens/{$viagem->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $viagem->id)
+            ->assertJsonPath('data.motivo_nome', 'TFD');
+    }
+
+    public function test_operador_visualiza_detalhe_da_propria_viagem(): void
+    {
+        $usuario = $this->loginOperador();
+        $motorista = Motorista::factory()->create();
+        $usuario->update(['motorista_id' => $motorista->id]);
+        $viagem = Viagem::factory()->create(['motorista_id' => $motorista->id]);
+
+        $this->getJson("/api/viagens/{$viagem->id}")->assertOk()->assertJsonPath('data.id', $viagem->id);
+    }
+
     public function test_registra_chegada_da_viagem(): void
     {
         $this->loginGestor();
