@@ -23,6 +23,10 @@
 
 set -euo pipefail
 
+# Independe do diretório de quem chamou (ex.: sudo -u www-data a partir de
+# /home/fcesarc, que o www-data não lê — o find falharia ao voltar para ele).
+cd /
+
 # ──────────────────────────────────────────────
 # Configuração
 # ──────────────────────────────────────────────
