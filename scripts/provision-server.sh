@@ -112,6 +112,13 @@ echo "==> Configurando crontab do scheduler (www-data)..."
 CRON_LINE="* * * * * cd $PROJECT_DIR && php artisan schedule:run >> /dev/null 2>&1"
 ( crontab -u www-data -l 2>/dev/null | grep -vF "$PROJECT_DIR && php artisan schedule:run" ; echo "$CRON_LINE" ) | crontab -u www-data -
 
+echo "==> Configurando cron de backup automático (diário às 02:30)..."
+mkdir -p /var/backups/healthdrive
+chown -R www-data:www-data /var/backups/healthdrive
+chmod 750 /var/backups/healthdrive
+BACKUP_CRON_LINE="30 2 * * * PROJECT_DIR=$PROJECT_DIR BACKUP_DIR=/var/backups/healthdrive RETAIN_DAYS=14 bash $PROJECT_DIR/scripts/backup.sh >> /var/backups/healthdrive/cron.log 2>&1"
+( crontab -u www-data -l 2>/dev/null | grep -vF "scripts/backup.sh" ; echo "$BACKUP_CRON_LINE" ) | crontab -u www-data -
+
 echo "==> Ajustando dono/permissões finais do projeto..."
 chown -R www-data:www-data "$PROJECT_DIR"
 chmod -R 775 "$PROJECT_DIR/storage" "$PROJECT_DIR/bootstrap/cache"
@@ -120,3 +127,5 @@ echo "==> Provisionamento concluído."
 echo "    Nginx: /etc/nginx/sites-available/healthdrive"
 echo "    Supervisor: $SUPERVISOR_CONF (status: supervisorctl status)"
 echo "    Cron: crontab -u www-data -l"
+echo "    Backups: /var/backups/healthdrive/ (cron diário às 02:30)"
+echo "    Teste manual: sudo -u www-data bash $PROJECT_DIR/scripts/backup.sh"
