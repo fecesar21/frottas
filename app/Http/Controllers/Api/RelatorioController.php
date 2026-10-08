@@ -342,6 +342,7 @@ class RelatorioController extends Controller
 
         $rows = $rows
             ->map(function ($vg) use ($colaboradoresPorViagem) {
+                $vg->motivo_nome = MotivoViagem::rotulo($vg->motivo_viagem);
                 $vg->colaboradores = $colaboradoresPorViagem[$vg->id] ?? null;
                 $vg->km_percorrido = $vg->km_chegada !== null ? $vg->km_chegada - $vg->km_saida : null;
                 $vg->duracao_min = $vg->saida_at && $vg->chegada_at

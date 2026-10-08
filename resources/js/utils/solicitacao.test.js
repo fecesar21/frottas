@@ -2,10 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { rotuloMotivo, detalheSolicitacao } from './solicitacao'
 
 describe('utils de solicitação', () => {
-  it('traduz o motivo e mantém valores desconhecidos', () => {
-    expect(rotuloMotivo('tfd')).toBe('TFD')
-    expect(rotuloMotivo('buscar_medico')).toBe('Buscar Médico em Outra Cidade')
-    expect(rotuloMotivo('outro')).toBe('outro')
+  it('usa o nome do motivo vindo da API e cai para o código', () => {
+    expect(rotuloMotivo({ motivo: 'tfd', motivo_nome: 'TFD' })).toBe('TFD')
+    expect(rotuloMotivo({ motivo: 'outro' })).toBe('outro')
+    expect(rotuloMotivo({})).toBe('Viagem')
+    expect(rotuloMotivo(undefined)).toBe('Viagem')
   })
 
   it('prefere o trajeto e cai para o campo específico do motivo', () => {

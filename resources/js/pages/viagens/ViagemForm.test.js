@@ -1,27 +1,21 @@
 import { describe, it, expect } from 'vitest'
 import { motivosDoVeiculo } from './ViagemForm'
 
-const valores = (v) => motivosDoVeiculo(v).map(m => m.value)
+const motivos = [
+  { codigo: 'tfd', nome: 'TFD', tipo_veiculo: 'ambulancia' },
+  { codigo: 'alimentacao', nome: 'Alimentação', tipo_veiculo: 'administrativo' },
+  { codigo: 'lavar', nome: 'Lavar', tipo_veiculo: 'ambos' },
+]
+const codigos = (v) => motivosDoVeiculo(motivos, v).map(m => m.codigo)
 
 describe('motivosDoVeiculo', () => {
-  it('ambulância não oferece motivos administrativos', () => {
-    expect(valores({ modelo: 'AMBULÂNCIA SPRINTER' })).toEqual(['tfd', 'transferencia_paciente'])
+  it('ambulância vê ambulância + ambos', () => {
+    expect(codigos({ modelo: 'AMBULÂNCIA SPRINTER' })).toEqual(['tfd', 'lavar'])
   })
-  it('administrativo troca paciente/TFD por alimentação', () => {
-    const v = valores({ modelo: 'STRADA' })
-    expect(v).not.toContain('transferencia_paciente')
-    expect(v).not.toContain('tfd')
-    expect(v).toContain('alimentacao')
-    expect(v).toContain('servicos_administrativos')
+  it('administrativo vê administrativo + ambos', () => {
+    expect(codigos({ modelo: 'STRADA' })).toEqual(['alimentacao', 'lavar'])
   })
   it('sem veículo mostra todos', () => {
-    expect(valores(null)).toHaveLength(8)
-  })
-})
-
-describe('ordem dos motivos', () => {
-  it('lista os motivos em ordem alfabética', () => {
-    const labels = motivosDoVeiculo(null).map(m => m.label)
-    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b, 'pt-BR')))
+    expect(codigos(null)).toHaveLength(3)
   })
 })

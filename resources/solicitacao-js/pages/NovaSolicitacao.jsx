@@ -4,9 +4,7 @@ import * as solicitacoesApi from '../api/solicitacoes'
 import * as pontosViagemApi from '../api/pontosViagem'
 import Layout from '../components/Layout'
 import PainelFrota from '../components/PainelFrota'
-import { opcoesMotivo } from '../../js/utils/solicitacao'
-
-const MOTIVOS = opcoesMotivo(['transferencia_paciente', 'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'tfd'])
+import * as motivosApi from '../api/motivosViagem'
 
 const INITIAL = {
   motivo: '',
@@ -25,12 +23,18 @@ export default function NovaSolicitacao() {
   const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL)
   const [pontos, setPontos] = useState([])
+  const [motivos, setMotivos] = useState([])
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [sucesso, setSucesso] = useState(false)
 
   useEffect(() => {
     pontosViagemApi.listar().then(({ data }) => setPontos(data.data ?? data)).catch(() => {})
+  }, [])
+
+  // Motivos cadastrados e liberados para solicitação (este app não usa React Query).
+  useEffect(() => {
+    motivosApi.listar({ solicitacao: 1 }).then(({ data }) => setMotivos(data.data ?? data)).catch(() => {})
   }, [])
 
   const setField = (field, value) => setForm(f => ({ ...f, [field]: value }))
@@ -82,17 +86,17 @@ export default function NovaSolicitacao() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Viagem *</label>
           <div className="space-y-2">
-            {MOTIVOS.map(m => (
-              <label key={m.value} className="flex items-center gap-2.5 border border-gray-200 rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50">
+            {motivos.map(m => (
+              <label key={m.codigo} className="flex items-center gap-2.5 border border-gray-200 rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50">
                 <input
                   type="radio"
                   name="motivo"
-                  value={m.value}
-                  checked={form.motivo === m.value}
+                  value={m.codigo}
+                  checked={form.motivo === m.codigo}
                   onChange={(e) => setField('motivo', e.target.value)}
                   className="accent-brand-500"
                 />
-                <span className="text-sm text-gray-800">{m.label}</span>
+                <span className="text-sm text-gray-800">{m.nome}</span>
               </label>
             ))}
           </div>

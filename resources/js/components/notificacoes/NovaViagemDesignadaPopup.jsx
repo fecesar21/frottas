@@ -66,7 +66,7 @@ export default function NovaViagemDesignadaPopup({ notificacao, temViagemAtiva, 
             <Truck size={24} />
           </div>
           <h2 className="text-base font-semibold text-navy-900 mb-1">Nova Viagem Designada pelo Gestor</h2>
-          <p className="text-sm font-medium text-gray-700 mt-2">{rotuloMotivo(notificacao.data?.motivo)}</p>
+          <p className="text-sm font-medium text-gray-700 mt-2">{rotuloMotivo(notificacao.data)}</p>
           {detalhe && <p className="text-sm text-gray-500">{detalhe}</p>}
           {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
           <div className="flex gap-2 mt-5">

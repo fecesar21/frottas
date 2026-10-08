@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import * as solicitacoesApi from '../api/solicitacoes'
 import Layout from '../components/Layout'
-import { MOTIVOS_SOLICITACAO } from '../../js/utils/solicitacao'
+import { rotuloMotivo } from '../../js/utils/solicitacao'
 
 
 const STATUS = {
@@ -55,7 +55,7 @@ export default function MinhasSolicitacoes() {
               {solicitacoes.map(s => (
                 <tr key={s.id}>
                   <td className="px-4 py-3 text-gray-700">{new Date(s.criado_em).toLocaleDateString('pt-BR')}</td>
-                  <td className="px-4 py-3 text-gray-700">{MOTIVOS_SOLICITACAO[s.motivo] ?? s.motivo}</td>
+                  <td className="px-4 py-3 text-gray-700">{rotuloMotivo(s)}</td>
                   <td className="px-4 py-3 text-gray-700">{s.saida_at ? new Date(s.saida_at).toLocaleString('pt-BR') : '—'}</td>
                   <td className="px-4 py-3 text-gray-700">{s.chegada_at ? new Date(s.chegada_at).toLocaleString('pt-BR') : '—'}</td>
                   <td className="px-4 py-3">

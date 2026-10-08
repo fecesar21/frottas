@@ -5,11 +5,10 @@ import * as relatoriosApi from '../../api/relatorios'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Badge from '../../components/ui/Badge'
 import { downloadBlob } from '../../utils/downloadBlob'
-import { MOTIVOS_SOLICITACAO } from '../../utils/solicitacao'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 const fmtKm = (n) => n != null ? Number(n).toLocaleString('pt-BR') : '—'
-const fmtMotivo = (m) => MOTIVOS_SOLICITACAO[m] ?? '—'
+const fmtMotivo = (r) => r.motivo_nome ?? r.motivo_viagem ?? '—'
 
 export default function RelatorioViagens() {
   const [de, setDe] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
@@ -85,7 +84,7 @@ export default function RelatorioViagens() {
                     <td className="px-4 py-3 text-gray-600">
                       <span className="text-gray-400">{r.origem}</span> → {r.destino}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{fmtMotivo(r.motivo_viagem)}</td>
+                    <td className="px-4 py-3 text-gray-600">{fmtMotivo(r)}</td>
                     <td className="px-4 py-3 text-gray-600">{r.numero_atendimento ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600 max-w-xs">{r.colaboradores ?? '—'}</td>
                     <td className="px-4 py-3">{fmtKm(r.km_percorrido)}</td>

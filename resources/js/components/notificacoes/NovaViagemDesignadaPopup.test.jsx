@@ -13,7 +13,7 @@ function renderPopup(data) {
 
 describe('NovaViagemDesignadaPopup', () => {
   it('exibe o motivo da viagem e o detalhe', () => {
-    renderPopup({ solicitacao_id: 's1', motivo: 'buscar_medico', detalhe: 'Cidade Teste' })
+    renderPopup({ solicitacao_id: 's1', motivo: 'buscar_medico', motivo_nome: 'Buscar Médico em Outra Cidade', detalhe: 'Cidade Teste' })
 
     expect(screen.getByText('Buscar Médico em Outra Cidade')).toBeInTheDocument()
     expect(screen.getByText('Cidade Teste')).toBeInTheDocument()
@@ -22,7 +22,7 @@ describe('NovaViagemDesignadaPopup', () => {
   })
 
   it('não mostra o texto genérico "Sem detalhe"', () => {
-    renderPopup({ solicitacao_id: 's2', motivo: 'tfd', detalhe: 'Sem detalhe' })
+    renderPopup({ solicitacao_id: 's2', motivo: 'tfd', motivo_nome: 'TFD', detalhe: 'Sem detalhe' })
 
     expect(screen.getByText('TFD')).toBeInTheDocument()
     expect(screen.queryByText('Sem detalhe')).not.toBeInTheDocument()

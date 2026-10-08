@@ -52,7 +52,7 @@ export default function SolicitacaoDisponivelPopup({ notificacao, temViagemAtiva
             <Truck size={24} />
           </div>
           <h2 className="text-base font-semibold text-navy-900 mb-1">Nova Solicitação Disponível</h2>
-          <p className="text-sm font-medium text-gray-700 mt-2">{rotuloMotivo(notificacao.data?.motivo)}</p>
+          <p className="text-sm font-medium text-gray-700 mt-2">{rotuloMotivo(notificacao.data)}</p>
           {detalhe && <p className="text-sm text-gray-500">{detalhe}</p>}
           {notificacao.data?.solicitante_nome && (
             <p className="text-xs text-gray-400 mt-1">Solicitante: {notificacao.data.solicitante_nome}</p>

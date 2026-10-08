@@ -8,26 +8,21 @@ import VeiculoSelect from '../../components/shared/VeiculoSelect'
 import VeiculoCheckinSelect from '../../components/shared/VeiculoCheckinSelect'
 import ColaboradorSelect from '../../components/shared/ColaboradorSelect'
 import Alert from '../../components/ui/Alert'
-import { opcoesMotivo } from '../../utils/solicitacao'
-
-const MOTIVOS = opcoesMotivo()
-
-// Motivos exclusivos de cada tipo de veículo (mesma regra de Veiculo::ehAmbulancia()).
-const SOMENTE_AMBULANCIA = ['transferencia_paciente', 'tfd']
-const SOMENTE_ADMINISTRATIVO = ['buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor', 'alimentacao', 'servicos_administrativos']
+import { useMotivosViagem } from '../../hooks/useMotivosViagem'
 
 const ehAmbulancia = (veiculo) =>
   (veiculo?.modelo ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().includes('AMBULANCIA')
 
-// Sem veículo selecionado mostra todos os motivos.
-export function motivosDoVeiculo(veiculo) {
-  if (!veiculo?.modelo) return MOTIVOS
-  const excluidos = ehAmbulancia(veiculo) ? SOMENTE_ADMINISTRATIVO : SOMENTE_AMBULANCIA
-  return MOTIVOS.filter(m => !excluidos.includes(m.value))
+// Sem veículo selecionado mostra todos os motivos ativos (mesma regra de Veiculo::ehAmbulancia()).
+export function motivosDoVeiculo(motivos, veiculo) {
+  if (!veiculo?.modelo) return motivos
+  const tipo = ehAmbulancia(veiculo) ? 'ambulancia' : 'administrativo'
+  return motivos.filter(m => m.tipo_veiculo === 'ambos' || m.tipo_veiculo === tipo)
 }
 
 export default function ViagemForm({ onSuccess }) {
   const { user, isOperador, checkinsAtivos } = useAuth()
+  const { motivos: todosMotivos, isLoading: carregandoMotivos } = useMotivosViagem()
 
   const [form, setForm] = useState({
     motorista_id: isOperador ? user.motorista_id : '',
@@ -81,8 +76,8 @@ export default function ViagemForm({ onSuccess }) {
   const veiculo = isOperador
     ? checkinsAtivos?.find(c => c.veiculo_id === form.veiculo_id)?.veiculo
     : veiculoGestao
-  const motivos = motivosDoVeiculo(veiculo)
-  if (form.motivo_viagem && !motivos.some(m => m.value === form.motivo_viagem)) {
+  const motivos = motivosDoVeiculo(todosMotivos, veiculo)
+  if (!carregandoMotivos && form.motivo_viagem && !motivos.some(m => m.codigo === form.motivo_viagem)) {
     setForm(f => ({ ...f, motivo_viagem: '', numero_atendimento: '' }))
   }
 
@@ -162,7 +157,7 @@ export default function ViagemForm({ onSuccess }) {
             ...((e.target.value === 'transferencia_paciente') !== (f.motivo_viagem === 'transferencia_paciente') ? { origem: '', destino: '' } : {}) }))}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Selecione...</option>
-          {motivos.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          {motivos.map(m => <option key={m.codigo} value={m.codigo}>{m.nome}</option>)}
         </select>
         {fe('motivo_viagem')}
       </div>

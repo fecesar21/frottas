@@ -10,7 +10,7 @@ function renderPopup({ temViagemAtiva = false, onFechar = () => {} } = {}) {
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <SolicitacaoDisponivelPopup
-        notificacao={{ id: 'n1', data: { solicitacao_id: 's1', motivo: 'buscar_medico', detalhe: 'Cidade Teste', solicitante_nome: 'Ana' } }}
+        notificacao={{ id: 'n1', data: { solicitacao_id: 's1', motivo: 'buscar_medico', motivo_nome: 'Buscar Médico em Outra Cidade', detalhe: 'Cidade Teste', solicitante_nome: 'Ana' } }}
         temViagemAtiva={temViagemAtiva}
         onFechar={onFechar}
       />

@@ -61,7 +61,7 @@ export default function FilaMotoristaCard({ ehMotorista }) {
         {fila.map((s) => (
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 bg-white rounded-lg px-3 py-2 border border-amber-100">
             <span className="min-w-0 text-gray-700">
-              <strong>{rotuloMotivo(s.motivo)}</strong>
+              <strong>{rotuloMotivo(s)}</strong>
               {detalheSolicitacao(s) && <span className="block text-xs text-gray-500">{detalheSolicitacao(s)}</span>}
             </span>
             <button
