@@ -95,6 +95,10 @@ env_val() {
 mkdir -p "${BACKUP_DIR}/db" "${BACKUP_DIR}/files"
 touch "${LOG_FILE}"
 
+# Com set -e o script morreria sem registrar nada; loga a falha e remove o
+# arquivo parcial do dump para não deixar um backup vazio parecendo válido.
+trap 'log "ERRO: comando falhou (linha ${LINENO}) — backup incompleto"; [ -n "${DUMP_PARCIAL:-}" ] && rm -f "${DUMP_PARCIAL}"' ERR
+
 log "===== Início do backup (timestamp: ${TIMESTAMP}) ====="
 
 # ──────────────────────────────────────────────
@@ -113,6 +117,8 @@ if [[ "${DB_CONNECTION}" == "mysql" ]]; then
 
   log "Iniciando dump MySQL: ${DB_DATABASE}@${DB_HOST}:${DB_PORT} → ${DB_FILE}"
 
+  # Sem --set-gtid-purged: o servidor é MariaDB, que não reconhece a opção.
+  DUMP_PARCIAL="${DB_FILE}"
   MYSQL_PWD="${DB_PASSWORD}" mysqldump \
     --host="${DB_HOST}" \
     --port="${DB_PORT}" \
@@ -121,9 +127,9 @@ if [[ "${DB_CONNECTION}" == "mysql" ]]; then
     --routines \
     --triggers \
     --events \
-    --set-gtid-purged=OFF \
     "${DB_DATABASE}" \
     | gzip -9 > "${DB_FILE}"
+  DUMP_PARCIAL=""
 
   DB_SIZE="$(du -sh "${DB_FILE}" | cut -f1)"
   log "Dump concluído: ${DB_FILE} (${DB_SIZE})"
