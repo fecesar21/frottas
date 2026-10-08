@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\MotivoViagem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,6 +18,7 @@ class ViagemResource extends JsonResource
             'origem' => $this->origem,
             'destino' => $this->destino,
             'motivo_viagem' => $this->motivo_viagem,
+            'motivo_nome' => MotivoViagem::rotulo($this->motivo_viagem),
             'numero_atendimento' => $this->numero_atendimento,
             'km_saida' => $this->km_saida,
             'km_chegada' => $this->km_chegada,

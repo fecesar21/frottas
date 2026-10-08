@@ -8,19 +8,6 @@
     <h1>Relatório de Viagens</h1>
     <p class="periodo">Período: {{ \Carbon\Carbon::parse($de)->format('d/m/Y') }} a {{ \Carbon\Carbon::parse($ate)->format('d/m/Y') }} — gerado em {{ now()->format('d/m/Y H:i') }}</p>
 
-    @php
-        $motivos = [
-            'transferencia_paciente' => 'Transferência de Paciente',
-            'buscar_medico' => 'Buscar médico em outra cidade',
-            'material_outro_hospital' => 'Levar Material em outro Hospital',
-            'transporte_colaborador' => 'Transporte de Colaborador(es)',
-            'buscar_material_fornecedor' => 'Buscar materiais em fornecedor',
-            'tfd' => 'TFD',
-            'alimentacao' => 'Alimentação (Levar/Buscar)',
-            'servicos_administrativos' => 'Serviços Administrativos Diversos',
-        ];
-    @endphp
-
     <table class="totais">
         <tr>
             <td><span class="label">Total viagens</span><span class="valor">{{ $totais['total_viagens'] }}</span></td>
@@ -45,7 +32,7 @@
                     <td>{{ $r->placa }}</td>
                     <td>{{ $r->motorista_nome }}</td>
                     <td>{{ $r->origem }} → {{ $r->destino }}</td>
-                    <td>{{ $motivos[$r->motivo_viagem] ?? '—' }}</td>
+                    <td>{{ \App\Models\MotivoViagem::rotulo($r->motivo_viagem) }}</td>
                     <td>{{ $r->numero_atendimento ?? '—' }}</td>
                     <td>{{ $r->colaboradores ?? '—' }}</td>
                     <td>{{ $r->km_percorrido !== null ? number_format($r->km_percorrido, 0, ',', '.') : '—' }}</td>

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\MotivoViagem;
 use App\Models\Solicitacao;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,6 +30,7 @@ class NovaViagemDesignada extends Notification implements ShouldQueue
         return [
             'solicitacao_id' => $this->solicitacao->id,
             'motivo' => $this->solicitacao->motivo,
+            'motivo_nome' => MotivoViagem::rotulo($this->solicitacao->motivo),
             'detalhe' => $this->detalhe(),
             'fila' => $this->fila,
         ];

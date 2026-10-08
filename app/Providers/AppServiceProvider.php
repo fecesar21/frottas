@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Checkin;
+use App\Models\MotivoViagem;
 use App\Models\Motorista;
 use App\Models\Usuario;
 use App\Models\Veiculo;
@@ -13,6 +14,7 @@ use App\Policies\VeiculoPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -30,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Veiculo::class, VeiculoPolicy::class);
         Gate::policy(Motorista::class, MotoristaPolicy::class);
         Gate::policy(Checkin::class, CheckinPolicy::class);
+
+        // Workers de fila são long-lived: limpa o cache estático de rótulos de
+        // motivos a cada job, para não usar nomes obsoletos após renomeação.
+        Queue::before(fn () => MotivoViagem::limparCache());
 
         // 2. DEFINIÇÃO DO RATE LIMITER 'api'
         RateLimiter::for('api', function (Request $request) {

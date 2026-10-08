@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\MotivoViagem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,6 +30,7 @@ class SolicitacaoResource extends JsonResource
             'usuario_id' => $this->usuario_id,
             'unidade_id' => $this->unidade_id,
             'motivo' => $this->motivo,
+            'motivo_nome' => MotivoViagem::rotulo($this->motivo),
             'origem_tipo' => $this->origem_tipo,
             'origem_id' => $this->origem_id,
             'destino_tipo' => $this->destino_tipo,

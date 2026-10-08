@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MotivoViagem;
 use App\Models\Veiculo;
 use App\Models\VeiculoManutencao;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -164,7 +165,8 @@ class RelatorioController extends Controller
 
         $porMotivo = [];
         foreach ($rows as $row) {
-            $motivo = trim((string) $row->motivo_viagem) !== '' ? $row->motivo_viagem : 'Não informado';
+            // Agrupa pelo nome de exibição vindo do cadastro de motivos.
+            $motivo = MotivoViagem::rotulo($row->motivo_viagem);
             $porMotivo[$motivo] = ($porMotivo[$motivo] ?? 0) + 1;
         }
 

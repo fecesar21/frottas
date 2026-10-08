@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\MotivoViagem;
 use App\Models\Solicitacao;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,7 +33,7 @@ class NovaSolicitacaoDisponivel extends Notification implements ShouldQueue
             ->subject('Nova solicitação de transporte disponível')
             ->greeting('Há uma nova solicitação disponível para você')
             ->line("Solicitante: {$this->solicitacao->usuario?->nome}")
-            ->line("Motivo: {$this->solicitacao->motivo}")
+            ->line('Motivo: '.MotivoViagem::rotulo($this->solicitacao->motivo))
             ->line("Detalhe: {$this->detalhe()}")
             ->action('Abrir o sistema', url('/'))
             ->line('Acesse o sistema para assumir essa viagem.');
@@ -47,6 +48,7 @@ class NovaSolicitacaoDisponivel extends Notification implements ShouldQueue
             'tipo' => 'solicitacao_disponivel',
             'solicitacao_id' => $this->solicitacao->id,
             'motivo' => $this->solicitacao->motivo,
+            'motivo_nome' => MotivoViagem::rotulo($this->solicitacao->motivo),
             'detalhe' => $this->detalhe(),
             'solicitante_nome' => $this->solicitacao->usuario?->nome,
             'unidade_id' => $this->solicitacao->unidade_id,
