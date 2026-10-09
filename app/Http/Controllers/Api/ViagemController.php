@@ -114,11 +114,16 @@ class ViagemController extends Controller
             'retornar_origem' => 'sometimes|boolean',
         ]);
 
-        if ($r->boolean('retornar_origem') && $viagem->motivo_viagem !== 'transferencia_paciente') {
-            return response()->json([
-                'message' => 'Retorno à origem disponível apenas para transferência de paciente.',
-                'errors' => ['retornar_origem' => ['Retorno à origem disponível apenas para transferência de paciente.']],
-            ], 422);
+        if ($r->boolean('retornar_origem')) {
+            $erro = match (true) {
+                $viagem->motivo_viagem !== 'transferencia_paciente' => 'Retorno à origem disponível apenas para transferência de paciente.',
+                $viagem->viagem_ida_id !== null => 'Esta viagem já é o retorno à origem; não é possível gerar outro retorno.',
+                default => null,
+            };
+
+            if ($erro) {
+                return response()->json(['message' => $erro, 'errors' => ['retornar_origem' => [$erro]]], 422);
+            }
         }
 
         [$viagem, $retorno] = DB::transaction(function () use ($viagem, $data, $r) {
@@ -129,6 +134,7 @@ class ViagemController extends Controller
                 'veiculo_id' => $concluida->veiculo_id,
                 'motorista_id' => $concluida->motorista_id,
                 'checkin_id' => $concluida->checkin_id,
+                'viagem_ida_id' => $concluida->id,
                 'origem' => $concluida->destino,
                 'destino' => $concluida->origem,
                 'motivo_viagem' => $concluida->motivo_viagem,

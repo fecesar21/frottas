@@ -22,7 +22,7 @@ class Viagem extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'veiculo_id', 'motorista_id', 'checkin_id',
+        'veiculo_id', 'motorista_id', 'checkin_id', 'viagem_ida_id',
         'origem', 'destino', 'motivo_viagem', 'numero_atendimento',
         'km_saida', 'km_chegada',
         'saida_at', 'chegada_at', 'status', 'observacoes',

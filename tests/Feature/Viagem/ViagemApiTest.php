@@ -323,4 +323,26 @@ class ViagemApiTest extends TestCase
 
         $this->assertDatabaseHas('viagens', ['id' => $viagem->id, 'status' => 'em_andamento']);
     }
+
+    public function test_viagem_de_retorno_nao_permite_novo_retorno(): void
+    {
+        $this->loginGestor();
+        $ida = Viagem::factory()->create([
+            'veiculo_id' => Veiculo::factory()->create(['km_atual' => 4000])->id,
+            'km_saida' => 5000, 'motivo_viagem' => 'transferencia_paciente',
+        ]);
+
+        $res = $this->patchJson("/api/viagens/{$ida->id}/chegada", ['km_chegada' => 5120, 'retornar_origem' => true])
+            ->assertJsonPath('viagem_retorno.eh_retorno', true)
+            ->assertJsonPath('data.eh_retorno', false);
+        $retornoId = $res->json('viagem_retorno.id');
+        $this->assertDatabaseHas('viagens', ['id' => $retornoId, 'viagem_ida_id' => $ida->id]);
+
+        $this->patchJson("/api/viagens/{$retornoId}/chegada", ['km_chegada' => 5240, 'retornar_origem' => true])
+            ->assertJsonValidationErrors(['retornar_origem']);
+        $this->assertSame(2, Viagem::count());
+
+        $this->patchJson("/api/viagens/{$retornoId}/chegada", ['km_chegada' => 5240])
+            ->assertOk()->assertJsonPath('data.status', 'concluida');
+    }
 }

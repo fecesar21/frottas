@@ -15,6 +15,8 @@ class ViagemResource extends JsonResource
             'veiculo_id' => $this->veiculo_id,
             'motorista_id' => $this->motorista_id,
             'checkin_id' => $this->checkin_id,
+            'viagem_ida_id' => $this->viagem_ida_id,
+            'eh_retorno' => $this->viagem_ida_id !== null,
             'origem' => $this->origem,
             'destino' => $this->destino,
             'motivo_viagem' => $this->motivo_viagem,

@@ -41,8 +41,9 @@ export default function ViagensList() {
     onError: (e) => { setPerguntaRetorno(false); setError(e.response?.data?.message ?? 'Erro ao registrar chegada') },
   })
 
-  // Ambulância em transferência: ao chegar, o motorista decide se já volta à origem
-  const podeRetornar = chegadaTarget?.motivo_viagem === 'transferencia_paciente'
+  // Ambulância em transferência: ao chegar, o motorista decide se já volta à origem.
+  // A própria viagem de retorno não pergunta de novo — só encerra com o KM de chegada.
+  const podeRetornar = chegadaTarget?.motivo_viagem === 'transferencia_paciente' && !chegadaTarget?.eh_retorno
 
   const enviarChegada = (retornar) => doChegada.mutate({ id: chegadaTarget.id, data: { ...chegadaForm, retornar_origem: retornar } })
 
