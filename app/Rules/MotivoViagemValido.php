@@ -19,7 +19,7 @@ class MotivoViagemValido implements ValidationRule
         $motivo = MotivoViagem::porCodigo(is_string($value) ? $value : null);
         $mantido = $this->aceitarInativo !== null && $value === $this->aceitarInativo;
 
-        if (! $motivo || (! $motivo->ativo && ! $mantido) || ($this->solicitacao && ! $motivo->disponivel_solicitacao)) {
+        if (! $motivo || (! $motivo->ativo && ! $mantido) || ($motivo->ehRetorno() && ! $mantido) || ($this->solicitacao && ! $motivo->disponivel_solicitacao)) {
             $fail('Motivo de viagem inválido ou inativo.');
         }
     }

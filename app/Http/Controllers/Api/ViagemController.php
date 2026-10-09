@@ -7,6 +7,7 @@ use App\Http\Requests\Viagem\StoreViagemRequest;
 use App\Http\Requests\Viagem\UpdateViagemRequest;
 use App\Http\Resources\ViagemResource;
 use App\Models\AuditoriaCorrecao;
+use App\Models\MotivoViagem;
 use App\Models\Motorista;
 use App\Models\Viagem;
 use App\Services\ChecklistVeiculoService;
@@ -137,7 +138,7 @@ class ViagemController extends Controller
                 'viagem_ida_id' => $concluida->id,
                 'origem' => $concluida->destino,
                 'destino' => $concluida->origem,
-                'motivo_viagem' => $concluida->motivo_viagem,
+                'motivo_viagem' => MotivoViagem::RETORNO,
                 'numero_atendimento' => $concluida->numero_atendimento,
                 'km_saida' => $concluida->km_chegada,
             ]) : null;

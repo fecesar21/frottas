@@ -297,7 +297,7 @@ class ViagemApiTest extends TestCase
             'id' => $res->json('viagem_retorno.id'),
             'status' => 'em_andamento', 'km_saida' => 5120,
             'veiculo_id' => $viagem->veiculo_id, 'motorista_id' => $viagem->motorista_id,
-            'motivo_viagem' => 'transferencia_paciente', 'numero_atendimento' => 123456,
+            'motivo_viagem' => 'retorno', 'numero_atendimento' => 123456,
         ]);
     }
 
@@ -344,5 +344,22 @@ class ViagemApiTest extends TestCase
 
         $this->patchJson("/api/viagens/{$retornoId}/chegada", ['km_chegada' => 5240])
             ->assertOk()->assertJsonPath('data.status', 'concluida');
+    }
+
+    public function test_motivo_retorno_nao_pode_ser_escolhido_manualmente(): void
+    {
+        $this->loginAdmin();
+        $viagem = Viagem::factory()->create(['motivo_viagem' => 'tfd']);
+
+        $this->putJson("/api/viagens/{$viagem->id}", ['motivo_viagem' => 'retorno'])
+            ->assertJsonValidationErrors(['motivo_viagem']);
+    }
+
+    public function test_viagem_de_retorno_pode_ser_editada_mantendo_o_motivo(): void
+    {
+        $this->loginAdmin();
+        $viagem = Viagem::factory()->create(['motivo_viagem' => 'retorno']);
+
+        $this->putJson("/api/viagens/{$viagem->id}", ['motivo_viagem' => 'retorno', 'origem' => 'X'])->assertOk();
     }
 }

@@ -17,7 +17,7 @@ class MotivoViagemController extends Controller
     {
         // "todos" (inclui inativos e flag em_uso) é exclusivo do admin
         $todos = $r->boolean('todos') && $r->user()->perfil === 'admin';
-        $q = MotivoViagem::query()->orderBy('nome');
+        $q = MotivoViagem::query()->selecionaveis()->orderBy('nome');
         if (! $todos) {
             $q->ativos();
         }
@@ -42,6 +42,7 @@ class MotivoViagemController extends Controller
 
     public function update(Request $r, MotivoViagem $motivoViagem): MotivoViagemResource
     {
+        abort_if($motivoViagem->ehRetorno(), 422, 'O motivo Retorno é automático e não pode ser alterado.');
         // "codigo" não consta nas regras: é imutável após a criação
         $data = $r->validate($this->regras($motivoViagem));
         if ($motivoViagem->sistema && isset($data['tipo_veiculo']) && $data['tipo_veiculo'] !== $motivoViagem->tipo_veiculo) {
@@ -54,6 +55,7 @@ class MotivoViagemController extends Controller
 
     public function destroy(MotivoViagem $motivoViagem): JsonResponse
     {
+        abort_if($motivoViagem->ehRetorno(), 422, 'O motivo Retorno é automático e não pode ser alterado.');
         abort_if($motivoViagem->sistema, 422, 'Motivos de sistema não podem ser excluídos. Inative-o.');
         abort_if($motivoViagem->emUso(), 422, 'Motivo já usado em viagens ou solicitações. Inative-o em vez de excluir.');
         $motivoViagem->delete();

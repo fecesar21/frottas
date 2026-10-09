@@ -73,4 +73,17 @@ class MotivoViagemApiTest extends TestCase
         $this->deleteJson("/api/motivos-viagem/{$livre->id}")->assertOk();
         $this->assertModelMissing($livre);
     }
+
+    public function test_motivo_retorno_nao_aparece_nem_pode_ser_alterado(): void
+    {
+        $retorno = MotivoViagem::porCodigo(MotivoViagem::RETORNO);
+        $this->assertSame('Retorno', $retorno->nome);
+
+        Sanctum::actingAs(Usuario::factory()->create(['perfil' => 'admin']));
+        $codigos = collect($this->getJson('/api/motivos-viagem?todos=1')->json('data'))->pluck('codigo');
+        $this->assertNotContains(MotivoViagem::RETORNO, $codigos);
+
+        $this->putJson("/api/motivos-viagem/{$retorno->id}", ['nome' => 'Outro'])->assertStatus(422);
+        $this->deleteJson("/api/motivos-viagem/{$retorno->id}")->assertStatus(422);
+    }
 }

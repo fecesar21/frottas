@@ -19,6 +19,9 @@ class MotivoViagem extends Model
 
     public const TIPO_AMBOS = 'ambos';
 
+    /** Motivo automático da viagem de retorno à origem: não é selecionável nem editável. */
+    public const RETORNO = 'retorno';
+
     protected $table = 'motivos_viagem';
 
     public $incrementing = false;
@@ -89,6 +92,16 @@ class MotivoViagem extends Model
     {
         return DB::table('viagens')->where('motivo_viagem', $this->codigo)->exists()
             || DB::table('solicitacoes')->where('motivo', $this->codigo)->exists();
+    }
+
+    public function ehRetorno(): bool
+    {
+        return $this->codigo === self::RETORNO;
+    }
+
+    public function scopeSelecionaveis(Builder $q): Builder
+    {
+        return $q->where('codigo', '!=', self::RETORNO);
     }
 
     public function scopeAtivos(Builder $q): Builder
