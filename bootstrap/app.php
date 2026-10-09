@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EscopoUnidade;
+use App\Http\Middleware\RestringirDashboard;
 use App\Http\Middleware\RestringirSolicitante;
 use App\Http\Middleware\SomenteAdmin;
 use Carbon\Carbon;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle' => ThrottleRequests::class,
             'escopo.unidade' => EscopoUnidade::class,
             'solicitante.restrito' => RestringirSolicitante::class,
+            'dashboard.restrito' => RestringirDashboard::class,
         ]);
 
         $middleware->appendToGroup('api', [

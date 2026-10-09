@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckinController;
 use App\Http\Controllers\Api\ChecklistVeiculoController;
 use App\Http\Controllers\Api\ColaboradorController;
+use App\Http\Controllers\Api\DashboardGerencialController;
 use App\Http\Controllers\Api\EscalaController;
 use App\Http\Controllers\Api\FrotaStatusController;
 use App\Http\Controllers\Api\KmController;
@@ -48,7 +49,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // ── Rotas protegidas por token Sanctum ────────────────────
-Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->group(function () {
+Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito', 'dashboard.restrito'])->group(function () {
 
     // Veículos
     Route::get('frota/status', [FrotaStatusController::class, 'status'])->name('frota.status');
@@ -114,6 +115,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito'])->g
     Route::prefix('relatorios')->group(function () {
         Route::get('dashboard', [RelatorioController::class, 'dashboard']);
         Route::get('dashboard/graficos', [RelatorioController::class, 'dashboardGraficos']);
+        Route::get('dashboard-gerencial/transferencias', [DashboardGerencialController::class, 'transferencias'])->name('dashboard-gerencial.transferencias');
         Route::get('abastecimentos', [RelatorioController::class, 'abastecimentos']);
         Route::get('abastecimentos/pdf', [RelatorioController::class, 'abastecimentosPdf']);
         Route::get('viagens', [RelatorioController::class, 'viagens']);

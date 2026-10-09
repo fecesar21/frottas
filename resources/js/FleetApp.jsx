@@ -21,6 +21,7 @@ import ConfiguracoesHub from './pages/configuracoes/ConfiguracoesHub'
 import ConfiguracoesLdap from './pages/configuracoes/ConfiguracoesLdap'
 import MotivosViagem from './pages/configuracoes/MotivosViagem'
 import LocalidadesList from './pages/localidades/LocalidadesList'
+import PainelGerencial from './pages/painel/PainelGerencial'
 
 function GestorRoute({ children }) {
   const { isGestor } = useAuth()
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/esqueci-senha" element={<EsqueciSenha />} />
             <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+            <Route path="/painel" element={<PainelGerencial />} />
             <Route element={<PrivateRoute />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/veiculos" element={<VeiculosList />} />

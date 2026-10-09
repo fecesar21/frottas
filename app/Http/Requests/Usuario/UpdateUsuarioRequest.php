@@ -18,7 +18,7 @@ class UpdateUsuarioRequest extends FormRequest
             'nome' => 'sometimes|string|max:100',
             'cpf' => ['sometimes', 'string', 'max:14', Rule::unique('usuarios')->ignore($this->route('usuario'))],
             'email' => ['sometimes', 'email', Rule::unique('usuarios')->ignore($this->route('usuario'))],
-            'perfil' => 'sometimes|in:admin,gestor,operador',
+            'perfil' => 'sometimes|in:admin,gestor,operador,dashboard',
             'ativo' => 'sometimes|boolean',
             'senha' => ['nullable', 'string', 'min:6', 'regex:/^[0-9]+$/'],
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',

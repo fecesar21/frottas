@@ -32,6 +32,7 @@ export function PrivateRoute() {
   const location = useLocation()
 
   if (!user) return <Navigate to="/login" replace />
+  if (user.perfil === 'dashboard') return <Navigate to="/painel" replace />
 
   if (isOperador) {
     const rotasPermitidas = checkinAtivo ? ROTAS_OPERADOR_COM_CHECKIN : ROTAS_OPERADOR_SEM_CHECKIN

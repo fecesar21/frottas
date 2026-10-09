@@ -1,3 +1,4 @@
+import { entrarModoKiosk } from './painel/kiosk'
 import { useState } from 'react'
 import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -21,6 +22,7 @@ export default function Login() {
   // Quando o estado `user` for atualizado após login bem-sucedido,
   // esta guarda dispara reativamente e redireciona para o dashboard.
   if (user) {
+    if (user.perfil === 'dashboard') return <Navigate to="/painel" replace />
     if (user.perfil === 'operador')
       return <Navigate to={user.checkin_ativo ? '/viagens' : '/checkins'} replace />
     return <Navigate to="/" replace />
@@ -31,7 +33,8 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      await login({ ...form, usuario: form.usuario.replace(/\D/g, '') })
+      const u = await login({ ...form, usuario: form.usuario.replace(/\D/g, '') })
+      if (u?.perfil === 'dashboard') entrarModoKiosk()
       // Não chamamos navigate() aqui — o setUser dentro de login()
       // atualiza o contexto e a guarda "if (user)" acima redireciona
       // de forma reativa, evitando a race condition com PrivateRoute.

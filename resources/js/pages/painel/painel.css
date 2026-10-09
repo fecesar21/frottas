@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+.painel {
+  --bg: #F3F6F8;
+  --surface: #FFFFFF;
+  --ink: #14222D;
+  --muted: #5C6D7A;
+  --rule: #D8E0E6;
+  --seg-1: #9DBBD0;
+  --seg-2: #4F86AC;
+  --seg-3: #1F4E6F;
+  --ok: #1F8A5B;
+  --warn: #C9711C;
+  --bad: #C8372D;
+  --none: #8695A1;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1;
+  padding: clamp(16px, 3vw, 48px);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(24px, 3vw, 48px);
+  transition: background-color .3s, color .3s;
+}
+
+.painel[data-theme='escuro'] {
+  --bg: #0E1921;
+  --surface: #15242F;
+  --ink: #E6EDF2;
+  --muted: #8EA0AD;
+  --rule: #24384A;
+  --seg-1: #3C6A8A;
+  --seg-2: #6FA3C7;
+  --seg-3: #B7D4E8;
+  --ok: #3DBB82;
+  --warn: #F0A04B;
+  --bad: #EF6A5E;
+  --none: #6B7C89;
+}
+
+/* Cabeçalho */
+.painel-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.painel-titulo { font-size: clamp(1.25rem, 1.6vw, 1.75rem); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.painel-sub { color: var(--muted); font-size: clamp(.875rem, 1vw, 1rem); margin: 4px 0 0; }
+.painel-controles { display: flex; align-items: center; gap: 8px; }
+.painel-select, .painel-botao {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  height: 44px;
+}
+.painel-select { padding: 0 12px; cursor: pointer; }
+.painel-botao { width: 44px; display: grid; place-items: center; cursor: pointer; }
+.painel-botao:hover, .painel-select:hover { border-color: var(--muted); }
+.painel-select:focus-visible, .painel-botao:focus-visible { outline: 3px solid var(--seg-2); outline-offset: 2px; }
+
+/* Destaque */
+.painel-corpo { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 72px); align-content: center; row-gap: clamp(16px, 3vh, 40px); }
+.painel-rotulo { color: var(--muted); font-size: clamp(1rem, 1.3vw, 1.375rem); font-weight: 600; margin: 0; }
+.painel-numero { font-size: clamp(4.5rem, min(11vw, 22vh), 12rem); font-weight: 800; line-height: .9; letter-spacing: -0.04em; margin: 16px 0 0; }
+.painel-numero small { font-size: .32em; font-weight: 700; letter-spacing: -0.01em; margin-left: .2em; color: var(--muted); }
+.painel-status { display: inline-flex; align-items: center; gap: 10px; margin-top: 20px; font-weight: 700; font-size: clamp(1rem, 1.3vw, 1.375rem); color: var(--status); }
+.painel-status::before { content: ''; width: 14px; height: 14px; border-radius: 50%; background: var(--status); }
+.painel-destaque { --status: var(--none); }
+.painel-destaque .painel-numero { color: var(--status); }
+.painel-destaque[data-cor='verde'] { --status: var(--ok); }
+.painel-destaque[data-cor='laranja'] { --status: var(--warn); }
+.painel-destaque[data-cor='vermelho'] { --status: var(--bad); }
+
+.painel-total { border-left: 1px solid var(--rule); padding-left: clamp(24px, 3vw, 48px); align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+.painel-total .painel-numero { font-size: clamp(3.5rem, min(8vw, 16vh), 8rem); }
+.painel-total-periodo { color: var(--muted); margin-top: 12px; font-weight: 500; }
+
+/* Linha do tempo das etapas */
+.painel-linha { grid-column: 1 / -1; margin-top: clamp(16px, 2vw, 32px); }
+.painel-barra { position: relative; height: 22px; display: flex; gap: 3px; }
+.painel-seg { height: 100%; border-radius: 4px; transition: flex-grow .6s ease; min-width: 6px; }
+.painel-seg:nth-child(1) { background: var(--seg-1); }
+.painel-seg:nth-child(2) { background: var(--seg-2); }
+.painel-seg:nth-child(3) { background: var(--seg-3); }
+.painel-resto { border-radius: 4px; background: var(--rule); opacity: .6; }
+.painel-marco { position: absolute; top: -14px; bottom: -14px; width: 2px; background: var(--ink); }
+.painel-marco span { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: .875rem; font-weight: 700; }
+
+.painel-etapas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+.painel-etapa { border-top: 4px solid var(--cor); padding-top: 14px; }
+.painel-etapa:nth-child(1) { --cor: var(--seg-1); }
+.painel-etapa:nth-child(2) { --cor: var(--seg-2); }
+.painel-etapa:nth-child(3) { --cor: var(--seg-3); }
+.painel-etapa-nome { color: var(--muted); font-weight: 600; font-size: clamp(.9rem, 1.1vw, 1.125rem); margin: 0; }
+.painel-etapa-valor { font-size: clamp(2rem, min(4vw, 8vh), 3.75rem); font-weight: 800; letter-spacing: -0.03em; margin: 6px 0 0; }
+
+.painel-rodape { color: var(--muted); font-size: .875rem; }
+
+@media (max-width: 900px) {
+  .painel-corpo { grid-template-columns: 1fr; }
+  .painel-total { border-left: 0; border-top: 1px solid var(--rule); padding: 24px 0 0; }
+  .painel-etapas { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .painel, .painel-seg { transition: none; }
+}
+.painel-etapa-valor small { font-size: .45em; font-weight: 700; margin-left: .25em; color: var(--muted); }

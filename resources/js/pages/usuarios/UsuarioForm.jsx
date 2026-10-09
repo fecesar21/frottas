@@ -116,6 +116,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="operador">Operador</option>
           <option value="gestor">Gestor</option>
+          <option value="dashboard">Dashboard (painel kiosk)</option>
           <option value="admin">Admin</option>
         </select>
       </div>

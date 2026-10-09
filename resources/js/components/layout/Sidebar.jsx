@@ -39,7 +39,7 @@ const sections = [
   },
 ]
 
-const perfil = { admin: 'Admin', gestor: 'Gestor', operador: 'Operador' }
+const perfil = { admin: 'Admin', gestor: 'Gestor', operador: 'Operador', dashboard: 'Dashboard' }
 
 function itemVisivel(item, { isOperador, isGestor, checkinAtivo }) {
   if (isOperador) {
