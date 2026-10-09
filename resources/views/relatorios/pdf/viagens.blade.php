@@ -20,7 +20,7 @@
     <table class="dados">
         <thead>
             <tr>
-                <th>Saída</th><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Origem → Destino</th>
+                <th>Saída</th><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Origem - Destino</th>
                 <th>Motivo</th><th>Nº Atend.</th><th>Autorizado Referência</th><th>Colaboradores</th><th>KM perc.</th><th>Duração</th><th>Status</th>
             </tr>
         </thead>
@@ -31,7 +31,7 @@
                     <td>{{ $r->chegada_at ? \Carbon\Carbon::parse($r->chegada_at)->format('d/m H:i') : '—' }}</td>
                     <td>{{ $r->placa }}</td>
                     <td>{{ $r->motorista_nome }}</td>
-                    <td>{{ $r->origem }} → {{ $r->destino }}</td>
+                    <td>{{ $r->origem }} - {{ $r->destino }}</td>
                     <td>{{ \App\Models\MotivoViagem::rotulo($r->motivo_viagem) }}</td>
                     <td>{{ $r->numero_atendimento ?? '—' }}</td>
                     <td>{{ $r->autorizacao_referencia_em ? \Carbon\Carbon::parse($r->autorizacao_referencia_em)->format('d/m H:i') : '—' }}</td>
