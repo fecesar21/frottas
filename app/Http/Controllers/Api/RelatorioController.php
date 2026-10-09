@@ -320,6 +320,7 @@ class RelatorioController extends Controller
         $rows = DB::table('viagens as vg')
             ->leftJoin('veiculos as v', 'vg.veiculo_id', '=', 'v.id')
             ->leftJoin('motoristas as m', 'vg.motorista_id', '=', 'm.id')
+            ->leftJoin('solicitacoes as s', 's.viagem_id', '=', 'vg.id')
             ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$de, $ate])
             ->when(array_filter((array) $r->input('motorista_ids', $r->motorista_id)), fn ($q, $ids) => $q->whereIn('vg.motorista_id', $ids))
             ->when($r->motivo, fn ($q, $m) => $q->where('vg.motivo_viagem', $m))
@@ -329,7 +330,7 @@ class RelatorioController extends Controller
                 'v.placa', 'v.modelo',
                 'm.nome as motorista_nome',
                 'vg.origem', 'vg.destino',
-                'vg.motivo_viagem', 'vg.numero_atendimento',
+                'vg.motivo_viagem', 'vg.numero_atendimento', 's.autorizacao_referencia_em',
                 'vg.km_saida', 'vg.km_chegada', 'vg.status'
             )
             ->get();

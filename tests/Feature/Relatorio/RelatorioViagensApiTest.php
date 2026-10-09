@@ -3,6 +3,7 @@
 namespace Tests\Feature\Relatorio;
 
 use App\Models\Colaborador;
+use App\Models\Solicitacao;
 use App\Models\Viagem;
 use Tests\TestCase;
 
@@ -55,6 +56,22 @@ class RelatorioViagensApiTest extends TestCase
 
         $this->assertSame('ANA PAULA, BRUNO LIMA', $linhas[$comColaboradores->id]['colaboradores']);
         $this->assertNull($linhas[$semColaboradores->id]['colaboradores']);
+    }
+
+    public function test_relatorio_mostra_autorizacao_da_referencia_da_solicitacao(): void
+    {
+        $this->loginGestor();
+        $comSolicitacao = Viagem::factory()->create(['saida_at' => now(), 'motivo_viagem' => 'transferencia_paciente']);
+        Solicitacao::factory()->create([
+            'viagem_id' => $comSolicitacao->id,
+            'autorizacao_referencia_em' => '2026-10-09 14:30:00',
+        ]);
+        $semSolicitacao = Viagem::factory()->create(['saida_at' => now()]);
+
+        $linhas = collect($this->getJson('/api/relatorios/viagens')->assertOk()->json('rows'))->keyBy('id');
+
+        $this->assertStringStartsWith('2026-10-09 14:30', $linhas[$comSolicitacao->id]['autorizacao_referencia_em']);
+        $this->assertNull($linhas[$semSolicitacao->id]['autorizacao_referencia_em']);
     }
 
     public function test_pdf_do_relatorio_de_viagens_e_gerado(): void
