@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, startOfMonth } from 'date-fns'
 import * as relatoriosApi from '../../api/relatorios'
@@ -15,10 +15,10 @@ const fmtMotivo = (r) => r.motivo_nome ?? r.motivo_viagem ?? '—'
 export default function RelatorioViagens() {
   const [de, setDe] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
   const [ate, setAte] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [motoristaId, setMotoristaId] = useState('')
+  const [motoristaIds, setMotoristaIds] = useState([])
   const [motivo, setMotivo] = useState('')
   const [exportando, setExportando] = useState(false)
-  const filtros = { de, ate, motorista_id: motoristaId || undefined, motivo: motivo || undefined }
+  const filtros = { de, ate, motorista_ids: motoristaIds.length ? motoristaIds : undefined, motivo: motivo || undefined }
 
   const { data: motoristas } = useQuery({
     queryKey: ['motoristas', 'relatorio'],
@@ -33,8 +33,9 @@ export default function RelatorioViagens() {
   })
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['relatorio-viagens', de, ate, motoristaId, motivo],
+    queryKey: ['relatorio-viagens', de, ate, motoristaIds, motivo],
     queryFn: () => relatoriosApi.viagens(filtros).then(r => r.data),
+    placeholderData: (anterior) => anterior,
   })
 
   const exportarPdf = async () => {
@@ -58,10 +59,7 @@ export default function RelatorioViagens() {
           Até:
           <input type="date" value={ate} onChange={e => setAte(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
         </label>
-        <select aria-label="Motorista" value={motoristaId} onChange={e => setMotoristaId(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
-          <option value="">TODOS OS MOTORISTAS</option>
-          {(motoristas ?? []).map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
-        </select>
+        <MotoristasMultiSelect motoristas={motoristas ?? []} value={motoristaIds} onChange={setMotoristaIds} />
         <select aria-label="Motivo" value={motivo} onChange={e => setMotivo(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
           <option value="">TODOS OS MOTIVOS</option>
           {(motivos ?? []).map(m => <option key={m.codigo} value={m.codigo}>{m.nome}</option>)}
@@ -124,6 +122,58 @@ export default function RelatorioViagens() {
             </table>
           </div>
         </>
+      )}
+    </div>
+  )
+}
+
+function MotoristasMultiSelect({ motoristas, value, onChange }) {
+  const [aberto, setAberto] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!aberto) return
+    const fechar = (e) => { if (!ref.current?.contains(e.target)) setAberto(false) }
+    document.addEventListener('mousedown', fechar)
+    return () => document.removeEventListener('mousedown', fechar)
+  }, [aberto])
+
+  const alternar = (id) => onChange(value.includes(id) ? value.filter(v => v !== id) : [...value, id])
+  const rotulo = value.length === 0
+    ? 'TODOS OS MOTORISTAS'
+    : value.length === 1
+      ? motoristas.find(m => m.id === value[0])?.nome ?? '1 motorista'
+      : `${value.length} motoristas selecionados`
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-label="Motoristas"
+        aria-expanded={aberto}
+        onClick={() => setAberto(a => !a)}
+        className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white min-w-56 text-left flex items-center justify-between gap-2"
+      >
+        <span className="truncate max-w-64">{rotulo}</span>
+        <span className="text-gray-400 text-xs">▾</span>
+      </button>
+      {aberto && (
+        <div className="absolute z-20 mt-1 w-72 max-h-72 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+          <button
+            type="button"
+            onClick={() => onChange([])}
+            disabled={value.length === 0}
+            className="w-full text-left px-3 py-1.5 text-xs text-blue-600 hover:bg-gray-50 disabled:text-gray-300"
+          >
+            Limpar seleção (todos)
+          </button>
+          {motoristas.map(m => (
+            <label key={m.id} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+              <input type="checkbox" checked={value.includes(m.id)} onChange={() => alternar(m.id)} />
+              {m.nome}
+            </label>
+          ))}
+        </div>
       )}
     </div>
   )

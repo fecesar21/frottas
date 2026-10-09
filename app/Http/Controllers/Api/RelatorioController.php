@@ -321,7 +321,7 @@ class RelatorioController extends Controller
             ->leftJoin('veiculos as v', 'vg.veiculo_id', '=', 'v.id')
             ->leftJoin('motoristas as m', 'vg.motorista_id', '=', 'm.id')
             ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$de, $ate])
-            ->when($r->motorista_id, fn ($q, $id) => $q->where('vg.motorista_id', $id))
+            ->when(array_filter((array) $r->input('motorista_ids', $r->motorista_id)), fn ($q, $ids) => $q->whereIn('vg.motorista_id', $ids))
             ->when($r->motivo, fn ($q, $m) => $q->where('vg.motivo_viagem', $m))
             ->orderBy('vg.saida_at', 'desc')
             ->select(

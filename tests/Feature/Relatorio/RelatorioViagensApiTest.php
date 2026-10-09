@@ -86,4 +86,17 @@ class RelatorioViagensApiTest extends TestCase
         $this->assertSame([$alvo->id], collect($ambos->json('rows'))->pluck('id')->all());
         $this->assertSame(1, $ambos->json('totais.total_viagens'));
     }
+
+    public function test_relatorio_viagens_filtra_por_varios_motoristas(): void
+    {
+        $this->loginGestor();
+        $a = Viagem::factory()->create(['saida_at' => now()]);
+        $b = Viagem::factory()->create(['saida_at' => now()]);
+        Viagem::factory()->create(['saida_at' => now()]);
+
+        $resposta = $this->getJson('/api/relatorios/viagens?'.http_build_query(['motorista_ids' => [$a->motorista_id, $b->motorista_id]]))
+            ->assertOk();
+
+        $this->assertEqualsCanonicalizing([$a->id, $b->id], collect($resposta->json('rows'))->pluck('id')->all());
+    }
 }
