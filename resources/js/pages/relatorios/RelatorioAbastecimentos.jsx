@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, startOfMonth } from 'date-fns'
 import * as relatoriosApi from '../../api/relatorios'
+import * as veiculosApi from '../../api/veiculos'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { downloadBlob } from '../../utils/downloadBlob'
 
@@ -11,17 +12,25 @@ const fmtDt = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm') : '—'
 export default function RelatorioAbastecimentos() {
   const [de, setDe] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
   const [ate, setAte] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [veiculoId, setVeiculoId] = useState('')
   const [exportando, setExportando] = useState(false)
+  const filtros = { de, ate, veiculo_id: veiculoId || undefined }
+
+  const { data: veiculos } = useQuery({
+    queryKey: ['veiculos', 'relatorio'],
+    queryFn: () => veiculosApi.listar({ per_page: 100 }).then(r => r.data.data ?? r.data),
+    staleTime: 60_000,
+  })
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['relatorio-abastecimentos', de, ate],
-    queryFn: () => relatoriosApi.abastecimentos({ de, ate }).then(r => r.data),
+    queryKey: ['relatorio-abastecimentos', de, ate, veiculoId],
+    queryFn: () => relatoriosApi.abastecimentos(filtros).then(r => r.data),
   })
 
   const exportarPdf = async () => {
     setExportando(true)
     try {
-      const { data: blob } = await relatoriosApi.abastecimentosPdf({ de, ate })
+      const { data: blob } = await relatoriosApi.abastecimentosPdf(filtros)
       downloadBlob(blob, 'relatorio-abastecimentos.pdf')
     } finally {
       setExportando(false)
@@ -39,6 +48,10 @@ export default function RelatorioAbastecimentos() {
           Até:
           <input type="date" value={ate} onChange={e => setAte(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
         </label>
+        <select aria-label="Veículo" value={veiculoId} onChange={e => setVeiculoId(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+          <option value="">TODOS OS VEÍCULOS</option>
+          {(veiculos ?? []).map(v => <option key={v.id} value={v.id}>{v.placa}</option>)}
+        </select>
         <button onClick={() => refetch()} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">Filtrar</button>
         <button onClick={exportarPdf} disabled={exportando} className="ml-auto bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50">
           {exportando ? 'Exportando...' : 'Exportar PDF'}

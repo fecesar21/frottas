@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, startOfMonth } from 'date-fns'
 import * as relatoriosApi from '../../api/relatorios'
+import * as motoristasApi from '../../api/motoristas'
+import * as motivosApi from '../../api/motivosViagem'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Badge from '../../components/ui/Badge'
 import { downloadBlob } from '../../utils/downloadBlob'
@@ -13,17 +15,32 @@ const fmtMotivo = (r) => r.motivo_nome ?? r.motivo_viagem ?? '—'
 export default function RelatorioViagens() {
   const [de, setDe] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
   const [ate, setAte] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [motoristaId, setMotoristaId] = useState('')
+  const [motivo, setMotivo] = useState('')
   const [exportando, setExportando] = useState(false)
+  const filtros = { de, ate, motorista_id: motoristaId || undefined, motivo: motivo || undefined }
+
+  const { data: motoristas } = useQuery({
+    queryKey: ['motoristas', 'relatorio'],
+    queryFn: () => motoristasApi.listar().then(r => r.data.data ?? r.data),
+    staleTime: 60_000,
+  })
+
+  const { data: motivos } = useQuery({
+    queryKey: ['motivos-viagem', 'relatorio'],
+    queryFn: () => motivosApi.listar().then(r => r.data.data ?? r.data),
+    staleTime: 60_000,
+  })
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['relatorio-viagens', de, ate],
-    queryFn: () => relatoriosApi.viagens({ de, ate }).then(r => r.data),
+    queryKey: ['relatorio-viagens', de, ate, motoristaId, motivo],
+    queryFn: () => relatoriosApi.viagens(filtros).then(r => r.data),
   })
 
   const exportarPdf = async () => {
     setExportando(true)
     try {
-      const { data: blob } = await relatoriosApi.viagensPdf({ de, ate })
+      const { data: blob } = await relatoriosApi.viagensPdf(filtros)
       downloadBlob(blob, 'relatorio-viagens.pdf')
     } finally {
       setExportando(false)
@@ -41,6 +58,14 @@ export default function RelatorioViagens() {
           Até:
           <input type="date" value={ate} onChange={e => setAte(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
         </label>
+        <select aria-label="Motorista" value={motoristaId} onChange={e => setMotoristaId(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+          <option value="">TODOS OS MOTORISTAS</option>
+          {(motoristas ?? []).map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+        </select>
+        <select aria-label="Motivo" value={motivo} onChange={e => setMotivo(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+          <option value="">TODOS OS MOTIVOS</option>
+          {(motivos ?? []).map(m => <option key={m.codigo} value={m.codigo}>{m.nome}</option>)}
+        </select>
         <button onClick={() => refetch()} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">Filtrar</button>
         <button onClick={exportarPdf} disabled={exportando} className="ml-auto bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50">
           {exportando ? 'Exportando...' : 'Exportar PDF'}

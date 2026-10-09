@@ -260,6 +260,7 @@ class RelatorioController extends Controller
             ->leftJoin('veiculos as v', 'a.veiculo_id', '=', 'v.id')
             ->leftJoin('motoristas as m', 'a.motorista_id', '=', 'm.id')
             ->whereRaw('DATE(COALESCE(a.abastecido_at, a.created_at)) BETWEEN ? AND ?', [$de, $ate])
+            ->when($r->veiculo_id, fn ($q, $id) => $q->where('a.veiculo_id', $id))
             ->orderByRaw('COALESCE(a.abastecido_at, a.created_at) DESC')
             ->select(
                 'a.id',
@@ -320,6 +321,8 @@ class RelatorioController extends Controller
             ->leftJoin('veiculos as v', 'vg.veiculo_id', '=', 'v.id')
             ->leftJoin('motoristas as m', 'vg.motorista_id', '=', 'm.id')
             ->whereRaw('DATE(vg.saida_at) BETWEEN ? AND ?', [$de, $ate])
+            ->when($r->motorista_id, fn ($q, $id) => $q->where('vg.motorista_id', $id))
+            ->when($r->motivo, fn ($q, $m) => $q->where('vg.motivo_viagem', $m))
             ->orderBy('vg.saida_at', 'desc')
             ->select(
                 'vg.id', 'vg.saida_at', 'vg.chegada_at',

@@ -31,6 +31,21 @@ class RelatorioApiTest extends TestCase
             ->assertJsonStructure(['rows', 'totais', 'por_veiculo']);
     }
 
+    public function test_relatorio_abastecimentos_filtra_por_veiculo(): void
+    {
+        $this->loginAdmin();
+        $alvo = Veiculo::factory()->create();
+        $outro = Veiculo::factory()->create();
+        Abastecimento::factory()->create(['veiculo_id' => $alvo->id, 'litros' => 40, 'valor_litro' => 5, 'abastecido_at' => now()]);
+        Abastecimento::factory()->create(['veiculo_id' => $outro->id, 'litros' => 10, 'valor_litro' => 5, 'abastecido_at' => now()]);
+
+        $resposta = $this->getJson('/api/relatorios/abastecimentos?veiculo_id='.$alvo->id)->assertOk();
+
+        $this->assertCount(1, $resposta->json('rows'));
+        $this->assertSame($alvo->placa, $resposta->json('rows.0.placa'));
+        $this->assertEquals(40, $resposta->json('totais.total_litros'));
+    }
+
     public function test_relatorio_plantao_retorna_totais(): void
     {
         $this->loginAdmin();

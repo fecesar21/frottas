@@ -66,4 +66,24 @@ class RelatorioViagensApiTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_relatorio_viagens_filtra_por_motorista_e_motivo(): void
+    {
+        $this->loginGestor();
+        $alvo = Viagem::factory()->create(['saida_at' => now(), 'motivo_viagem' => 'transferencia_paciente']);
+        $mesmoMotoristaOutroMotivo = Viagem::factory()->create([
+            'saida_at' => now(), 'motorista_id' => $alvo->motorista_id, 'motivo_viagem' => 'transporte_colaborador',
+        ]);
+        Viagem::factory()->create(['saida_at' => now(), 'motivo_viagem' => 'transferencia_paciente']);
+
+        $porMotorista = $this->getJson('/api/relatorios/viagens?motorista_id='.$alvo->motorista_id)->assertOk();
+        $this->assertEqualsCanonicalizing(
+            [$alvo->id, $mesmoMotoristaOutroMotivo->id],
+            collect($porMotorista->json('rows'))->pluck('id')->all()
+        );
+
+        $ambos = $this->getJson('/api/relatorios/viagens?motorista_id='.$alvo->motorista_id.'&motivo=transferencia_paciente')->assertOk();
+        $this->assertSame([$alvo->id], collect($ambos->json('rows'))->pluck('id')->all());
+        $this->assertSame(1, $ambos->json('totais.total_viagens'));
+    }
 }
