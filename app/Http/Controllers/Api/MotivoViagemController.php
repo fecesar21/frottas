@@ -17,7 +17,11 @@ class MotivoViagemController extends Controller
     {
         // "todos" (inclui inativos e flag em_uso) é exclusivo do admin
         $todos = $r->boolean('todos') && $r->user()->perfil === 'admin';
-        $q = MotivoViagem::query()->selecionaveis()->orderBy('nome');
+        $q = MotivoViagem::query()->orderBy('nome');
+        // "Retorno" é automático: só entra quando pedido (filtros de relatório), nunca nas listas de seleção
+        if (! $r->boolean('incluir_retorno')) {
+            $q->selecionaveis();
+        }
         if (! $todos) {
             $q->ativos();
         }

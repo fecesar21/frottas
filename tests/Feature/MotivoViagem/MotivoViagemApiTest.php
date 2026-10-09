@@ -86,4 +86,11 @@ class MotivoViagemApiTest extends TestCase
         $this->putJson("/api/motivos-viagem/{$retorno->id}", ['nome' => 'Outro'])->assertStatus(422);
         $this->deleteJson("/api/motivos-viagem/{$retorno->id}")->assertStatus(422);
     }
+
+    public function test_retorno_listado_so_quando_pedido_para_filtros(): void
+    {
+        Sanctum::actingAs(Usuario::factory()->create(['perfil' => 'gestor']));
+        $codigos = collect($this->getJson('/api/motivos-viagem?incluir_retorno=1')->json('data'))->pluck('codigo');
+        $this->assertContains(MotivoViagem::RETORNO, $codigos);
+    }
 }

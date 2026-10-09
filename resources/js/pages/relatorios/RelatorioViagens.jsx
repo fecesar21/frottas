@@ -28,7 +28,7 @@ export default function RelatorioViagens() {
 
   const { data: motivos } = useQuery({
     queryKey: ['motivos-viagem', 'relatorio'],
-    queryFn: () => motivosApi.listar().then(r => r.data.data ?? r.data),
+    queryFn: () => motivosApi.listar({ incluir_retorno: 1 }).then(r => r.data.data ?? r.data),
     staleTime: 60_000,
   })
 
