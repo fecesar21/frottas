@@ -15,7 +15,10 @@ import { rotuloMotivo } from '../../utils/solicitacao'
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 
 const detalheMotivo = (s) => {
-  if (s.origem || s.destino) return `${s.origem ?? '—'} → ${s.destino ?? '—'}`
+  if (s.origem || s.destino) {
+    const rota = `${s.origem ?? '—'} → ${s.destino ?? '—'}`
+    return s.autorizacao_referencia_em ? `${rota} · Ref. autorizada ${fmtDt(s.autorizacao_referencia_em)}` : rota
+  }
   if (s.cidade) return s.cidade
   if (s.hospital_destino) return s.hospital_destino
   if (s.fornecedor_nome) return s.fornecedor_nome

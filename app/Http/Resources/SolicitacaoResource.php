@@ -36,6 +36,7 @@ class SolicitacaoResource extends JsonResource
             'destino_tipo' => $this->destino_tipo,
             'destino_id' => $this->destino_id,
             'numero_atendimento' => $this->numero_atendimento,
+            'autorizacao_referencia_em' => $this->autorizacao_referencia_em?->toIso8601String(),
             'cidade' => $this->cidade,
             'hospital_destino' => $this->hospital_destino,
             'fornecedor_nome' => $this->fornecedor_nome,

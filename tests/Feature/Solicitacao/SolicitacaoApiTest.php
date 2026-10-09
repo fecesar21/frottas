@@ -45,7 +45,7 @@ class SolicitacaoApiTest extends TestCase
 
         $this->postJson('/api/solicitacoes', ['motivo' => 'transferencia_paciente'])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['origem_tipo', 'origem_id', 'destino_tipo', 'destino_id', 'numero_atendimento']);
+            ->assertJsonValidationErrors(['origem_tipo', 'origem_id', 'destino_tipo', 'destino_id', 'numero_atendimento', 'autorizacao_referencia_em']);
 
         $origem = Unidade::factory()->create();
         $destino = Unidade::factory()->create();
@@ -57,7 +57,23 @@ class SolicitacaoApiTest extends TestCase
             'destino_tipo' => 'unidade',
             'destino_id' => $destino->id,
             'numero_atendimento' => 12345,
+            'autorizacao_referencia_em' => now()->subHour()->format('Y-m-d\TH:i'),
         ])->assertCreated();
+    }
+
+    public function test_autorizacao_referencia_nao_pode_ser_futura(): void
+    {
+        $this->loginOperador();
+
+        $this->postJson('/api/solicitacoes', [
+            'motivo' => 'transferencia_paciente',
+            'origem_tipo' => 'unidade',
+            'origem_id' => Unidade::factory()->create()->id,
+            'destino_tipo' => 'unidade',
+            'destino_id' => Unidade::factory()->create()->id,
+            'numero_atendimento' => 12345,
+            'autorizacao_referencia_em' => now()->addDay()->format('Y-m-d\TH:i'),
+        ])->assertUnprocessable()->assertJsonValidationErrors(['autorizacao_referencia_em']);
     }
 
     public function test_transferencia_paciente_aceita_localidade_como_origem_ou_destino(): void
@@ -74,6 +90,7 @@ class SolicitacaoApiTest extends TestCase
             'destino_tipo' => 'localidade',
             'destino_id' => $destino->id,
             'numero_atendimento' => 54321,
+            'autorizacao_referencia_em' => now()->subHour()->format('Y-m-d\TH:i'),
         ]);
 
         $response->assertCreated();

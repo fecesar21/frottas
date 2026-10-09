@@ -13,10 +13,18 @@ const INITIAL = {
   destino_tipo: '',
   destino_id: '',
   numero_atendimento: '',
+  autorizacao_referencia_em: '',
   cidade: '',
   hospital_destino: '',
   fornecedor_nome: '',
   observacoes: '',
+}
+
+// "Agora" no formato do input datetime-local (horário local), usado como limite máximo.
+const agoraLocal = () => {
+  const d = new Date()
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 16)
 }
 
 export default function NovaSolicitacao() {
@@ -165,6 +173,21 @@ export default function NovaSolicitacao() {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             {fe('numero_atendimento')}
+          </div>
+        )}
+
+        {precisaAtendimento && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Data e Hora da Autorização da Referência *</label>
+            <input
+              type="datetime-local"
+              required
+              max={agoraLocal()}
+              value={form.autorizacao_referencia_em}
+              onChange={(e) => setField('autorizacao_referencia_em', e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+            {fe('autorizacao_referencia_em')}
           </div>
         )}
 

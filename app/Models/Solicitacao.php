@@ -19,9 +19,13 @@ class Solicitacao extends Model
 
     protected $fillable = [
         'usuario_id', 'unidade_id', 'motivo',
-        'origem_tipo', 'origem_id', 'destino_tipo', 'destino_id', 'numero_atendimento',
+        'origem_tipo', 'origem_id', 'destino_tipo', 'destino_id', 'numero_atendimento', 'autorizacao_referencia_em',
         'cidade', 'hospital_destino', 'fornecedor_nome',
         'status', 'viagem_id', 'motorista_pendente_id', 'veiculo_pendente_id', 'motivo_recusa', 'observacoes',
+    ];
+
+    protected $casts = [
+        'autorizacao_referencia_em' => 'datetime',
     ];
 
     /**

@@ -50,6 +50,7 @@ class SolicitacaoRoteamentoMotoristaTest extends TestCase
             'destino_tipo' => 'unidade',
             'destino_id' => Unidade::factory()->create()->id,
             'numero_atendimento' => 123,
+            'autorizacao_referencia_em' => now()->subHour()->format('Y-m-d\TH:i'),
         ];
     }
 
