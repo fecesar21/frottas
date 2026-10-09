@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Checkin;
 use Carbon\CarbonInterface;
 
 class Plantao
@@ -27,5 +28,29 @@ class Plantao
         }
 
         return ['data' => $agora->toDateString(), 'turno' => 'noturno'];
+    }
+
+    /**
+     * Plantão ao qual o check-in pertence, pelo turno do motorista — não pelo
+     * relógio. Assim, check-in antecipado (06:50) ou checkout tardio (19:20)
+     * continuam no mesmo plantão.
+     *
+     * @return array{data: string, turno: 'diurno'|'noturno'}
+     */
+    public static function doCheckin(Checkin $checkin): array
+    {
+        $inicio = $checkin->checkin_at ?? now();
+
+        if ($checkin->turno === 'dia') {
+            return ['data' => $inicio->toDateString(), 'turno' => 'diurno'];
+        }
+
+        if ($checkin->turno === 'noite') {
+            $data = $inicio->hour < 12 ? $inicio->copy()->subDay() : $inicio;
+
+            return ['data' => $data->toDateString(), 'turno' => 'noturno'];
+        }
+
+        return self::atual($inicio);
     }
 }

@@ -63,7 +63,7 @@ class ViagemController extends Controller
             $data['checkin_id'] = $checkin->getAttribute('id');
         }
 
-        if ($this->checklistService->bloqueiaOperacao($data['veiculo_id'])) {
+        if ($this->checklistService->bloqueiaOperacao($data['veiculo_id'], $checkin ?? null)) {
             return response()->json(['error' => 'Checklist do veículo pendente. Realize o checklist antes de iniciar a viagem.'], 403);
         }
 

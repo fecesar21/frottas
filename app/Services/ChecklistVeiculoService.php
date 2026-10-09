@@ -13,23 +13,35 @@ use Illuminate\Validation\ValidationException;
 
 class ChecklistVeiculoService
 {
-    public function necessitaChecklist(string $veiculoId): bool
+    public function necessitaChecklist(string $veiculoId, ?Checkin $checkin = null): bool
     {
-        $checklist = $this->doPlantao($veiculoId, Plantao::atual())->first();
+        $checklist = $checkin
+            ? $this->doCheckin($checkin)
+            : $this->doPlantao($veiculoId, Plantao::atual())->first();
 
         return ! $checklist || $checklist->status !== 'enviado';
     }
 
-    public function bloqueiaOperacao(string $veiculoId): bool
+    public function bloqueiaOperacao(string $veiculoId, ?Checkin $checkin = null): bool
     {
-        return $this->necessitaChecklist($veiculoId);
+        return $this->necessitaChecklist($veiculoId, $checkin);
+    }
+
+    /**
+     * Checklist que vale para o check-in: o vinculado a ele ou, se não houver,
+     * o do mesmo plantão (ex.: check-in refeito no mesmo veículo).
+     */
+    private function doCheckin(Checkin $checkin): ?ChecklistVeiculo
+    {
+        return ChecklistVeiculo::where('checkin_id', $checkin->id)->first()
+            ?? $this->doPlantao($checkin->veiculo_id, Plantao::doCheckin($checkin))->first();
     }
 
     public function iniciarOuObter(Checkin $checkin): ChecklistVeiculo
     {
-        $plantao = Plantao::atual();
+        $plantao = Plantao::doCheckin($checkin);
 
-        $existente = $this->doPlantao($checkin->veiculo_id, $plantao)->first();
+        $existente = $this->doCheckin($checkin);
 
         if ($existente) {
             return $existente->load(['veiculo', 'respostas.itemModelo.categoria']);
