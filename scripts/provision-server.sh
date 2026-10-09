@@ -3,8 +3,8 @@
 #
 # Automatiza os passos de sistema que antes eram manuais: Nginx, HTTPS (Certbot),
 # Supervisor (queue worker) e crontab (scheduler). Roda UMA VEZ, como root,
-# em um Ubuntu Server 24.04 LTS já com PHP-FPM, Composer, Node, MySQL e Redis
-# instalados e com o projeto clonado em PROJECT_DIR.
+# em um Ubuntu Server 24.04 LTS já com PHP-FPM, Composer, MySQL e Redis
+# instalados (o Node.js 22 LTS é instalado/atualizado aqui via NodeSource) e com o projeto clonado em PROJECT_DIR.
 #
 # Uso:
 #   sudo DOMAIN=api.healthdrive.com.br \
@@ -46,6 +46,19 @@ fi
 echo "==> Instalando Nginx, Supervisor e Certbot (se ausentes)..."
 apt-get update -y
 apt-get install -y nginx supervisor certbot python3-certbot-nginx
+
+# Node.js 22 LTS (NodeSource): as dependências do frontend exigem Node >= 22.
+# Instala se ausente ou se a versão major for menor que 22.
+NODE_MAJOR_REQ=22
+NODE_MAJOR_ATUAL=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || true)
+if [ -z "$NODE_MAJOR_ATUAL" ] || [ "$NODE_MAJOR_ATUAL" -lt "$NODE_MAJOR_REQ" ]; then
+    echo "==> Instalando Node.js ${NODE_MAJOR_REQ} LTS (atual: ${NODE_MAJOR_ATUAL:-nenhum})..."
+    apt-get install -y ca-certificates curl
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR_REQ}.x" | bash -
+    apt-get install -y nodejs
+else
+    echo "==> Node.js $(node -v) já instalado."
+fi
 
 echo "==> Configurando Nginx para $DOMAIN (PHP-FPM socket: $PHP_FPM_SOCK)..."
 NGINX_CONF="/etc/nginx/sites-available/healthdrive"
