@@ -21,7 +21,10 @@ export function motivosDoVeiculo(motivos, veiculo) {
 }
 
 // Motivos em que o número do atendimento não se aplica: o campo fica oculto.
-const MOTIVOS_SEM_ATENDIMENTO = ['buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor']
+const MOTIVOS_SEM_ATENDIMENTO = [
+  'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor',
+  'servicos_administrativos', 'alimentacao',
+]
 
 export default function ViagemForm({ onSuccess }) {
   const { user, isOperador, checkinsAtivos } = useAuth()
