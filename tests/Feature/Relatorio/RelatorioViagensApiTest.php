@@ -74,6 +74,15 @@ class RelatorioViagensApiTest extends TestCase
         $this->assertNull($linhas[$semSolicitacao->id]['autorizacao_referencia_em']);
     }
 
+    public function test_relatorio_mostra_cidade_uf_da_viagem_tfd(): void
+    {
+        $this->loginGestor();
+        $viagem = Viagem::factory()->create(['motivo_viagem' => 'tfd', 'cidade_uf' => 'RECIFE/PE', 'saida_at' => now()]);
+
+        $linhas = collect($this->getJson('/api/relatorios/viagens')->assertOk()->json('rows'))->keyBy('id');
+        $this->assertSame('RECIFE/PE', $linhas[$viagem->id]['cidade_uf']);
+    }
+
     public function test_pdf_do_relatorio_de_viagens_e_gerado(): void
     {
         $this->loginAdmin();

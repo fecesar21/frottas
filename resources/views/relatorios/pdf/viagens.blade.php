@@ -21,7 +21,7 @@
         <thead>
             <tr>
                 <th>Saída</th><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Origem - Destino</th>
-                <th>Motivo</th><th>Nº Atend.</th><th>Autorizado Referência</th><th>Colaboradores</th><th>KM perc.</th><th>Duração</th><th>Status</th>
+                <th>Motivo</th><th>Nº Atend.</th><th>Cidade/UF</th><th>Autorizado Referência</th><th>Colaboradores</th><th>KM perc.</th><th>Duração</th><th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -34,6 +34,7 @@
                     <td>{{ $r->origem }} - {{ $r->destino }}</td>
                     <td>{{ \App\Models\MotivoViagem::rotulo($r->motivo_viagem) }}</td>
                     <td>{{ $r->numero_atendimento ?? '—' }}</td>
+                    <td>{{ $r->cidade_uf ?? '—' }}</td>
                     <td>{{ $r->autorizacao_referencia_em ? \Carbon\Carbon::parse($r->autorizacao_referencia_em)->format('d/m H:i') : '—' }}</td>
                     <td>{{ $r->colaboradores ?? '—' }}</td>
                     <td>{{ $r->km_percorrido !== null ? number_format($r->km_percorrido, 0, ',', '.') : '—' }}</td>
@@ -41,7 +42,7 @@
                     <td>{{ $r->status }}</td>
                 </tr>
             @empty
-                <tr><td colspan="12" class="sem-dados">Sem dados no período</td></tr>
+                <tr><td colspan="13" class="sem-dados">Sem dados no período</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -330,7 +330,7 @@ class RelatorioController extends Controller
                 'v.placa', 'v.modelo',
                 'm.nome as motorista_nome',
                 'vg.origem', 'vg.destino',
-                'vg.motivo_viagem', 'vg.numero_atendimento', 's.autorizacao_referencia_em',
+                'vg.motivo_viagem', 'vg.numero_atendimento', 'vg.cidade_uf', 's.autorizacao_referencia_em',
                 'vg.km_saida', 'vg.km_chegada', 'vg.status'
             )
             ->get();

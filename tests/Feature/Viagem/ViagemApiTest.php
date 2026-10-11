@@ -246,6 +246,25 @@ class ViagemApiTest extends TestCase
         $this->postJson('/api/viagens', $payload($strada, 'alimentacao'))->assertCreated();
     }
 
+    public function test_tfd_exige_cidade_uf(): void
+    {
+        $this->loginGestor();
+        $ambulancia = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'AMBULÂNCIA SPRINTER']);
+        $motorista = Motorista::factory()->create();
+        $this->liberarChecklist($ambulancia, $motorista);
+
+        $payload = [
+            'veiculo_id' => $ambulancia->id, 'motorista_id' => $motorista->id,
+            'origem' => 'a', 'destino' => 'b', 'km_saida' => 5000, 'motivo_viagem' => 'tfd',
+        ];
+
+        $this->postJson('/api/viagens', $payload)->assertJsonValidationErrors(['cidade_uf']);
+        $this->postJson('/api/viagens', $payload + ['cidade_uf' => 'RECIFE'])->assertJsonValidationErrors(['cidade_uf']);
+        $this->postJson('/api/viagens', $payload + ['cidade_uf' => 'RECIFE/PE'])
+            ->assertCreated()
+            ->assertJsonPath('data.cidade_uf', 'RECIFE/PE');
+    }
+
     public function test_motivo_inativo_e_recusado_e_ambos_aceito_nos_dois_tipos(): void
     {
         $this->loginGestor();
