@@ -27,13 +27,18 @@ class ViagemController extends Controller
         $unidadeId = $r->unidade_efetiva;
         $isOperador = auth()->user()->perfil === 'operador';
 
-        $viagens = Viagem::with(['veiculo', 'motorista'])
+        $query = Viagem::with(['veiculo', 'motorista'])
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($isOperador, fn ($q) => $q->where('motorista_id', auth()->user()->motorista_id))
+            // Motorista vê só as viagens do mês corrente (as em andamento sempre aparecem)
+            ->when($isOperador, fn ($q) => $q->where('motorista_id', auth()->user()->motorista_id)
+                ->where(fn ($m) => $m->where('saida_at', '>=', now()->startOfMonth())->orWhere('status', 'em_andamento')))
             ->when(! $isOperador && $unidadeId, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
-            ->latest('saida_at')
-            ->limit(200)
-            ->get();
+            ->latest('saida_at');
+
+        // Paginação (20 por página) quando a tela pede `page`; demais consumidores mantêm a lista simples
+        $viagens = $r->filled('page') && ! $isOperador
+            ? $query->paginate(20)
+            : $query->limit(200)->get();
 
         return ViagemResource::collection($viagens);
     }

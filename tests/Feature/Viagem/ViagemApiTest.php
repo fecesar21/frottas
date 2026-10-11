@@ -181,6 +181,35 @@ class ViagemApiTest extends TestCase
         $this->assertFalse($ids->contains($viagemDeOutro->id));
     }
 
+    public function test_operador_ve_apenas_viagens_do_mes_corrente_e_as_em_andamento(): void
+    {
+        $usuario = $this->loginOperador();
+        $motorista = Motorista::factory()->create();
+        $usuario->update(['motorista_id' => $motorista->id]);
+
+        $doMes = Viagem::factory()->create(['motorista_id' => $motorista->id, 'status' => 'concluida', 'saida_at' => now()->startOfMonth()->addHour()]);
+        $mesPassado = Viagem::factory()->create(['motorista_id' => $motorista->id, 'status' => 'concluida', 'saida_at' => now()->startOfMonth()->subDay()]);
+        $abertaMesPassado = Viagem::factory()->create(['motorista_id' => $motorista->id, 'status' => 'em_andamento', 'saida_at' => now()->startOfMonth()->subDay()]);
+
+        $ids = collect($this->getJson('/api/viagens')->assertOk()->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($doMes->id));
+        $this->assertTrue($ids->contains($abertaMesPassado->id));
+        $this->assertFalse($ids->contains($mesPassado->id));
+    }
+
+    public function test_admin_recebe_viagens_paginadas_de_20_em_20(): void
+    {
+        $this->loginAdmin();
+        Viagem::factory()->count(25)->create();
+
+        $this->getJson('/api/viagens?page=2')
+            ->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('meta.per_page', 20)
+            ->assertJsonPath('meta.last_page', 2);
+    }
+
     public function test_operador_nao_visualiza_detalhe_de_viagem_de_outro_motorista(): void
     {
         $usuario = $this->loginOperador();

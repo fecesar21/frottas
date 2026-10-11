@@ -30,11 +30,16 @@ export default function ViagensList() {
   const [retornarEscolhido, setRetornarEscolhido] = useState(false)
   const [detalhesTarget, setDetalhesTarget] = useState(null)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const paginado = !isOperador
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['viagens', statusFilter],
-    queryFn: () => viagensApi.listar(statusFilter ? { status: statusFilter } : undefined).then(r => r.data.data ?? r.data),
+  const { data: resp, isLoading } = useQuery({
+    queryKey: ['viagens', statusFilter, paginado ? page : null],
+    queryFn: () => viagensApi.listar({ ...(statusFilter ? { status: statusFilter } : {}), ...(paginado ? { page } : {}) }).then(r => r.data),
   })
+  const data = resp?.data ?? resp
+  const lastPage = resp?.meta?.last_page ?? 1
+  const total = resp?.meta?.total
 
   // Rastreamento GPS roda em Layout.jsx (nível global, sobrevive à navegação entre telas)
   const activeTrip = isOperador ? (data ?? []).find(v => v.status === 'em_andamento') : null
@@ -68,7 +73,7 @@ export default function ViagensList() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {[{ v: '', l: 'Todas' }, { v: 'em_andamento', l: 'Em andamento' }, { v: 'concluida', l: 'Concluídas' }, { v: 'cancelada', l: 'Canceladas' }].map(({ v, l }) => (
-            <button key={v} onClick={() => setStatusFilter(v)}
+            <button key={v} onClick={() => { setStatusFilter(v); setPage(1) }}
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${statusFilter === v ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600 hover:border-blue-400'}`}>
               {l}
             </button>
@@ -178,6 +183,18 @@ export default function ViagensList() {
           </tbody>
         </table>
       </div>
+
+      {paginado && lastPage > 1 && (
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>{total} viagens · página {page} de {lastPage}</span>
+          <div className="flex gap-2">
+            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
+              className="px-3 py-1.5 rounded-lg border border-gray-300 disabled:opacity-40 hover:border-blue-400">Anterior</button>
+            <button disabled={page >= lastPage} onClick={() => setPage(p => p + 1)}
+              className="px-3 py-1.5 rounded-lg border border-gray-300 disabled:opacity-40 hover:border-blue-400">Próxima</button>
+          </div>
+        </div>
+      )}
 
       <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Nova viagem">
         <ViagemForm onSuccess={() => { setFormOpen(false); qc.invalidateQueries({ queryKey: ['viagens'] }) }} />
