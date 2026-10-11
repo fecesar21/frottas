@@ -22,7 +22,6 @@ class ViagemResource extends JsonResource
             'motivo_viagem' => $this->motivo_viagem,
             'motivo_nome' => MotivoViagem::rotulo($this->motivo_viagem),
             'numero_atendimento' => $this->numero_atendimento,
-            'cidade_uf' => $this->cidade_uf,
             'km_saida' => $this->km_saida,
             'km_chegada' => $this->km_chegada,
             'km_percorrido' => $this->when($this->km_chegada, fn () => $this->km_chegada - $this->km_saida),

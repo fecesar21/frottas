@@ -35,7 +35,6 @@ export default function ViagemForm({ onSuccess }) {
     destino: '',
     motivo_viagem: '',
     numero_atendimento: '',
-    cidade_uf: '',
     km_saida: '',
   })
   const [colaboradores, setColaboradores] = useState([])
@@ -74,7 +73,6 @@ export default function ViagemForm({ onSuccess }) {
       colaborador_ids: transporteColaborador ? colaboradores.map(c => c.id) : undefined,
       km_saida: Number(form.km_saida),
       numero_atendimento: form.numero_atendimento ? Number(form.numero_atendimento) : null,
-      cidade_uf: form.motivo_viagem === 'tfd' ? form.cidade_uf.trim() : null,
     })
   }
 
@@ -148,6 +146,7 @@ export default function ViagemForm({ onSuccess }) {
             </select>
           ) : (
             <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value.toUpperCase() }))}
+              {...(form.motivo_viagem === 'tfd' && { pattern: String.raw`[^\/]+\/[A-Za-z]{2}`, title: 'Para TFD, informe o destino no formato CIDADE/UF (ex.: RECIFE/PE)', placeholder: 'CIDADE/UF' })}
               className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           )}
           {fe('destino')}
@@ -158,7 +157,6 @@ export default function ViagemForm({ onSuccess }) {
         <label className="block text-sm font-medium text-gray-700 mb-1">Motivo da Viagem *</label>
         <select required value={form.motivo_viagem}
           onChange={e => setForm(f => ({ ...f, motivo_viagem: e.target.value, numero_atendimento: e.target.value === 'transferencia_paciente' ? f.numero_atendimento : '',
-            cidade_uf: e.target.value === 'tfd' ? f.cidade_uf : '',
             // Ao entrar/sair de transferência, origem/destino mudam de texto livre para lista.
             ...((e.target.value === 'transferencia_paciente') !== (f.motivo_viagem === 'transferencia_paciente') ? { origem: '', destino: '' } : {}) }))}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -167,17 +165,6 @@ export default function ViagemForm({ onSuccess }) {
         </select>
         {fe('motivo_viagem')}
       </div>
-
-      {form.motivo_viagem === 'tfd' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cidade/UF *</label>
-          <input type="text" required maxLength={100} placeholder="EX.: RECIFE/PE"
-            pattern="[^/]+/[A-Za-z]{2}" title="Formato CIDADE/UF (ex.: RECIFE/PE)"
-            value={form.cidade_uf} onChange={e => setForm(f => ({ ...f, cidade_uf: e.target.value.toUpperCase() }))}
-            className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          {fe('cidade_uf')}
-        </div>
-      )}
 
       {form.motivo_viagem === 'transporte_colaborador' && (
         <div>

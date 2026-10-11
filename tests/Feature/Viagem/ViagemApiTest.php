@@ -246,23 +246,20 @@ class ViagemApiTest extends TestCase
         $this->postJson('/api/viagens', $payload($strada, 'alimentacao'))->assertCreated();
     }
 
-    public function test_tfd_exige_cidade_uf(): void
+    public function test_tfd_exige_destino_no_formato_cidade_uf(): void
     {
         $this->loginGestor();
         $ambulancia = Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'AMBULÂNCIA SPRINTER']);
         $motorista = Motorista::factory()->create();
         $this->liberarChecklist($ambulancia, $motorista);
 
-        $payload = [
+        $payload = fn ($destino) => [
             'veiculo_id' => $ambulancia->id, 'motorista_id' => $motorista->id,
-            'origem' => 'a', 'destino' => 'b', 'km_saida' => 5000, 'motivo_viagem' => 'tfd',
+            'origem' => 'UPA', 'destino' => $destino, 'km_saida' => 5000, 'motivo_viagem' => 'tfd',
         ];
 
-        $this->postJson('/api/viagens', $payload)->assertJsonValidationErrors(['cidade_uf']);
-        $this->postJson('/api/viagens', $payload + ['cidade_uf' => 'RECIFE'])->assertJsonValidationErrors(['cidade_uf']);
-        $this->postJson('/api/viagens', $payload + ['cidade_uf' => 'RECIFE/PE'])
-            ->assertCreated()
-            ->assertJsonPath('data.cidade_uf', 'RECIFE/PE');
+        $this->postJson('/api/viagens', $payload('RECIFE'))->assertJsonValidationErrors(['destino']);
+        $this->postJson('/api/viagens', $payload('RECIFE/PE'))->assertCreated();
     }
 
     public function test_motivo_inativo_e_recusado_e_ambos_aceito_nos_dois_tipos(): void
@@ -320,6 +317,25 @@ class ViagemApiTest extends TestCase
         ]);
     }
 
+    public function test_chegada_de_tfd_com_retorno_abre_viagem_de_retorno(): void
+    {
+        $this->loginGestor();
+        $viagem = Viagem::factory()->create([
+            'veiculo_id' => Veiculo::factory()->create(['km_atual' => 4000, 'modelo' => 'AMBULÂNCIA SPRINTER'])->id,
+            'km_saida' => 5000, 'origem' => 'UPA', 'destino' => 'RECIFE/PE', 'motivo_viagem' => 'tfd',
+        ]);
+
+        $res = $this->patchJson("/api/viagens/{$viagem->id}/chegada", ['km_chegada' => 5300, 'retornar_origem' => true])
+            ->assertOk()
+            ->assertJsonPath('viagem_retorno.origem', 'RECIFE/PE')
+            ->assertJsonPath('viagem_retorno.destino', 'UPA');
+
+        $this->assertDatabaseHas('viagens', [
+            'id' => $res->json('viagem_retorno.id'), 'status' => 'em_andamento',
+            'km_saida' => 5300, 'motivo_viagem' => 'retorno', 'viagem_ida_id' => $viagem->id,
+        ]);
+    }
+
     public function test_chegada_sem_retorno_apenas_encerra(): void
     {
         $this->loginGestor();
@@ -332,10 +348,10 @@ class ViagemApiTest extends TestCase
         $this->assertSame(1, Viagem::count());
     }
 
-    public function test_retorno_so_vale_para_transferencia_de_paciente(): void
+    public function test_retorno_so_vale_para_transferencia_de_paciente_e_tfd(): void
     {
         $this->loginGestor();
-        $viagem = Viagem::factory()->create(['km_saida' => 5000, 'motivo_viagem' => 'tfd']);
+        $viagem = Viagem::factory()->create(['km_saida' => 5000, 'motivo_viagem' => 'buscar_medico']);
 
         $this->patchJson("/api/viagens/{$viagem->id}/chegada", ['km_chegada' => 5120, 'retornar_origem' => true])
             ->assertJsonValidationErrors(['retornar_origem']);

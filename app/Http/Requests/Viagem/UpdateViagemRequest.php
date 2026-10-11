@@ -23,8 +23,6 @@ class UpdateViagemRequest extends FormRequest
             'destino' => 'sometimes|string|max:150',
             'motivo_viagem' => ['sometimes', 'string', new MotivoViagemValido(aceitarInativo: ($this->route('viagem') ?? $this->route('viagen'))?->motivo_viagem)],
             'numero_atendimento' => 'required_if:motivo_viagem,transferencia_paciente|nullable|integer|min:100000|max:999999',
-            // TFD: cidade/UF no formato "CIDADE/UF" (ex.: RECIFE/PE).
-            'cidade_uf' => ['required_if:motivo_viagem,tfd', 'nullable', 'string', 'max:100', 'regex:~^[^/]+/[A-Za-z]{2}$~'],
             'km_saida' => 'sometimes|integer|min:0',
             'km_chegada' => 'nullable|integer|min:0',
             'status' => 'sometimes|in:em_andamento,concluida,cancelada',
@@ -37,14 +35,16 @@ class UpdateViagemRequest extends FormRequest
         return [
             'numero_atendimento.min' => 'O número do atendimento deve ter exatamente 6 dígitos e não pode ser 000000.',
             'numero_atendimento.max' => 'O número do atendimento deve ter exatamente 6 dígitos.',
-            'cidade_uf.required_if' => 'Informe a Cidade/UF para viagens TFD.',
-            'cidade_uf.regex' => 'Informe no formato CIDADE/UF (ex.: RECIFE/PE).',
         ];
     }
 
     public function after(): array
     {
         return [function ($validator) {
+            $viagemAtual = $this->route('viagem') ?? $this->route('viagen');
+            if ($this->input('motivo_viagem', $viagemAtual?->motivo_viagem) === 'tfd' && ! preg_match('~^[^/]+/[A-Za-z]{2}$~', trim((string) $this->input('destino', $viagemAtual?->destino)))) {
+                $validator->errors()->add('destino', 'Para TFD, informe o destino no formato CIDADE/UF (ex.: RECIFE/PE).');
+            }
             if (! $this->filled('motivo_viagem') || $validator->errors()->hasAny(['motivo_viagem', 'veiculo_id'])) {
                 return;
             }
