@@ -11,7 +11,7 @@ const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julh
   'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
 const STATUS = {
-  neutro: () => 'Sem Viagens Concluídas No Período',
+  neutro: () => 'Sem Horário De Autorização Registrado No Período',
   vermelho: (acordo) => `Acima Do Acordo De ${acordo} Minutos`,
   laranja: (acordo) => `Próximo Do Limite De ${acordo} Minutos`,
   verde: (acordo) => `Dentro Do Acordo De ${acordo} Minutos`,

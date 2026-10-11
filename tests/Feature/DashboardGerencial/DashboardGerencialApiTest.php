@@ -15,11 +15,15 @@ class DashboardGerencialApiTest extends TestCase
     {
         $criada = $autorizacao->copy()->addMinutes($minSolicitacao);
         $viagem = Viagem::factory()->create([
+            'motivo_viagem' => 'transferencia_paciente',
             'saida_at' => $criada->copy()->addMinutes($minInicio),
             'chegada_at' => $criada->copy()->addMinutes($minInicio + $minFim),
             'km_chegada' => 2000,
             'status' => 'concluida',
         ]);
+        if (isset($extra['unidade_id'])) {
+            $viagem->motorista->unidades()->attach($extra['unidade_id']);
+        }
 
         $s = Solicitacao::factory()->create(array_merge([
             'motivo' => 'transferencia_paciente',
@@ -49,6 +53,23 @@ class DashboardGerencialApiTest extends TestCase
             ->assertJsonPath('medias_minutos.autorizacao_solicitacao', 5)
             ->assertJsonPath('medias_minutos.solicitacao_inicio', 8)
             ->assertJsonPath('medias_minutos.inicio_fim', 12);
+    }
+
+    public function test_conta_viagem_de_transferencia_lancada_sem_solicitacao(): void
+    {
+        $this->loginAs('dashboard');
+        $saida = Carbon::create(2026, 9, 5, 9, 0);
+        Viagem::factory()->create([
+            'motivo_viagem' => 'transferencia_paciente', 'status' => 'concluida',
+            'saida_at' => $saida, 'chegada_at' => $saida->copy()->addMinutes(40), 'km_chegada' => 2000,
+        ]);
+        Viagem::factory()->create(['motivo_viagem' => 'tfd', 'saida_at' => $saida]);
+
+        $this->getJson('/api/relatorios/dashboard-gerencial/transferencias?mes=9&ano=2026')
+            ->assertOk()
+            ->assertJsonPath('total_transferencias', 1)
+            ->assertJsonPath('medias_minutos.inicio_fim', 40)
+            ->assertJsonPath('medias_minutos.autorizacao_fim', null);
     }
 
     public function test_perfil_dashboard_nao_acessa_outras_rotas(): void

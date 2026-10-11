@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Solicitacao;
 use App\Models\Unidade;
+use App\Models\Viagem;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,12 +44,16 @@ class DashboardGerencialController extends Controller
         $inicio = Carbon::create($r->integer('ano', now()->year), $r->integer('mes', now()->month), 1)->startOfDay();
         $fim = $inicio->copy()->endOfMonth();
 
-        $solicitacoes = Solicitacao::with('viagem:id,saida_at,chegada_at')
-            ->where('motivo', 'transferencia_paciente')
-            ->whereNotIn('status', ['cancelado', 'recusada'])
-            ->whereBetween('created_at', [$inicio, $fim])
-            ->when($filtroUnidades, fn ($q) => $q->whereIn('unidade_id', $filtroUnidades))
-            ->get(['id', 'viagem_id', 'autorizacao_referencia_em', 'created_at']);
+        // Base: viagens de transferência (muitas são lançadas direto, sem
+        // solicitação). A unidade da viagem é a do motorista, como na lista
+        // de viagens. Autorização e horário da solicitação vêm da solicitação
+        // vinculada, quando existir.
+        $viagens = Viagem::with('solicitacao:id,viagem_id,autorizacao_referencia_em,created_at')
+            ->where('motivo_viagem', 'transferencia_paciente')
+            ->where('status', '!=', 'cancelada')
+            ->whereBetween('saida_at', [$inicio, $fim])
+            ->when($filtroUnidades, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->whereIn('unidades.id', $filtroUnidades)))
+            ->get(['id', 'saida_at', 'chegada_at']);
 
         $minutos = fn ($de, $ate) => $de && $ate && $ate->gte($de) ? $de->diffInSeconds($ate) / 60 : null;
         $media = function ($valores) {
@@ -58,11 +62,11 @@ class DashboardGerencialController extends Controller
             return $validos->isEmpty() ? null : round($validos->avg(), 1);
         };
 
-        $tempos = $solicitacoes->map(fn ($s) => [
-            'autorizacao_fim' => $minutos($s->autorizacao_referencia_em, $s->viagem?->chegada_at),
-            'autorizacao_solicitacao' => $minutos($s->autorizacao_referencia_em, $s->created_at),
-            'solicitacao_inicio' => $minutos($s->created_at, $s->viagem?->saida_at),
-            'inicio_fim' => $minutos($s->viagem?->saida_at, $s->viagem?->chegada_at),
+        $tempos = $viagens->map(fn ($v) => [
+            'autorizacao_fim' => $minutos($v->solicitacao?->autorizacao_referencia_em, $v->chegada_at),
+            'autorizacao_solicitacao' => $minutos($v->solicitacao?->autorizacao_referencia_em, $v->solicitacao?->created_at),
+            'solicitacao_inicio' => $minutos($v->solicitacao?->created_at, $v->saida_at),
+            'inicio_fim' => $minutos($v->saida_at, $v->chegada_at),
         ]);
 
         return response()->json([
@@ -71,7 +75,7 @@ class DashboardGerencialController extends Controller
             'acordo_minutos' => self::ACORDO_MINUTOS,
             'unidades' => $unidades,
             'unidade_id' => $unidadeId,
-            'total_transferencias' => $solicitacoes->count(),
+            'total_transferencias' => $viagens->count(),
             'medias_minutos' => [
                 'autorizacao_fim' => $media($tempos->pluck('autorizacao_fim')),
                 'autorizacao_solicitacao' => $media($tempos->pluck('autorizacao_solicitacao')),
