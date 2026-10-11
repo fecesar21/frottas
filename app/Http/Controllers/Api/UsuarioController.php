@@ -22,13 +22,16 @@ class UsuarioController extends Controller
 
         $usuario = Usuario::create([
             'nome' => $d['nome'],
-            'cpf' => $d['cpf'],
+            'cpf' => $d['cpf'] ?? null,
+            'login' => $d['login'] ?? null,
             'email' => $d['email'] ?? null,
             'senha_hash' => Hash::make($d['senha']),
             'perfil' => $d['perfil'],
             'motorista_id' => $d['motorista_id'] ?? null,
             'ativo' => true,
         ]);
+
+        $usuario->unidadesDashboard()->sync($d['perfil'] === 'dashboard' ? ($d['unidades'] ?? []) : []);
 
         return (new UsuarioResource($usuario))->response()->setStatusCode(201);
     }
@@ -42,7 +45,16 @@ class UsuarioController extends Controller
             unset($d['senha']);
         }
 
+        $unidades = $d['unidades'] ?? null;
+        unset($d['unidades']);
+
         $usuario->update($d);
+
+        if ($usuario->perfil !== 'dashboard') {
+            $usuario->unidadesDashboard()->detach();
+        } elseif ($unidades !== null) {
+            $usuario->unidadesDashboard()->sync($unidades);
+        }
 
         return new UsuarioResource($usuario->fresh());
     }

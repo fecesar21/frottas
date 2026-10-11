@@ -16,14 +16,24 @@ class UpdateUsuarioRequest extends FormRequest
     {
         return [
             'nome' => 'sometimes|string|max:100',
-            'cpf' => ['sometimes', 'string', 'max:14', Rule::unique('usuarios')->ignore($this->route('usuario'))],
+            'cpf' => [Rule::requiredIf(fn () => $this->perfilEfetivo() !== 'dashboard' && ! $this->route('usuario')?->cpf), 'nullable', 'string', 'max:14', Rule::unique('usuarios')->ignore($this->route('usuario'))],
+            'login' => [Rule::requiredIf(fn () => $this->perfilEfetivo() === 'dashboard' && ! $this->route('usuario')?->login), 'nullable', 'string', 'max:60', 'regex:/^(?=.*[a-z])[a-z0-9._-]+$/', Rule::unique('usuarios')->ignore($this->route('usuario'))],
             'email' => ['sometimes', 'email', Rule::unique('usuarios')->ignore($this->route('usuario'))],
             'perfil' => 'sometimes|in:admin,gestor,operador,dashboard',
             'ativo' => 'sometimes|boolean',
-            'senha' => ['nullable', 'string', 'min:6', 'regex:/^[0-9]+$/'],
+            'senha' => $this->perfilEfetivo() === 'dashboard'
+                ? ['nullable', 'string', 'min:6']
+                : ['nullable', 'string', 'min:6', 'regex:/^[0-9]+$/'],
             'motorista_id' => 'nullable|uuid|exists:motoristas,id',
             'unidade_id' => 'nullable|uuid|exists:unidades,id',
+            'unidades' => 'nullable|array',
+            'unidades.*' => 'uuid|exists:unidades,id',
         ];
+    }
+
+    private function perfilEfetivo(): ?string
+    {
+        return $this->input('perfil', $this->route('usuario')?->perfil);
     }
 
     public function withValidator($validator): void
@@ -48,6 +58,10 @@ class UpdateUsuarioRequest extends FormRequest
     {
         if ($this->email) {
             $this->merge(['email' => strtolower($this->email)]);
+        }
+
+        if ($this->login) {
+            $this->merge(['login' => mb_strtolower(trim($this->login))]);
         }
 
         if ($this->cpf) {

@@ -5,7 +5,11 @@ import { useAuth } from '../contexts/AuthContext'
 import { Truck, User, Lock } from 'lucide-react'
 import Alert from '../components/ui/Alert'
 
+// Com letras é um login comum (perfil Dashboard); só dígitos, CPF com máscara.
+const ehLogin = (v) => /[a-z]/i.test(v)
+
 function mascaraCpf(v) {
+  if (ehLogin(v)) return v.slice(0, 60)
   const d = v.replace(/\D/g, '').slice(0, 11)
   if (d.length <= 3) return d
   if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`
@@ -33,7 +37,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const u = await login({ ...form, usuario: form.usuario.replace(/\D/g, '') })
+      const u = await login({ ...form, usuario: ehLogin(form.usuario) ? form.usuario.trim() : form.usuario.replace(/\D/g, '') })
       if (u?.perfil === 'dashboard') entrarModoKiosk()
       // Não chamamos navigate() aqui — o setUser dentro de login()
       // atualiza o contexto e a guarda "if (user)" acima redireciona
@@ -68,7 +72,7 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  CPF
+                  CPF ou usuário
                 </label>
                 <div className="relative">
                   <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -76,11 +80,11 @@ export default function Login() {
                     type="text"
                     required
                     autoFocus
-                    inputMode="numeric"
+                    autoCapitalize="none"
                     value={form.usuario}
                     onChange={(e) => setForm(f => ({ ...f, usuario: mascaraCpf(e.target.value) }))}
                     className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
-                    placeholder="000.000.000-00"
+                    placeholder="000.000.000-00 ou usuário"
                   />
                 </div>
               </div>
@@ -99,8 +103,6 @@ export default function Login() {
                   <input
                     type="password"
                     required
-                    inputMode="numeric"
-                    pattern="[0-9]*"
                     minLength={6}
                     value={form.senha}
                     onChange={(e) => setForm(f => ({ ...f, senha: e.target.value }))}

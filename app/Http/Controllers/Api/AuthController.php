@@ -30,9 +30,14 @@ class AuthController extends Controller
     {
         $input = $r->validated();
 
-        $cpf = preg_replace('/\D/', '', $input['usuario']);
+        // Com letras, é um login comum (perfil "dashboard"); senão, CPF.
+        $identificador = trim($input['usuario']);
         $usuario = Usuario::where('ativo', true)
-            ->where('cpf', $cpf)
+            ->when(
+                preg_match('/[a-z]/i', $identificador),
+                fn ($q) => $q->where('login', mb_strtolower($identificador)),
+                fn ($q) => $q->where('cpf', preg_replace('/\D/', '', $identificador)),
+            )
             ->first();
 
         if (! $usuario || ! Hash::check($input['senha'], $usuario->senha_hash)) {

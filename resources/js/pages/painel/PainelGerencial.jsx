@@ -74,6 +74,7 @@ export default function PainelGerencial() {
   const hoje = new Date()
   const [mes, setMes] = useState(hoje.getMonth() + 1)
   const [ano, setAno] = useState(hoje.getFullYear())
+  const [unidadeId, setUnidadeId] = useState('')
   const [tema, setTema] = useState(temaInicial)
   const [telaCheia, setTelaCheia] = useState(!!document.fullscreenElement)
 
@@ -84,8 +85,9 @@ export default function PainelGerencial() {
   }, [])
 
   const { data, isLoading, dataUpdatedAt } = useQuery({
-    queryKey: ['dashboard-gerencial', mes, ano],
-    queryFn: () => relatoriosApi.dashboardGerencialTransferencias({ mes, ano }).then(r => r.data),
+    queryKey: ['dashboard-gerencial', mes, ano, unidadeId],
+    placeholderData: (anterior) => anterior,
+    queryFn: () => relatoriosApi.dashboardGerencialTransferencias({ mes, ano, unidade_id: unidadeId || undefined }).then(r => r.data),
     refetchInterval: 60_000,
     enabled: !!user,
   })
@@ -117,6 +119,12 @@ export default function PainelGerencial() {
           <p className="painel-sub">Acordo De {acordo} Minutos Entre A Autorização Da Referência E A Chegada Ao Destino</p>
         </div>
         <div className="painel-controles">
+          {(data?.unidades?.length ?? 0) > 1 && (
+            <select aria-label="Unidade" className="painel-select" value={unidadeId} onChange={e => setUnidadeId(e.target.value)}>
+              <option value="">Todas As Unidades</option>
+              {data.unidades.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+            </select>
+          )}
           <select aria-label="Mês" className="painel-select" value={mes} onChange={e => setMes(Number(e.target.value))}>
             {MESES.map((nome, i) => <option key={nome} value={i + 1}>{nome}</option>)}
           </select>
@@ -152,7 +160,11 @@ export default function PainelGerencial() {
           <section className="painel-total">
             <p className="painel-rotulo">Transferências No Mês</p>
             <p className="painel-numero">{data?.total_transferencias ?? 0}</p>
-            <p className="painel-total-periodo">{MESES[mes - 1]} De {ano}</p>
+            <p className="painel-total-periodo">
+              {MESES[mes - 1]} De {ano}
+              {data?.unidades?.length === 1 ? `, ${data.unidades[0].nome}` : ''}
+              {unidadeId ? `, ${data?.unidades?.find(u => u.id === unidadeId)?.nome ?? ''}` : ''}
+            </p>
           </section>
 
           <LinhaDoTempo medias={medias} acordo={acordo} />

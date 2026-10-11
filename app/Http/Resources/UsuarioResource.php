@@ -13,6 +13,8 @@ class UsuarioResource extends JsonResource
             'id' => $this->id,
             'nome' => $this->nome,
             'cpf' => $this->cpf,
+            'login' => $this->login,
+            'unidades' => $this->perfil === 'dashboard' ? $this->unidadesDashboard()->pluck('unidades.id') : [],
             'email' => $this->email,
             'perfil' => $this->perfil,
             'ativo' => $this->ativo,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Solicitacao;
+use App\Models\Unidade;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,21 @@ class DashboardGerencialController extends Controller
         $r->validate([
             'mes' => 'nullable|integer|between:1,12',
             'ano' => 'nullable|integer|between:2000,2100',
+            'unidade_id' => 'nullable|uuid',
         ]);
+
+        // Perfil "dashboard" vê só as unidades vinculadas a ele (nenhuma
+        // vinculada = todas); admin e gestor veem todas.
+        $user = $r->user();
+        $vinculadas = $user->perfil === 'dashboard' ? $user->unidadesDashboard()->pluck('unidades.id') : collect();
+        $unidades = Unidade::query()
+            ->when($vinculadas->isNotEmpty(), fn ($q) => $q->whereIn('id', $vinculadas))
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+
+        $unidadeId = $r->query('unidade_id');
+        abort_if($unidadeId && ! $unidades->contains('id', $unidadeId), 403, 'Unidade não permitida para este usuário.');
+        $filtroUnidades = $unidadeId ? [$unidadeId] : ($vinculadas->isNotEmpty() ? $vinculadas->all() : null);
 
         $inicio = Carbon::create($r->integer('ano', now()->year), $r->integer('mes', now()->month), 1)->startOfDay();
         $fim = $inicio->copy()->endOfMonth();
@@ -33,6 +48,7 @@ class DashboardGerencialController extends Controller
             ->where('motivo', 'transferencia_paciente')
             ->whereNotIn('status', ['cancelado', 'recusada'])
             ->whereBetween('created_at', [$inicio, $fim])
+            ->when($filtroUnidades, fn ($q) => $q->whereIn('unidade_id', $filtroUnidades))
             ->get(['id', 'viagem_id', 'autorizacao_referencia_em', 'created_at']);
 
         $minutos = fn ($de, $ate) => $de && $ate && $ate->gte($de) ? $de->diffInSeconds($ate) / 60 : null;
@@ -53,6 +69,8 @@ class DashboardGerencialController extends Controller
             'mes' => $inicio->month,
             'ano' => $inicio->year,
             'acordo_minutos' => self::ACORDO_MINUTOS,
+            'unidades' => $unidades,
+            'unidade_id' => $unidadeId,
             'total_transferencias' => $solicitacoes->count(),
             'medias_minutos' => [
                 'autorizacao_fim' => $media($tempos->pluck('autorizacao_fim')),
