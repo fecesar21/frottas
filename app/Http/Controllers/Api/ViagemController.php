@@ -112,6 +112,8 @@ class ViagemController extends Controller
         $data = $r->validate([
             'km_chegada' => 'required|integer|min:0',
             'observacoes' => 'nullable|string',
+            'confirmar_km' => 'sometimes|boolean',
+            'justificativa_km' => 'nullable|string|max:250',
             'retornar_origem' => 'sometimes|boolean',
         ]);
 

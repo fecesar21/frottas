@@ -157,6 +157,11 @@ export default function ViagemDetalhe({ viagem: viagemInicial }) {
         <div>
           <p className="text-xs text-gray-400 mb-0.5">KM saída / chegada</p>
           <p className="text-gray-700">{fmtKm(viagem.km_saida)} / {fmtKm(viagem.km_chegada)}</p>
+          {viagem.km_suspeito && (
+            <p className="text-xs text-amber-700 mt-1" title={viagem.justificativa_km ?? ''}>
+              ⚠ KM fora do esperado — {viagem.justificativa_km}
+            </p>
+          )}
         </div>
         <div>
           <p className="text-xs text-gray-400 mb-0.5">KM percorrido</p>

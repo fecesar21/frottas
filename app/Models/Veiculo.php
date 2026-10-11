@@ -87,6 +87,21 @@ class Veiculo extends Model
             ->where('turno', $plantao['turno']);
     }
 
+    /**
+     * Maior KM já registrado para o veículo em qualquer fonte. Viagens não
+     * atualizam km_atual, então ele sozinho fica defasado.
+     */
+    public function ultimoKmConhecido(): int
+    {
+        return (int) max(
+            (int) $this->km_atual,
+            (int) $this->viagens()->max('km_chegada'),
+            (int) $this->viagens()->max('km_saida'),
+            (int) $this->checkins()->max('km_retorno'),
+            (int) $this->abastecimentos()->max('km_momento'),
+        );
+    }
+
     public function getPrecisaManutencaoAttribute(): bool
     {
         return $this->km_proxima_revisao !== null && $this->km_atual >= $this->km_proxima_revisao;

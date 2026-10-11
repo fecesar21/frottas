@@ -25,6 +25,8 @@ class ViagemResource extends JsonResource
             'km_saida' => $this->km_saida,
             'km_chegada' => $this->km_chegada,
             'km_percorrido' => $this->when($this->km_chegada, fn () => $this->km_chegada - $this->km_saida),
+            'km_suspeito' => (bool) $this->km_suspeito,
+            'justificativa_km' => $this->justificativa_km,
             'saida_at' => $this->saida_at,
             'chegada_at' => $this->chegada_at,
             'status' => $this->status,

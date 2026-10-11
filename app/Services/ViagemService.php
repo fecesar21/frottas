@@ -9,7 +9,10 @@ use Illuminate\Validation\ValidationException;
 
 class ViagemService
 {
-    public function __construct(private SolicitacaoService $solicitacaoService) {}
+    public function __construct(
+        private SolicitacaoService $solicitacaoService,
+        private KmPlausibilidade $kmPlausibilidade,
+    ) {}
 
     public function store(array $data): Viagem
     {
@@ -30,6 +33,13 @@ class ViagemService
             throw ValidationException::withMessages([
                 'km_saida' => 'KM de saída menor que o KM atual do veículo.',
             ]);
+        }
+
+        $confirmacao = array_intersect_key($data, array_flip(['confirmar_km', 'justificativa_km']));
+        unset($data['confirmar_km'], $data['justificativa_km']);
+        if ($this->kmPlausibilidade->validarSaida($veiculo, (int) $data['km_saida'], $confirmacao)) {
+            $data['km_suspeito'] = true;
+            $data['justificativa_km'] = 'Saída: '.trim($confirmacao['justificativa_km']);
         }
 
         $data['saida_at'] = $data['saida_at'] ?? now();
@@ -54,7 +64,13 @@ class ViagemService
             throw ValidationException::withMessages(['km_chegada' => 'KM de chegada menor que KM de saída.']);
         }
 
+        $suspeito = $this->kmPlausibilidade->validarChegada($viagem, (int) $data['km_chegada'], $data);
+
         $viagem->update([
+            ...($suspeito ? [
+                'km_suspeito' => true,
+                'justificativa_km' => trim(($viagem->justificativa_km ? $viagem->justificativa_km.' | ' : '').'Chegada: '.trim($data['justificativa_km'])),
+            ] : []),
             'status' => 'concluida',
             'chegada_at' => now(),
             'km_chegada' => $data['km_chegada'],

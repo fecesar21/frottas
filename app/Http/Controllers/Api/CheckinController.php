@@ -122,6 +122,9 @@ class CheckinController extends Controller
             app(ViagemService::class)->chegada($viagem, [
                 'km_chegada' => $kmChegada,
                 'observacoes' => trim(($viagem->observacoes ? $viagem->observacoes.' ' : '').'[Finalizada no check-out]'),
+                // Sem tela de confirmação aqui: KM fora do esperado só marca a viagem como suspeita.
+                'confirmar_km' => true,
+                'justificativa_km' => 'Encerrada pela gestão no check-out',
             ]);
         });
     }

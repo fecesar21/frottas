@@ -1,3 +1,4 @@
+import KmConfirmacao, { KmEco, ehAlertaKm, camposConfirmacaoKm } from '../../components/shared/KmConfirmacao'
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import * as viagensApi from '../../api/viagens'
@@ -44,11 +45,14 @@ export default function ViagemForm({ onSuccess }) {
   const [veiculoGestao, setVeiculoGestao] = useState(null)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
+  const [kmAlerta, setKmAlerta] = useState(null)
+  const [justificativaKm, setJustificativaKm] = useState('')
 
   const criar = useMutation({
     mutationFn: (data) => viagensApi.criar(data),
     onSuccess,
     onError: (e) => {
+      if (ehAlertaKm(e)) { setKmAlerta(e.response.data); return }
       if (e.response?.data?.errors) setFieldErrors(e.response.data.errors)
       else setError(e.response?.data?.message ?? 'Erro ao criar viagem')
     },
@@ -75,6 +79,7 @@ export default function ViagemForm({ onSuccess }) {
       ...form,
       colaborador_ids: transporteColaborador ? colaboradores.map(c => c.id) : undefined,
       km_saida: Number(form.km_saida),
+      ...camposConfirmacaoKm(kmAlerta, justificativaKm),
       numero_atendimento: form.numero_atendimento ? Number(form.numero_atendimento) : null,
     })
   }
@@ -199,14 +204,18 @@ export default function ViagemForm({ onSuccess }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">KM saída *</label>
-        <input type="number" min={0} required value={form.km_saida} onChange={e => setForm(f => ({ ...f, km_saida: e.target.value }))}
+        <input type="number" inputMode="numeric" min={0} required value={form.km_saida}
+          onChange={e => { setKmAlerta(null); setForm(f => ({ ...f, km_saida: e.target.value })) }}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <KmEco valor={form.km_saida} />
         {fe('km_saida')}
       </div>
 
+      <KmConfirmacao alerta={kmAlerta} justificativa={justificativaKm} onJustificativa={setJustificativaKm} />
+
       <div className="flex justify-end">
         <button type="submit" disabled={criar.isPending} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-60">
-          {criar.isPending ? 'Criando...' : 'Iniciar viagem'}
+          {criar.isPending ? 'Criando...' : kmAlerta ? 'Confirmar KM e iniciar' : 'Iniciar viagem'}
         </button>
       </div>
     </form>

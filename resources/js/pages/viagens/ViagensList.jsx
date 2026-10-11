@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Alert from '../../components/ui/Alert'
 import ViagemForm from './ViagemForm'
+import KmConfirmacao, { KmEco, ehAlertaKm, camposConfirmacaoKm } from '../../components/shared/KmConfirmacao'
 import ViagemDetalhe from './ViagemDetalhe'
 import FilaMotoristaCard from '../../components/notificacoes/FilaMotoristaCard'
 import { useAuth } from '../../contexts/AuthContext'
@@ -24,6 +25,9 @@ export default function ViagensList() {
   const [chegadaTarget, setChegadaTarget] = useState(null)
   const [chegadaForm, setChegadaForm] = useState({ km_chegada: '', observacoes: '' })
   const [perguntaRetorno, setPerguntaRetorno] = useState(false)
+  const [kmAlerta, setKmAlerta] = useState(null)
+  const [justificativaKm, setJustificativaKm] = useState('')
+  const [retornarEscolhido, setRetornarEscolhido] = useState(false)
   const [detalhesTarget, setDetalhesTarget] = useState(null)
   const [error, setError] = useState('')
 
@@ -37,15 +41,23 @@ export default function ViagensList() {
 
   const doChegada = useMutation({
     mutationFn: ({ id, data }) => viagensApi.chegada(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['viagens'] }); setChegadaTarget(null); setPerguntaRetorno(false) },
-    onError: (e) => { setPerguntaRetorno(false); setError(e.response?.data?.message ?? 'Erro ao registrar chegada') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['viagens'] }); setChegadaTarget(null); setPerguntaRetorno(false); setKmAlerta(null); setJustificativaKm('') },
+    onError: (e) => {
+      setPerguntaRetorno(false)
+      if (ehAlertaKm(e)) { setError(''); setKmAlerta(e.response.data); return }
+      setError(e.response?.data?.errors?.km_chegada?.[0] ?? e.response?.data?.message ?? 'Erro ao registrar chegada')
+    },
   })
 
   // Ambulância em transferência: ao chegar, o motorista decide se já volta à origem.
   // A própria viagem de retorno não pergunta de novo — só encerra com o KM de chegada.
   const podeRetornar = ['transferencia_paciente', 'tfd'].includes(chegadaTarget?.motivo_viagem) && !chegadaTarget?.eh_retorno
 
-  const enviarChegada = (retornar) => doChegada.mutate({ id: chegadaTarget.id, data: { ...chegadaForm, retornar_origem: retornar } })
+  const enviarChegada = (retornar) => {
+    setRetornarEscolhido(retornar)
+    doChegada.mutate({ id: chegadaTarget.id, data: { ...chegadaForm, ...camposConfirmacaoKm(kmAlerta, justificativaKm), retornar_origem: retornar } })
+  }
+  const abrirChegada = (v) => { setChegadaTarget(v); setChegadaForm({ km_chegada: '', observacoes: '' }); setKmAlerta(null); setJustificativaKm(''); setError('') }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -96,7 +108,7 @@ export default function ViagensList() {
             </div>
             <div className="flex items-center gap-2">
               {v.status === 'em_andamento' && (
-                <button onClick={() => { setChegadaTarget(v); setChegadaForm({ km_chegada: '', observacoes: '' }) }}
+                <button onClick={() => abrirChegada(v)}
                   className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors">
                   <MapPin size={12} /> Chegada
                 </button>
@@ -138,13 +150,13 @@ export default function ViagensList() {
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(v.saida_at)}</td>
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_saida)}</td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(v.chegada_at)}</td>
-                <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_chegada)}</td>
+                <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_chegada)}{v.km_suspeito && <span className="ml-1 text-amber-600" title={`KM fora do esperado: ${v.justificativa_km ?? ''}`}>⚠</span>}</td>
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_percorrido)} {v.km_percorrido ? 'km' : ''}</td>
                 <td className="px-4 py-3"><Badge value={v.status} /></td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {v.status === 'em_andamento' && (
-                      <button onClick={() => { setChegadaTarget(v); setChegadaForm({ km_chegada: '', observacoes: '' }) }}
+                      <button onClick={() => abrirChegada(v)}
                         className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors">
                         <MapPin size={12} /> Chegada
                       </button>
@@ -172,15 +184,19 @@ export default function ViagensList() {
       </Modal>
 
       <Modal open={!!chegadaTarget} onClose={() => { setChegadaTarget(null); setPerguntaRetorno(false) }} title="Registrar chegada">
-        <form onSubmit={(e) => { e.preventDefault(); podeRetornar ? setPerguntaRetorno(true) : enviarChegada(false) }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); kmAlerta ? enviarChegada(retornarEscolhido) : podeRetornar ? setPerguntaRetorno(true) : enviarChegada(false) }} className="space-y-4">
           {error && <Alert type="error" message={error} />}
           <p className="text-sm text-gray-600">{chegadaTarget?.origem} → <strong>{chegadaTarget?.destino}</strong></p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">KM chegada *</label>
             <input type="number" min={chegadaTarget?.km_saida ?? 0} required value={chegadaForm.km_chegada}
-              onChange={e => setChegadaForm(f => ({ ...f, km_chegada: e.target.value }))}
+              onChange={e => { setKmAlerta(null); setChegadaForm(f => ({ ...f, km_chegada: e.target.value })) }}
+              inputMode="numeric"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <p className="text-xs text-gray-500 mt-1">KM saída: {fmtKm(chegadaTarget?.km_saida)}</p>
+            <KmEco valor={chegadaForm.km_chegada} referencia={chegadaTarget?.km_saida} />
           </div>
+          <KmConfirmacao alerta={kmAlerta} justificativa={justificativaKm} onJustificativa={setJustificativaKm} />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
             <textarea rows={3} value={chegadaForm.observacoes} onChange={e => setChegadaForm(f => ({ ...f, observacoes: e.target.value }))}
@@ -188,7 +204,7 @@ export default function ViagensList() {
           </div>
           <div className="flex justify-end">
             <button type="submit" disabled={doChegada.isPending} className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-green-700 disabled:opacity-60">
-              {doChegada.isPending ? 'Registrando...' : 'Confirmar chegada'}
+              {doChegada.isPending ? 'Registrando...' : kmAlerta ? 'Confirmar KM e chegada' : 'Confirmar chegada'}
             </button>
           </div>
         </form>

@@ -24,7 +24,7 @@ class Viagem extends Model
     protected $fillable = [
         'veiculo_id', 'motorista_id', 'checkin_id', 'viagem_ida_id',
         'origem', 'destino', 'motivo_viagem', 'numero_atendimento',
-        'km_saida', 'km_chegada',
+        'km_saida', 'km_chegada', 'km_suspeito', 'justificativa_km',
         'saida_at', 'chegada_at', 'status', 'observacoes',
     ];
 
@@ -34,7 +34,7 @@ class Viagem extends Model
         return MotivoViagem::rotulo($motivo);
     }
 
-    protected $casts = ['saida_at' => 'datetime', 'chegada_at' => 'datetime'];
+    protected $casts = ['saida_at' => 'datetime', 'chegada_at' => 'datetime', 'km_suspeito' => 'boolean'];
 
     /**
      * Origem e destino são sempre gravados em maiúsculas (padronização),

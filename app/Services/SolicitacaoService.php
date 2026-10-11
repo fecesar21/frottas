@@ -250,7 +250,13 @@ class SolicitacaoService
 
     private function efetivarAceite(Solicitacao $solicitacao, string $motoristaId, string $veiculoId, int $kmSaida): Solicitacao
     {
-        Veiculo::findOrFail($veiculoId)->garantirForaDeManutencao();
+        $veiculo = Veiculo::findOrFail($veiculoId);
+        $veiculo->garantirForaDeManutencao();
+        // Sem tela de confirmação no aceite: bloqueia o absurdo, marca o duvidoso.
+        $kmSuspeito = app(KmPlausibilidade::class)->validarSaida($veiculo, $kmSaida, [
+            'confirmar_km' => true,
+            'justificativa_km' => 'Aceite de solicitação',
+        ]);
 
         $motorista = Motorista::with('checkinsAtivos')->findOrFail($motoristaId);
         // Com check-in duplo, usa o check-in que já está no veículo da viagem.
@@ -279,6 +285,8 @@ class SolicitacaoService
             'motivo_viagem' => $solicitacao->motivo,
             'numero_atendimento' => $solicitacao->numero_atendimento,
             'km_saida' => $kmSaida,
+            'km_suspeito' => $kmSuspeito,
+            'justificativa_km' => $kmSuspeito ? 'Saída: aceite de solicitação' : null,
             'saida_at' => now(),
             'status' => 'em_andamento',
         ]);
