@@ -1,5 +1,6 @@
 <style>
-    @page { margin: 24px 28px; }
+    @page { margin: 24px 28px 48px; }
+    .rodape { position: fixed; bottom: -32px; left: 0; right: 0; text-align: center; color: #9ca3af; font-size: 8px; line-height: 1.4; }
     body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1f2937; }
     h1 { font-size: 16px; margin: 0 0 2px; }
     .periodo { color: #6b7280; font-size: 10px; margin-bottom: 14px; }

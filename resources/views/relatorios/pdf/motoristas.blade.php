@@ -5,6 +5,7 @@
     @include('relatorios.pdf._styles')
 </head>
 <body>
+    @include('relatorios.pdf._rodape')
     <h1>Relatório de Motoristas</h1>
     <p class="periodo">Gerado em {{ now()->format('d/m/Y H:i') }}</p>
 

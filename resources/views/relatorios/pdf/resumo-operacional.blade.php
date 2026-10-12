@@ -5,6 +5,7 @@
     @include('relatorios.pdf._styles')
 </head>
 <body>
+    @include('relatorios.pdf._rodape')
     @php
         $fmt = function ($min) {
             $d = intdiv($min, 1440); $h = intdiv($min % 1440, 60); $m = $min % 60;

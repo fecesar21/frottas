@@ -131,7 +131,8 @@ export default function RedefinirSenha() {
         </div>
 
         <p className="text-center text-xs text-white/40 mt-6 px-2">
-          © {new Date().getFullYear()} UTI Tech - Soluções em Tecnologia. Todos os direitos reservados.
+          Desenvolvido por © {new Date().getFullYear()} UTI Tech - Soluções em Tecnologia.<br />
+          Todos os direitos reservados.
         </p>
       </div>
     </div>

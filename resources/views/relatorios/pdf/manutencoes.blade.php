@@ -5,6 +5,7 @@
     @include('relatorios.pdf._styles')
 </head>
 <body>
+    @include('relatorios.pdf._rodape')
     @php
         $fmt = function ($min) {
             if ($min === null) return '—';
