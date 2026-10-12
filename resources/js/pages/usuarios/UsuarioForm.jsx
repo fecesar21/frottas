@@ -10,7 +10,6 @@ export default function UsuarioForm({ usuario, onSuccess }) {
   const [form, setForm] = useState({
     nome: usuario?.nome ?? '',
     cpf: usuario?.cpf ?? '',
-    login: usuario?.login ?? '',
     unidades: usuario?.unidades ?? [],
     email: usuario?.email ?? '',
     senha: '',
@@ -76,13 +75,8 @@ export default function UsuarioForm({ usuario, onSuccess }) {
     if (!payload.email) payload.email = null
     if (!payload.unidade_id) payload.unidade_id = null
     if (payload.perfil !== 'operador') delete payload.motorista_id
-    if (payload.perfil === 'dashboard') {
-      if (!payload.cpf) payload.cpf = null
-      payload.unidade_id = null
-    } else {
-      delete payload.login
-      delete payload.unidades
-    }
+    if (payload.perfil === 'dashboard') payload.unidade_id = null
+    else delete payload.unidades
     salvar.mutate(payload)
   }
 
@@ -106,10 +100,11 @@ export default function UsuarioForm({ usuario, onSuccess }) {
         {fe('nome')}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">CPF {ehDashboard ? '(opcional)' : '*'}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label>
         <input type="text" value={form.cpf} onChange={handleCpfChange}
-          placeholder="000.000.000-00" required={!usuario && !ehDashboard} maxLength={14}
+          placeholder="000.000.000-00" required={!usuario?.cpf} maxLength={14}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        {ehDashboard && <p className="text-gray-400 text-xs mt-1">Pode ser um CPF genérico, como 000.000.000-00.</p>}
         {fe('cpf')}
       </div>
       <div>
@@ -139,14 +134,6 @@ export default function UsuarioForm({ usuario, onSuccess }) {
 
       {ehDashboard && (
         <>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Usuário de login *</label>
-            <input type="text" value={form.login} onChange={set('login')} required={!usuario?.login}
-              placeholder="ex.: painel.recepcao" maxLength={60} autoCapitalize="none"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p className="text-gray-400 text-xs mt-1">Letras minúsculas, números, ponto, hífen ou sublinhado. A senha pode ter letras.</p>
-            {fe('login')}
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Unidades visíveis no painel</label>
             <div className="border border-gray-300 rounded-lg divide-y divide-gray-100 max-h-48 overflow-y-auto">

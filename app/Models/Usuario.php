@@ -27,7 +27,7 @@ class Usuario extends Authenticatable
     protected $keyType = 'string';
 
     protected $fillable = [
-        'nome', 'cpf', 'login', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id', 'unidade_id',
+        'nome', 'cpf', 'email', 'senha_hash', 'perfil', 'ativo', 'ultimo_acesso', 'motorista_id', 'unidade_id',
         'ldap_guid', 'ldap_sync_at',
     ];
 
@@ -53,11 +53,6 @@ class Usuario extends Authenticatable
     public function unidadesDashboard(): BelongsToMany
     {
         return $this->belongsToMany(Unidade::class, 'usuario_unidades', 'usuario_id', 'unidade_id');
-    }
-
-    public function setLoginAttribute($value)
-    {
-        $this->attributes['login'] = $value !== null && $value !== '' ? mb_strtolower(trim($value)) : null;
     }
 
     public function setCpfAttribute($value)

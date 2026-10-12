@@ -49,19 +49,26 @@ bash scripts/deploy.sh
 ## Architecture
 
 ### Authentication
-Sanctum token-based auth. Tokens expire in 8 hours. Login (`POST /api/auth/login`) takes a `usuario` field, but its value must be the user's **CPF** (digits are stripped and matched against the `cpf` column) — despite the field name, it is not a username or email. AD-based login (`POST /api/auth/login-ad`) is a separate flow matching by `samaccountname`. The auth model is `App\Models\Usuario` (not the default `User`), stored in table `usuarios` with `senha_hash` as the password column. `email` on `Usuario` is nullable/unique and not guaranteed to be populated for every operator (only reliably set via the AD login flow or manual admin entry).
+Sanctum token-based auth. Tokens expire in 8 hours. Login (`POST /api/auth/login`) takes a `usuario` field, but its value must be the user's **CPF** (digits are stripped and matched against the `cpf` column) — despite the field name, it is not a username or email. Passwords are numeric-only for every profile, so the login screen opens only the numeric keypad (drivers log in from phones). `dashboard` users also log in by CPF, typically a generic one such as `000.000.000-00` (CPF is unique, so each generic CPF serves one user). The `usuarios.login` column is a leftover of a reverted username-login experiment and is unused. AD-based login (`POST /api/auth/login-ad`) is a separate flow matching by `samaccountname`. The auth model is `App\Models\Usuario` (not the default `User`), stored in table `usuarios` with `senha_hash` as the password column. `email` on `Usuario` is nullable/unique and not guaranteed to be populated for every operator (only reliably set via the AD login flow or manual admin entry).
 
 ### Authorization
 Two middleware levels:
 - `auth:sanctum` — required on all protected routes
 - `admin` (`App\Http\Middleware\SomenteAdmin`) — required for `usuarios` CRUD
 
+Profiles (`usuarios.perfil` enum): `admin`, `gestor`, `operador`, `solicitante`, `dashboard`. The restricted profiles each have a route-name allowlist middleware on the main authenticated group: `solicitante.restrito` (`RestringirSolicitante`) and `dashboard.restrito` (`RestringirDashboard`) — anything outside the allowlist returns 403.
+
+### Dashboard profile (Dashboard Gerencial / kiosk)
+- A `dashboard` user can only call `GET /api/relatorios/dashboard-gerencial/transferencias` (`DashboardGerencialController`, also open to admin/gestor). On the frontend it is always redirected to `/painel` (`resources/js/pages/painel/`), a standalone full-screen page outside the normal `Layout`; login triggers the Fullscreen API (`kiosk.js`). True kiosk (no address bar) requires launching Chrome with `--kiosk`.
+- Visible units come from the `usuario_unidades` pivot (`Usuario::unidadesDashboard()`); **no units linked = all units**. The endpoint returns the allowed `unidades` and rejects (403) a `unidade_id` outside them.
+- Metrics are based on **trips** (`viagens.motivo_viagem = 'transferencia_paciente'`, by `saida_at` month, unit = the driver's `motorista.unidades`), not on `solicitacoes` — in production transfers are mostly launched directly as trips and `solicitacoes` may be empty. Authorization/request times come from the linked `Solicitacao` (`autorizacao_referencia_em`, `created_at`) when it exists; otherwise those averages are `null`. The fixed agreement is 30 min (`ACORDO_MINUTOS`); color: green < 25, orange 25–30, red > 30.
+
 ### Models & Primary Keys
 All models use **UUID primary keys** via `HasUuids` trait (`$incrementing = false`, `$keyType = 'string'`). Key models:
 
 | Model | Table | Notes |
 |---|---|---|
-| `Usuario` | `usuarios` | Extends `Authenticatable`, has `HasApiTokens` |
+| `Usuario` | `usuarios` | Extends `Authenticatable`, has `HasApiTokens`; `cpf` required for all profiles (column is nullable in the DB) |
 | `Motorista` | `motoristas` | Has `diasParaVencerCnh` computed attribute |
 | `Veiculo` | `veiculos` | |
 | `Escala` | `escalas` | Schedules / shift assignments |
@@ -80,7 +87,7 @@ All routes are under `/api` prefix (standard Laravel). Grouped structure in `rou
 Controllers live in `app/Http/Controllers/Api/`. There is a dead `UsuarioController.old` / `RelatorioController.old` — these are superseded files, not active.
 
 ### Database
-Uses SQLite (`database/database.sqlite`) by default. Tests also use SQLite (in-memory mode is commented out in `phpunit.xml`, so tests run against the file DB unless reconfigured).
+**Production uses MySQL** (`DB_CONNECTION=mysql`, database `healthdrive` on `127.0.0.1:3306`, user `healthdrive_user` — see `.env` on the server). Local development uses SQLite (`database/database.sqlite`) by default. Tests also use SQLite (in-memory mode is commented out in `phpunit.xml`, so tests run against the file DB unless reconfigured).
 
 ### Frontend
 There are two React SPAs built by Vite into `public/`: the fleet panel (`index.html` → `resources/js/`) and the transport-request app (`solicitacao.html` → `resources/solicitacao-js/`, served under `/solicitar`). Frontend tests: `npm test` (Vitest + Testing Library, jsdom). Full spec: `docs/ESPECIFICACAO_FRONTEND.md`.

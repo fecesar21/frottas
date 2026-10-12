@@ -22,8 +22,7 @@ class UsuarioController extends Controller
 
         $usuario = Usuario::create([
             'nome' => $d['nome'],
-            'cpf' => $d['cpf'] ?? null,
-            'login' => $d['login'] ?? null,
+            'cpf' => $d['cpf'],
             'email' => $d['email'] ?? null,
             'senha_hash' => Hash::make($d['senha']),
             'perfil' => $d['perfil'],

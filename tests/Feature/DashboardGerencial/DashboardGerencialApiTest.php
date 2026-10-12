@@ -86,44 +86,39 @@ class DashboardGerencialApiTest extends TestCase
         $this->getJson('/api/relatorios/dashboard-gerencial/transferencias')->assertForbidden();
     }
 
-    public function test_admin_cria_usuario_dashboard_sem_cpf_com_login_e_unidades(): void
+    public function test_admin_cria_usuario_dashboard_com_cpf_generico_e_unidades(): void
     {
         $this->loginAdmin();
         $unidades = Unidade::factory()->count(2)->create();
 
         $this->postJson('/api/usuarios', [
             'nome' => 'Painel TV',
-            'login' => 'Painel.TV',
-            'senha' => 'senhaTv1',
+            'cpf' => '000.000.000-00',
+            'senha' => '246813',
             'perfil' => 'dashboard',
             'unidades' => $unidades->pluck('id')->all(),
         ])->assertCreated()
-            ->assertJsonPath('data.login', 'painel.tv')
-            ->assertJsonPath('data.cpf', null)
+            ->assertJsonPath('data.cpf', '00000000000')
             ->assertJsonCount(2, 'data.unidades');
     }
 
-    public function test_perfil_dashboard_exige_login_e_demais_exigem_cpf(): void
+    public function test_perfil_dashboard_exige_cpf_e_senha_numerica(): void
     {
         $this->loginAdmin();
         $this->postJson('/api/usuarios', ['nome' => 'X', 'senha' => 'abcdef', 'perfil' => 'dashboard'])
-            ->assertJsonValidationErrors('login');
-        $this->postJson('/api/usuarios', ['nome' => 'Y', 'senha' => '123456', 'perfil' => 'gestor'])
-            ->assertJsonValidationErrors('cpf');
+            ->assertJsonValidationErrors(['cpf', 'senha']);
     }
 
-    public function test_login_com_usuario_comum(): void
+    public function test_dashboard_entra_com_cpf_generico(): void
     {
         Usuario::factory()->create([
-            'cpf' => null, 'login' => 'painel.tv', 'perfil' => 'dashboard',
-            'senha_hash' => bcrypt('senhaTv1'), 'ativo' => true,
+            'cpf' => '00000000000', 'perfil' => 'dashboard',
+            'senha_hash' => bcrypt('246813'), 'ativo' => true,
         ]);
 
-        $this->postJson('/api/auth/login', ['usuario' => 'Painel.TV', 'senha' => 'senhaTv1'])
+        $this->postJson('/api/auth/login', ['usuario' => '000.000.000-00', 'senha' => '246813'])
             ->assertOk()
             ->assertJsonPath('user.perfil', 'dashboard');
-        $this->postJson('/api/auth/login', ['usuario' => 'painel.tv', 'senha' => 'errada'])
-            ->assertUnauthorized();
     }
 
     public function test_dashboard_ve_somente_unidades_vinculadas(): void
