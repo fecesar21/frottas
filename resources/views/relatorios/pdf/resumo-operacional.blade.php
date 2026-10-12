@@ -14,6 +14,7 @@
         $km = fn ($v) => number_format($v, 1, ',', '.');
     @endphp
 
+    <div class="cabecalho">
     <h1>{{ $titulo }}</h1>
     <p class="periodo">Período: {{ $periodo }} — gerado em {{ now()->format('d/m/Y H:i') }}</p>
 
@@ -22,6 +23,7 @@
         KM rodados: <strong>{{ $km($totais['km']) }}</strong> —
         Tempo em manutenção: <strong>{{ $fmt($totais['manutencao_minutos']) }}</strong>
     </p>
+    </div>
 
     <h2>KM rodados por veículo</h2>
     <table class="dados">

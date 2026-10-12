@@ -6,6 +6,7 @@
 </head>
 <body>
     @include('relatorios.pdf._rodape')
+    <div class="cabecalho">
     <h1>Relatório de Abastecimentos</h1>
     <p class="periodo">Período: {{ \Carbon\Carbon::parse($de)->format('d/m/Y') }} a {{ \Carbon\Carbon::parse($ate)->format('d/m/Y') }} — gerado em {{ now()->format('d/m/Y H:i') }}</p>
 
@@ -17,6 +18,7 @@
             <td><span class="label">Registros</span><span class="valor">{{ $totais['total_registros'] }}</span></td>
         </tr>
     </table>
+    </div>
 
     <table class="dados">
         <thead>

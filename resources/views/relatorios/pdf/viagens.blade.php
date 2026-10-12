@@ -6,6 +6,7 @@
 </head>
 <body>
     @include('relatorios.pdf._rodape')
+    <div class="cabecalho">
     <h1>Relatório de Viagens</h1>
     <p class="periodo">Período: {{ \Carbon\Carbon::parse($de)->format('d/m/Y') }} a {{ \Carbon\Carbon::parse($ate)->format('d/m/Y') }} — gerado em {{ now()->format('d/m/Y H:i') }}</p>
 
@@ -17,6 +18,7 @@
             <td><span class="label">Duração média</span><span class="valor">{{ round($totais['duracao_media_min'] ?? 0) }} min</span></td>
         </tr>
     </table>
+    </div>
 
     <table class="dados">
         <thead>

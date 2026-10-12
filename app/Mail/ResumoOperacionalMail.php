@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\RelatorioPdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Attachment;
@@ -22,7 +22,7 @@ class ResumoOperacionalMail extends Mailable implements ShouldQueue
 
     public static function pdf(array $dados): string
     {
-        return Pdf::loadView('relatorios.pdf.resumo-operacional', $dados)->output();
+        return RelatorioPdf::make('relatorios.pdf.resumo-operacional', $dados)->output();
     }
 
     public function envelope(): Envelope

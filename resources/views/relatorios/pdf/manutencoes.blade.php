@@ -14,6 +14,7 @@
         };
     @endphp
 
+    <div class="cabecalho">
     <h1>Relatório de Manutenções</h1>
     <p class="periodo">Período: {{ \Carbon\Carbon::parse($de)->format('d/m/Y') }} a {{ \Carbon\Carbon::parse($ate)->format('d/m/Y') }} — gerado em {{ now()->format('d/m/Y H:i') }}</p>
 
@@ -23,6 +24,7 @@
         Tempo médio: <strong>{{ $fmt($totais['tempo_medio_min']) }}</strong> —
         Em manutenção agora: <strong>{{ $totais['em_manutencao_agora'] }}</strong>
     </p>
+    </div>
 
     @if (count($por_tipo))
     <table class="dados">

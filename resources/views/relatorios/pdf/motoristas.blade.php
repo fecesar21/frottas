@@ -6,8 +6,10 @@
 </head>
 <body>
     @include('relatorios.pdf._rodape')
+    <div class="cabecalho">
     <h1>Relatório de Motoristas</h1>
     <p class="periodo">Gerado em {{ now()->format('d/m/Y H:i') }}</p>
+    </div>
 
     <table class="dados">
         <thead>

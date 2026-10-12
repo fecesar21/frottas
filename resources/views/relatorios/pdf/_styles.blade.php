@@ -1,6 +1,7 @@
 <style>
-    @page { margin: 24px 28px 48px; }
-    .rodape { position: fixed; bottom: -32px; left: 0; right: 0; text-align: center; color: #9ca3af; font-size: 8px; line-height: 1.4; }
+    @page { margin: 170px 45px 115px; }
+    .timbrado { position: fixed; top: -170px; left: -45px; width: 794px; height: 1123px; z-index: -1; }
+    .rodape { position: fixed; bottom: -103px; left: 0; right: 0; text-align: center; color: #9ca3af; font-size: 8px; line-height: 1.4; }
     body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1f2937; }
     h1 { font-size: 16px; margin: 0 0 2px; }
     .periodo { color: #6b7280; font-size: 10px; margin-bottom: 14px; }
@@ -13,4 +14,10 @@
     table.dados td { padding: 5px 6px; border-bottom: 1px solid #f0f0f0; font-size: 9px; }
     table.dados tr:nth-child(even) { background: #fafafa; }
     .sem-dados { text-align: center; color: #9ca3af; padding: 16px; }
+    .cabecalho { position: fixed; top: -128px; left: 0; right: 0; height: 115px; }
+    .cabecalho h1 { margin-bottom: 0; }
+    .cabecalho .periodo { margin-bottom: 8px; }
+    .cabecalho .totais { margin-bottom: 0; }
+    .cabecalho p { margin: 0 0 4px; }
+    .totais td { background: #ffffff; }
 </style>

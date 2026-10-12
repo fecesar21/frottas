@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MotivoViagem;
 use App\Models\Veiculo;
 use App\Models\VeiculoManutencao;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\RelatorioPdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -305,7 +305,7 @@ class RelatorioController extends Controller
     {
         $dados = $this->abastecimentosData($r);
 
-        return Pdf::loadView('relatorios.pdf.abastecimentos', $dados)
+        return RelatorioPdf::make('relatorios.pdf.abastecimentos', $dados)
             ->download('relatorio-abastecimentos.pdf');
     }
 
@@ -381,7 +381,7 @@ class RelatorioController extends Controller
     {
         $dados = $this->viagensData($r);
 
-        return Pdf::loadView('relatorios.pdf.viagens', $dados)
+        return RelatorioPdf::make('relatorios.pdf.viagens', $dados)
             ->download('relatorio-viagens.pdf');
     }
 
@@ -474,7 +474,7 @@ class RelatorioController extends Controller
 
     public function manutencoesPdf(Request $r)
     {
-        return Pdf::loadView('relatorios.pdf.manutencoes', $this->manutencoesData($r))
+        return RelatorioPdf::make('relatorios.pdf.manutencoes', $this->manutencoesData($r))
             ->download('relatorio-manutencoes.pdf');
     }
 
@@ -540,7 +540,7 @@ class RelatorioController extends Controller
     {
         $dados = $this->plantaoData($r);
 
-        return Pdf::loadView('relatorios.pdf.plantao', $dados)
+        return RelatorioPdf::make('relatorios.pdf.plantao', $dados)
             ->download('relatorio-plantao.pdf');
     }
 
@@ -607,7 +607,7 @@ class RelatorioController extends Controller
     {
         $rows = $this->motoristasData($r);
 
-        return Pdf::loadView('relatorios.pdf.motoristas', compact('rows'))
+        return RelatorioPdf::make('relatorios.pdf.motoristas', compact('rows'))
             ->download('relatorio-motoristas.pdf');
     }
 
