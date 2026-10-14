@@ -720,7 +720,7 @@ class SolicitacaoApiTest extends TestCase
 
     public function test_tfd_nao_aparece_nem_e_aceito_para_solicitante_da_upa(): void
     {
-        $this->loginSolicitanteDa(Unidade::factory()->create(['tipo' => 'filial']));
+        $this->loginSolicitanteDa(Unidade::factory()->create(['nome' => 'UPA Anatólio', 'tipo' => 'filial']));
 
         $codigos = collect($this->getJson('/api/motivos-viagem?solicitacao=1')->assertOk()->json('data'))->pluck('codigo');
         $this->assertNotContains('tfd', $codigos);
@@ -729,7 +729,7 @@ class SolicitacaoApiTest extends TestCase
 
     public function test_tfd_disponivel_para_solicitante_do_hma(): void
     {
-        $this->loginSolicitanteDa(Unidade::factory()->create(['tipo' => 'matriz']));
+        $this->loginSolicitanteDa(Unidade::factory()->create(['nome' => 'HMA - Hospital', 'tipo' => 'filial']));
 
         $codigos = collect($this->getJson('/api/motivos-viagem?solicitacao=1')->json('data'))->pluck('codigo');
         $this->assertContains('tfd', $codigos);

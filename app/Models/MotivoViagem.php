@@ -111,10 +111,10 @@ class MotivoViagem extends Model
         return $codigo === 'transferencia_paciente' || Str::startsWith((string) $codigo, 'exames');
     }
 
-    /** TFD só pode ser solicitado pela matriz (HMA); usuários de filial (UPA) não o enxergam. */
+    /** TFD só pode ser solicitado pelo HMA (unidade com "HMA" no nome); as demais, como a UPA, não o enxergam. */
     public static function tfdPermitidoPara(Usuario $usuario): bool
     {
-        return ! $usuario->unidade_id || $usuario->unidade?->tipo === 'matriz';
+        return ! $usuario->unidade_id || preg_match('/\bHMA\b/i', (string) $usuario->unidade?->nome) === 1;
     }
 
     public function scopeSelecionaveis(Builder $q): Builder
