@@ -391,7 +391,7 @@ class SolicitacaoApiTest extends TestCase
         $this->withToken($token);
 
         $this->postJson('/api/solicitacoes', [
-            'motivo' => 'tfd',
+            'motivo' => 'buscar_medico',
             'cidade' => 'Curitiba',
         ])->assertCreated();
 
@@ -708,5 +708,69 @@ class SolicitacaoApiTest extends TestCase
             'km_retorno_esperado' => 1080,
             'divergencia_km' => 20,
         ]);
+    }
+
+    private function loginSolicitanteDa(Unidade $unidade): Usuario
+    {
+        $usuario = Usuario::factory()->create(['perfil' => 'solicitante', 'unidade_id' => $unidade->id]);
+        $this->actingAs($usuario, 'sanctum');
+
+        return $usuario;
+    }
+
+    public function test_tfd_nao_aparece_nem_e_aceito_para_solicitante_da_upa(): void
+    {
+        $this->loginSolicitanteDa(Unidade::factory()->create(['tipo' => 'filial']));
+
+        $codigos = collect($this->getJson('/api/motivos-viagem?solicitacao=1')->assertOk()->json('data'))->pluck('codigo');
+        $this->assertNotContains('tfd', $codigos);
+        $this->postJson('/api/solicitacoes', ['motivo' => 'tfd'])->assertJsonValidationErrors(['motivo']);
+    }
+
+    public function test_tfd_disponivel_para_solicitante_do_hma(): void
+    {
+        $this->loginSolicitanteDa(Unidade::factory()->create(['tipo' => 'matriz']));
+
+        $codigos = collect($this->getJson('/api/motivos-viagem?solicitacao=1')->json('data'))->pluck('codigo');
+        $this->assertContains('tfd', $codigos);
+        $this->postJson('/api/solicitacoes', ['motivo' => 'tfd'])->assertCreated();
+    }
+
+    public function test_exames_e_transferencia_usam_a_unidade_do_solicitante_como_origem(): void
+    {
+        $unidade = Unidade::factory()->create(['nome' => 'UPA Teste', 'tipo' => 'filial']);
+        $this->loginSolicitanteDa($unidade);
+        $exames = MotivoViagem::factory()->create(['codigo' => 'exames_levar_paciente', 'nome' => 'Exames - Levar Paciente', 'disponivel_solicitacao' => true]);
+        $destino = Localidade::factory()->create(['nome' => 'Clínica de Imagem']);
+        $outra = Unidade::factory()->create();
+
+        $this->postJson('/api/solicitacoes', ['motivo' => $exames->codigo])
+            ->assertJsonValidationErrors(['destino_id'])->assertJsonMissingValidationErrors(['origem_id']);
+
+        $this->postJson('/api/solicitacoes', [
+            'motivo' => $exames->codigo,
+            'origem_tipo' => 'unidade', 'origem_id' => $outra->id, // ignorado
+            'destino_tipo' => 'localidade', 'destino_id' => $destino->id,
+        ])->assertCreated()->assertJsonPath('data.origem_id', $unidade->id);
+
+        $this->postJson('/api/solicitacoes', [
+            'motivo' => 'transferencia_paciente',
+            'destino_tipo' => 'localidade', 'destino_id' => $destino->id,
+            'numero_atendimento' => 123,
+            'autorizacao_referencia_em' => now()->subHour()->format('Y-m-d\TH:i'),
+        ])->assertCreated()->assertJsonPath('data.origem_tipo', 'unidade')->assertJsonPath('data.origem_id', $unidade->id);
+    }
+
+    public function test_destino_nao_pode_ser_o_local_do_solicitante(): void
+    {
+        $unidade = Unidade::factory()->create(['nome' => 'UPA Anatólio', 'tipo' => 'filial']);
+        $this->loginSolicitanteDa($unidade);
+        $homonima = Localidade::factory()->create(['nome' => 'upa anatolio']);
+        $dados = ['motivo' => 'transferencia_paciente', 'numero_atendimento' => 1, 'autorizacao_referencia_em' => now()->subHour()->format('Y-m-d\TH:i')];
+
+        $this->postJson('/api/solicitacoes', $dados + ['destino_tipo' => 'localidade', 'destino_id' => $homonima->id])
+            ->assertJsonValidationErrors(['destino_id']);
+        $this->postJson('/api/solicitacoes', $dados + ['destino_tipo' => 'unidade', 'destino_id' => $unidade->id])
+            ->assertJsonValidationErrors(['destino_id']);
     }
 }

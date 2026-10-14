@@ -27,6 +27,9 @@ class MotivoViagemController extends Controller
         }
         if ($r->boolean('solicitacao')) {
             $q->paraSolicitacao();
+            if (! MotivoViagem::tfdPermitidoPara($r->user())) {
+                $q->where('codigo', '!=', MotivoViagem::TFD);
+            }
         }
         $motivos = $q->get();
         if ($todos) {

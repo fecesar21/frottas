@@ -7,6 +7,8 @@ import * as pontosViagemApi from '../api/pontosViagem'
 vi.mock('../api/motivosViagem')
 vi.mock('../api/pontosViagem')
 vi.mock('../api/solicitacoes')
+vi.mock('../api/unidades')
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { unidade_id: null } }) }))
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }))
 vi.mock('../components/Layout', () => ({ default: ({ children }) => <div>{children}</div> }))
 vi.mock('../components/PainelFrota', () => ({ default: () => null }))

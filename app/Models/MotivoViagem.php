@@ -22,6 +22,8 @@ class MotivoViagem extends Model
     /** Motivo automático da viagem de retorno à origem: não é selecionável nem editável. */
     public const RETORNO = 'retorno';
 
+    public const TFD = 'tfd';
+
     protected $table = 'motivos_viagem';
 
     public $incrementing = false;
@@ -97,6 +99,22 @@ class MotivoViagem extends Model
     public function ehRetorno(): bool
     {
         return $this->codigo === self::RETORNO;
+    }
+
+    /**
+     * Motivos de solicitação cuja origem é sempre a unidade do solicitante:
+     * Transferência de Paciente e "Exames - Levar Paciente" (cadastrado pelo
+     * admin, por isso reconhecido pelo prefixo do código gerado a partir do nome).
+     */
+    public static function origemNaUnidadeDoSolicitante(?string $codigo): bool
+    {
+        return $codigo === 'transferencia_paciente' || Str::startsWith((string) $codigo, 'exames');
+    }
+
+    /** TFD só pode ser solicitado pela matriz (HMA); usuários de filial (UPA) não o enxergam. */
+    public static function tfdPermitidoPara(Usuario $usuario): bool
+    {
+        return ! $usuario->unidade_id || $usuario->unidade?->tipo === 'matriz';
     }
 
     public function scopeSelecionaveis(Builder $q): Builder

@@ -2,9 +2,13 @@
 
 namespace App\Http\Requests\Solicitacao;
 
+use App\Models\Localidade;
+use App\Models\MotivoViagem;
 use App\Rules\MotivoViagemValido;
 use App\Rules\PontoViagemExiste;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Validator;
 
 class StoreSolicitacaoRequest extends FormRequest
 {
@@ -13,15 +17,29 @@ class StoreSolicitacaoRequest extends FormRequest
         return true;
     }
 
+    /** Origem forçada para a unidade do solicitante (Transferência / Exames), ignorando o que vier do cliente. */
+    protected function prepareForValidation(): void
+    {
+        $unidadeId = $this->user()?->unidade_id;
+        if ($unidadeId && MotivoViagem::origemNaUnidadeDoSolicitante($this->input('motivo'))) {
+            $this->merge(['origem_tipo' => 'unidade', 'origem_id' => $unidadeId]);
+        }
+    }
+
     public function rules(): array
     {
+        $comOrigemDestino = 'transferencia_paciente,transporte_colaborador';
+        if (MotivoViagem::origemNaUnidadeDoSolicitante($this->input('motivo'))) {
+            $comOrigemDestino .= ','.$this->input('motivo');
+        }
+
         return [
             'motivo' => ['required', 'string', new MotivoViagemValido(solicitacao: true)],
 
-            'origem_tipo' => 'required_if:motivo,transferencia_paciente,transporte_colaborador|nullable|in:unidade,localidade',
-            'origem_id' => ['required_if:motivo,transferencia_paciente,transporte_colaborador', 'nullable', 'uuid', new PontoViagemExiste($this->input('origem_tipo'))],
-            'destino_tipo' => 'required_if:motivo,transferencia_paciente,transporte_colaborador|nullable|in:unidade,localidade',
-            'destino_id' => ['required_if:motivo,transferencia_paciente,transporte_colaborador', 'nullable', 'uuid', new PontoViagemExiste($this->input('destino_tipo'))],
+            'origem_tipo' => 'required_if:motivo,'.$comOrigemDestino.'|nullable|in:unidade,localidade',
+            'origem_id' => ['required_if:motivo,'.$comOrigemDestino, 'nullable', 'uuid', new PontoViagemExiste($this->input('origem_tipo'))],
+            'destino_tipo' => 'required_if:motivo,'.$comOrigemDestino.'|nullable|in:unidade,localidade',
+            'destino_id' => ['required_if:motivo,'.$comOrigemDestino, 'nullable', 'uuid', new PontoViagemExiste($this->input('destino_tipo'))],
             'numero_atendimento' => 'required_if:motivo,transferencia_paciente|nullable|integer|digits_between:1,6',
             'autorizacao_referencia_em' => 'required_if:motivo,transferencia_paciente|nullable|date|before_or_equal:now',
             'cidade' => 'required_if:motivo,buscar_medico|nullable|string|max:150',
@@ -30,5 +48,36 @@ class StoreSolicitacaoRequest extends FormRequest
 
             'observacoes' => 'nullable|string',
         ];
+    }
+
+    public function after(): array
+    {
+        return [function (Validator $validator) {
+            $usuario = $this->user();
+
+            if ($this->input('motivo') === MotivoViagem::TFD && ! MotivoViagem::tfdPermitidoPara($usuario)) {
+                $validator->errors()->add('motivo', 'TFD só pode ser solicitado pelo HMA.');
+            }
+
+            if (! $usuario->unidade_id || ! MotivoViagem::origemNaUnidadeDoSolicitante($this->input('motivo'))) {
+                return;
+            }
+
+            // O destino não pode ser o próprio local do solicitante (mesma unidade ou localidade homônima).
+            $destinoId = $this->input('destino_id');
+            $mesmoLocal = match ($this->input('destino_tipo')) {
+                'unidade' => $destinoId === $usuario->unidade_id,
+                'localidade' => self::normalizar(Localidade::whereKey($destinoId)->value('nome')) === self::normalizar($usuario->unidade?->nome),
+                default => false,
+            };
+            if ($mesmoLocal) {
+                $validator->errors()->add('destino_id', 'O destino não pode ser a mesma unidade de origem.');
+            }
+        }];
+    }
+
+    private static function normalizar(?string $nome): string
+    {
+        return Str::of((string) $nome)->ascii()->lower()->squish()->toString();
     }
 }

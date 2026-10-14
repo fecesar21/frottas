@@ -5,6 +5,8 @@ import * as pontosViagemApi from '../api/pontosViagem'
 import Layout from '../components/Layout'
 import PainelFrota from '../components/PainelFrota'
 import * as motivosApi from '../api/motivosViagem'
+import * as unidadesApi from '../api/unidades'
+import { useAuth } from '../contexts/AuthContext'
 
 const INITIAL = {
   motivo: '',
@@ -20,6 +22,11 @@ const INITIAL = {
   observacoes: '',
 }
 
+// Motivos cuja origem é sempre a unidade do solicitante (espelha MotivoViagem::origemNaUnidadeDoSolicitante).
+const origemNaUnidade = (codigo) => codigo === 'transferencia_paciente' || codigo.startsWith('exames')
+
+const normalizar = (nome) => (nome ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+
 // "Agora" no formato do input datetime-local (horário local), usado como limite máximo.
 const agoraLocal = () => {
   const d = new Date()
@@ -29,6 +36,8 @@ const agoraLocal = () => {
 
 export default function NovaSolicitacao() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const [unidade, setUnidade] = useState(null)
   const [form, setForm] = useState(INITIAL)
   const [pontos, setPontos] = useState([])
   const [motivos, setMotivos] = useState([])
@@ -41,6 +50,13 @@ export default function NovaSolicitacao() {
   useEffect(() => {
     pontosViagemApi.listar().then(({ data }) => setPontos(data.data ?? data)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!user?.unidade_id) return
+    unidadesApi.listar()
+      .then(({ data }) => setUnidade((data.data ?? data).find(u => u.id === user.unidade_id) ?? null))
+      .catch(() => {})
+  }, [user?.unidade_id])
 
   // Motivos cadastrados e liberados para solicitação (este app não usa React Query).
   useEffect(() => {
@@ -80,7 +96,12 @@ export default function NovaSolicitacao() {
     <p className="text-xs text-red-600 mt-1">{errors[field][0]}</p>
   )
 
-  const precisaOrigemDestino = ['transferencia_paciente', 'transporte_colaborador'].includes(form.motivo)
+  const origemFixa = !!user?.unidade_id && origemNaUnidade(form.motivo)
+  const precisaOrigemDestino = origemFixa || ['transferencia_paciente', 'transporte_colaborador'].includes(form.motivo)
+  // Com origem fixa, o destino não pode ser o próprio local do solicitante.
+  const pontosDestino = origemFixa && unidade
+    ? pontos.filter(p => normalizar(p.nome) !== normalizar(unidade.nome))
+    : pontos
   const precisaAtendimento = form.motivo === 'transferencia_paciente'
   const precisaCidade = form.motivo === 'buscar_medico'
   const precisaHospital = form.motivo === 'material_outro_hospital'
@@ -133,6 +154,13 @@ export default function NovaSolicitacao() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Origem *</label>
+              {origemFixa ? (
+                <input
+                  readOnly
+                  value={unidade?.nome ?? 'Sua unidade'}
+                  className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700"
+                />
+              ) : (
               <select
                 required
                 value={form.origem_id}
@@ -142,6 +170,7 @@ export default function NovaSolicitacao() {
                 <option value="">Selecione...</option>
                 {pontos.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
               </select>
+              )}
               {fe('origem_id')}
             </div>
             <div>
@@ -153,7 +182,7 @@ export default function NovaSolicitacao() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">Selecione...</option>
-                {pontos.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
+                {pontosDestino.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
               </select>
               {fe('destino_id')}
             </div>
