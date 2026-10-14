@@ -104,11 +104,18 @@ class MotivoViagem extends Model
     /**
      * Motivos de solicitação cuja origem é sempre a unidade do solicitante:
      * Transferência de Paciente e "Exames - Levar Paciente" (cadastrado pelo
-     * admin, por isso reconhecido pelo prefixo do código gerado a partir do nome).
+     * admin, por isso reconhecido pelo prefixo do código ou do nome).
      */
     public static function origemNaUnidadeDoSolicitante(?string $codigo): bool
     {
-        return $codigo === 'transferencia_paciente' || Str::startsWith((string) $codigo, 'exames');
+        if ($codigo === 'transferencia_paciente' || Str::startsWith((string) $codigo, 'exames')) {
+            return true;
+        }
+
+        // O código é imutável: um motivo renomeado para "Exames ..." é reconhecido pelo nome.
+        $nome = $codigo ? self::where('codigo', $codigo)->value('nome') : null;
+
+        return Str::startsWith(Str::of((string) $nome)->ascii()->lower()->toString(), 'exames');
     }
 
     /** TFD só pode ser solicitado pelo HMA (unidade com "HMA" no nome); as demais, como a UPA, não o enxergam. */

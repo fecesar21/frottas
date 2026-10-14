@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import NovaSolicitacao from './NovaSolicitacao'
 import * as motivosApi from '../api/motivosViagem'
 import * as pontosViagemApi from '../api/pontosViagem'
@@ -41,5 +41,18 @@ describe('NovaSolicitacao — motivos', () => {
     render(<NovaSolicitacao />)
 
     expect(await screen.findByText(/Nenhum motivo disponível/)).toBeInTheDocument()
+  })
+})
+
+describe('NovaSolicitacao — Exames', () => {
+  it('mostra Origem e Destino para "Exames - Levar Paciente" mesmo com código diferente e sem unidade', async () => {
+    pontosViagemApi.listar.mockResolvedValue({ data: [{ tipo: 'localidade', id: 'l1', nome: 'Clínica' }] })
+    motivosApi.listar.mockResolvedValue({ data: { data: [{ codigo: 'levar_paciente', nome: 'Exames - Levar Paciente' }] } })
+
+    render(<NovaSolicitacao />)
+    fireEvent.click(await screen.findByLabelText('Exames - Levar Paciente'))
+
+    expect(screen.getByText('Origem *')).toBeInTheDocument()
+    expect(screen.getByText('Destino *')).toBeInTheDocument()
   })
 })

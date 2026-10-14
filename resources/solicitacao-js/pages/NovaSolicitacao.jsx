@@ -23,9 +23,11 @@ const INITIAL = {
 }
 
 // Motivos cuja origem é sempre a unidade do solicitante (espelha MotivoViagem::origemNaUnidadeDoSolicitante).
-const origemNaUnidade = (codigo) => codigo === 'transferencia_paciente' || codigo.startsWith('exames')
+const normalizar = (nome) => (nome ?? '').normalize('NFD').replace(/[0300-036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
 
-const normalizar = (nome) => (nome ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+const origemNaUnidade = (motivo) => !!motivo && (
+  motivo.codigo === 'transferencia_paciente' || motivo.codigo.startsWith('exames') || normalizar(motivo.nome).startsWith('exames')
+)
 
 // "Agora" no formato do input datetime-local (horário local), usado como limite máximo.
 const agoraLocal = () => {
@@ -96,8 +98,10 @@ export default function NovaSolicitacao() {
     <p className="text-xs text-red-600 mt-1">{errors[field][0]}</p>
   )
 
-  const origemFixa = !!user?.unidade_id && origemNaUnidade(form.motivo)
-  const precisaOrigemDestino = origemFixa || ['transferencia_paciente', 'transporte_colaborador'].includes(form.motivo)
+  const motivoSelecionado = motivos.find(m => m.codigo === form.motivo)
+  const exigeOrigemDestino = origemNaUnidade(motivoSelecionado)
+  const origemFixa = !!user?.unidade_id && exigeOrigemDestino
+  const precisaOrigemDestino = exigeOrigemDestino || ['transferencia_paciente', 'transporte_colaborador'].includes(form.motivo)
   // Com origem fixa, o destino não pode ser o próprio local do solicitante.
   const pontosDestino = origemFixa && unidade
     ? pontos.filter(p => normalizar(p.nome) !== normalizar(unidade.nome))

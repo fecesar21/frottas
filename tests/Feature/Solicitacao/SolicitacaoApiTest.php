@@ -773,4 +773,17 @@ class SolicitacaoApiTest extends TestCase
         $this->postJson('/api/solicitacoes', $dados + ['destino_tipo' => 'unidade', 'destino_id' => $unidade->id])
             ->assertJsonValidationErrors(['destino_id']);
     }
+
+    public function test_motivo_renomeado_para_exames_tambem_usa_origem_da_unidade(): void
+    {
+        $unidade = Unidade::factory()->create(['nome' => 'UPA X', 'tipo' => 'filial']);
+        $this->loginSolicitanteDa($unidade);
+        $motivo = MotivoViagem::factory()->create(['codigo' => 'levar_paciente', 'nome' => 'Exames - Levar Paciente', 'disponivel_solicitacao' => true]);
+
+        $this->postJson('/api/solicitacoes', ['motivo' => $motivo->codigo])->assertJsonValidationErrors(['destino_id']);
+        $this->postJson('/api/solicitacoes', [
+            'motivo' => $motivo->codigo,
+            'destino_tipo' => 'localidade', 'destino_id' => Localidade::factory()->create()->id,
+        ])->assertCreated()->assertJsonPath('data.origem_id', $unidade->id);
+    }
 }
