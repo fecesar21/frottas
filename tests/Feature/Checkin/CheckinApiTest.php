@@ -179,6 +179,18 @@ class CheckinApiTest extends TestCase
         ]);
     }
 
+    public function test_checkout_sem_km_retorno_retorna_erro(): void
+    {
+        $this->loginAdmin();
+        $checkin = $this->checkinAtivo();
+
+        $this->patchJson("/api/checkins/{$checkin->id}/checkout", ['km_retorno' => null])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('km_retorno');
+
+        $this->assertDatabaseHas('checkins', ['id' => $checkin->id, 'status' => 'ativo']);
+    }
+
     public function test_sem_viagem_km_retorno_diferente_da_saida_retorna_erro(): void
     {
         $this->loginAdmin();

@@ -137,8 +137,8 @@ class CheckinDuploApiTest extends TestCase
             'status' => 'em_andamento',
         ]);
 
-        $this->patchJson("/api/checkins/{$checkinAdm->id}/checkout", [])->assertOk();
-        $this->patchJson("/api/checkins/{$checkinAmb->id}/checkout", [])->assertStatus(422);
+        $this->patchJson("/api/checkins/{$checkinAdm->id}/checkout", ['km_retorno' => $checkinAdm->km_saida])->assertOk();
+        $this->patchJson("/api/checkins/{$checkinAmb->id}/checkout", ['km_retorno' => $checkinAmb->km_saida])->assertStatus(422);
     }
 
     public function test_login_retorna_lista_de_checkins_ativos(): void

@@ -14,7 +14,7 @@ class CheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'km_retorno' => 'nullable|integer|min:0',
+            'km_retorno' => 'required|integer|min:0',
             'nivel_combustivel_retorno' => 'nullable|numeric|min:0|max:100',
             'ocorrencias' => 'nullable|string',
             'justificativa_divergencia_km' => 'nullable|string|max:500',
