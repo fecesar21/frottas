@@ -365,6 +365,34 @@ class ViagemApiTest extends TestCase
         ]);
     }
 
+    public function test_chegada_de_exames_com_retorno_abre_viagem_de_retorno(): void
+    {
+        $this->loginGestor();
+        $exames = MotivoViagem::factory()->create(['codigo' => 'levar_paciente', 'nome' => 'Exames - Levar Paciente', 'tipo_veiculo' => 'ambos']);
+        $viagem = Viagem::factory()->create([
+            'veiculo_id' => Veiculo::factory()->create(['km_atual' => 4900])->id,
+            'km_saida' => 5000, 'origem' => 'UPA', 'destino' => 'CLÍNICA', 'motivo_viagem' => $exames->codigo,
+        ]);
+
+        $this->getJson("/api/viagens/{$viagem->id}")->assertJsonPath('data.permite_retorno', true);
+
+        $res = $this->patchJson("/api/viagens/{$viagem->id}/chegada", ['km_chegada' => 5040, 'retornar_origem' => true])
+            ->assertOk()
+            ->assertJsonPath('viagem_retorno.origem', 'CLÍNICA')
+            ->assertJsonPath('viagem_retorno.destino', 'UPA');
+
+        $this->getJson('/api/viagens/'.$res->json('viagem_retorno.id'))->assertJsonPath('data.permite_retorno', false);
+    }
+
+    public function test_chegada_de_motivo_sem_retorno_recusa_retornar_origem(): void
+    {
+        $this->loginGestor();
+        $viagem = Viagem::factory()->create(['km_saida' => 5000, 'motivo_viagem' => 'buscar_medico']);
+
+        $this->patchJson("/api/viagens/{$viagem->id}/chegada", ['km_chegada' => 5040, 'retornar_origem' => true])
+            ->assertJsonValidationErrors(['retornar_origem']);
+    }
+
     public function test_chegada_sem_retorno_apenas_encerra(): void
     {
         $this->loginGestor();

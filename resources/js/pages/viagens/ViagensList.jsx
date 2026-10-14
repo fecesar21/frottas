@@ -54,9 +54,9 @@ export default function ViagensList() {
     },
   })
 
-  // Ambulância em transferência: ao chegar, o motorista decide se já volta à origem.
-  // A própria viagem de retorno não pergunta de novo — só encerra com o KM de chegada.
-  const podeRetornar = ['transferencia_paciente', 'tfd'].includes(chegadaTarget?.motivo_viagem) && !chegadaTarget?.eh_retorno
+  // Transferência, TFD e Exames: ao chegar, o motorista decide se já volta à origem.
+  // A própria viagem de retorno não pergunta de novo (permite_retorno vem falso do backend).
+  const podeRetornar = !!chegadaTarget?.permite_retorno
 
   const enviarChegada = (retornar) => {
     setRetornarEscolhido(retornar)

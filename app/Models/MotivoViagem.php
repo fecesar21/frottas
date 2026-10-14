@@ -108,14 +108,24 @@ class MotivoViagem extends Model
      */
     public static function origemNaUnidadeDoSolicitante(?string $codigo): bool
     {
-        if ($codigo === 'transferencia_paciente' || Str::startsWith((string) $codigo, 'exames')) {
-            return true;
+        return $codigo === 'transferencia_paciente' || self::ehExames($codigo);
+    }
+
+    /** Motivos em que, ao chegar ao destino, o motorista pode gerar a viagem de retorno à origem. */
+    public static function permiteRetornoOrigem(?string $codigo): bool
+    {
+        return in_array($codigo, ['transferencia_paciente', self::TFD], true) || self::ehExames($codigo);
+    }
+
+    /** "Exames - Levar Paciente": pelo código ou, como o código é imutável, pelo nome (motivo renomeado). */
+    public static function ehExames(?string $codigo): bool
+    {
+        if (! $codigo) {
+            return false;
         }
 
-        // O código é imutável: um motivo renomeado para "Exames ..." é reconhecido pelo nome.
-        $nome = $codigo ? self::where('codigo', $codigo)->value('nome') : null;
-
-        return Str::startsWith(Str::of((string) $nome)->ascii()->lower()->toString(), 'exames');
+        return Str::startsWith($codigo, 'exames')
+            || Str::startsWith(Str::of(self::rotulo($codigo))->ascii()->lower()->toString(), 'exames');
     }
 
     /** TFD só pode ser solicitado pelo HMA (unidade com "HMA" no nome); as demais, como a UPA, não o enxergam. */

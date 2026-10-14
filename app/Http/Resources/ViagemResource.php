@@ -17,6 +17,7 @@ class ViagemResource extends JsonResource
             'checkin_id' => $this->checkin_id,
             'viagem_ida_id' => $this->viagem_ida_id,
             'eh_retorno' => $this->viagem_ida_id !== null,
+            'permite_retorno' => $this->viagem_ida_id === null && MotivoViagem::permiteRetornoOrigem($this->motivo_viagem),
             'origem' => $this->origem,
             'destino' => $this->destino,
             'motivo_viagem' => $this->motivo_viagem,

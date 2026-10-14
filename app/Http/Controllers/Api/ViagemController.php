@@ -124,7 +124,7 @@ class ViagemController extends Controller
 
         if ($r->boolean('retornar_origem')) {
             $erro = match (true) {
-                ! in_array($viagem->motivo_viagem, ['transferencia_paciente', 'tfd'], true) => 'Retorno à origem disponível apenas para transferência de paciente e TFD.',
+                ! MotivoViagem::permiteRetornoOrigem($viagem->motivo_viagem) => 'Retorno à origem disponível apenas para transferência de paciente, TFD e exames.',
                 $viagem->viagem_ida_id !== null => 'Esta viagem já é o retorno à origem; não é possível gerar outro retorno.',
                 default => null,
             };
