@@ -34,6 +34,14 @@ class ViagemResource extends JsonResource
             'observacoes' => $this->observacoes,
             'motorista' => $this->whenLoaded('motorista', fn () => new MotoristaResource($this->motorista)),
             'veiculo' => $this->whenLoaded('veiculo', fn () => new VeiculoResource($this->veiculo)),
+            'paradas' => $this->whenLoaded('paradas', fn () => $this->paradas->map(fn ($p) => [
+                'id' => $p->id,
+                'ordem' => $p->ordem,
+                'local' => $p->local,
+                'motivo' => $p->motivo,
+                'chegada_at' => $p->chegada_at,
+                'saida_at' => $p->saida_at,
+            ])),
             'colaboradores' => $this->whenLoaded('colaboradores', fn () => $this->colaboradores->map(fn ($c) => [
                 'id' => $c->id,
                 'nome' => $c->nome,

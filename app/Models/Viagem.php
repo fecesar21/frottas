@@ -75,6 +75,16 @@ class Viagem extends Model
     }
 
     /**
+     * Paradas intermediárias registradas pelo motorista durante o trajeto.
+     *
+     * @return HasMany<ViagemParada, $this>
+     */
+    public function paradas(): HasMany
+    {
+        return $this->hasMany(ViagemParada::class)->orderBy('ordem');
+    }
+
+    /**
      * Colaboradores transportados (motivo transporte_colaborador).
      *
      * @return BelongsToMany<Colaborador, $this>

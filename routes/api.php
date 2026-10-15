@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\UnidadeLdapConfigController;
 use App\Http\Controllers\Api\UsuarioController;
 use App\Http\Controllers\Api\VeiculoController;
 use App\Http\Controllers\Api\ViagemController;
+use App\Http\Controllers\Api\ViagemParadaController;
 use App\Http\Controllers\Api\ViagemPontoController;
 use Illuminate\Support\Facades\Route;
 
@@ -93,6 +94,8 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito', 'da
     Route::patch('viagens/{viagem}/chegada', [ViagemController::class, 'chegada']);
     Route::post('viagens/{viagem}/pontos', [ViagemPontoController::class, 'store']);
     Route::get('viagens/{viagem}/pontos', [ViagemPontoController::class, 'index']);
+    Route::post('viagens/{viagem}/paradas', [ViagemParadaController::class, 'store']);
+    Route::patch('viagens/{viagem}/paradas/{parada}/retomar', [ViagemParadaController::class, 'retomar']);
     Route::apiResource('viagens', ViagemController::class)->parameters(['viagens' => 'viagem'])->only(['index', 'show', 'store']);
 
     // Solicitações de Transporte

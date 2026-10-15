@@ -10,6 +10,7 @@ import Alert from '../../components/ui/Alert'
 import ViagemForm from './ViagemForm'
 import KmConfirmacao, { KmEco, ehAlertaKm, camposConfirmacaoKm } from '../../components/shared/KmConfirmacao'
 import ViagemDetalhe from './ViagemDetalhe'
+import ParadaControle from './ParadaControle'
 import FilaMotoristaCard from '../../components/notificacoes/FilaMotoristaCard'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -20,7 +21,8 @@ export default function ViagensList() {
   const { user, isGestor, isOperador } = useAuth()
   const ehMotorista = isOperador && !!user?.motorista_id
   const qc = useQueryClient()
-  const [statusFilter, setStatusFilter] = useState('')
+  // Motorista abre já em "Em andamento" (tela enxuta); demais perfis começam em "Todas".
+  const [statusFilter, setStatusFilter] = useState(() => (isOperador ? 'em_andamento' : ''))
   const [formOpen, setFormOpen] = useState(false)
   const [chegadaTarget, setChegadaTarget] = useState(null)
   const [chegadaForm, setChegadaForm] = useState({ km_chegada: '', observacoes: '' })
@@ -90,8 +92,23 @@ export default function ViagensList() {
         </button>
       </div>
 
+      {/* Motorista no celular: ações da viagem ativa em botões redondos fixos no rodapé */}
+      {activeTrip && (
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-30 flex justify-around items-center pb-6 pt-2 pointer-events-none">
+          <div className="pointer-events-auto"><ParadaControle viagem={activeTrip} circular /></div>
+          <button onClick={() => abrirChegada(activeTrip)}
+            className="pointer-events-auto w-36 h-36 rounded-full shadow-lg flex flex-col items-center justify-center gap-1 bg-green-600 active:bg-green-700 text-white text-sm font-semibold">
+            <MapPin size={26} /> Chegada
+          </button>
+        </div>
+      )}
+
+      {isOperador && (data ?? []).length === 0 && (
+        <p className="text-sm text-gray-500 text-center py-10">{statusFilter === 'em_andamento' ? 'Nenhuma viagem em andamento.' : 'Nenhuma viagem encontrada.'}</p>
+      )}
+
       {/* Cards — telas pequenas */}
-      <div className="md:hidden space-y-3">
+      <div className={`md:hidden space-y-3 ${activeTrip ? 'pb-44' : ''}`}>
         {(data ?? []).map((v) => (
           <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-4 text-sm space-y-2">
             <div className="flex items-center justify-between">
@@ -111,8 +128,14 @@ export default function ViagensList() {
               <p>KM chegada: <span className="text-gray-700">{fmtKm(v.km_chegada)}</span></p>
               <p>KM: <span className="text-gray-700">{fmtKm(v.km_percorrido)} {v.km_percorrido ? 'km' : ''}</span></p>
             </div>
+            {v.status === 'em_andamento' && v.id !== activeTrip?.id && <ParadaControle viagem={v} />}
+            {v.id === activeTrip?.id && (v.paradas ?? []).filter(p => !p.saida_at).map(p => (
+              <p key={p.id} className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                Parado em {p.local} desde {format(new Date(p.chegada_at), 'HH:mm')}
+              </p>
+            ))}
             <div className="flex items-center gap-2">
-              {v.status === 'em_andamento' && (
+              {v.status === 'em_andamento' && v.id !== activeTrip?.id && (
                 <button onClick={() => abrirChegada(v)}
                   className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors">
                   <MapPin size={12} /> Chegada
@@ -151,6 +174,7 @@ export default function ViagensList() {
                   <span className="text-gray-400">{v.origem || '—'}</span>
                   <span className="mx-1 text-gray-300">→</span>
                   <span>{v.destino || '—'}</span>
+                  {v.status === 'em_andamento' && <div className="mt-1.5"><ParadaControle viagem={v} /></div>}
                 </td>
                 <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDt(v.saida_at)}</td>
                 <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtKm(v.km_saida)}</td>

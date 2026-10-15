@@ -8,3 +8,5 @@ export const corrigir       = (id, data) => api.patch(`/viagens/${id}/correcao`,
 export const chegada        = (id, data) => api.patch(`/viagens/${id}/chegada`, data)
 export const registrarPonto = (id, data) => api.post(`/viagens/${id}/pontos`, data)
 export const buscarPontos   = (id)       => api.get(`/viagens/${id}/pontos`)
+export const registrarParada = (id, data) => api.post(`/viagens/${id}/paradas`, data)
+export const retomarViagem   = (id, paradaId) => api.patch(`/viagens/${id}/paradas/${paradaId}/retomar`)

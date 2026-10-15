@@ -66,6 +66,9 @@ class ViagemService
 
         $suspeito = $this->kmPlausibilidade->validarChegada($viagem, (int) $data['km_chegada'], $data);
 
+        // Parada esquecida aberta é encerrada no momento da chegada.
+        $viagem->paradas()->whereNull('saida_at')->update(['saida_at' => now()]);
+
         $viagem->update([
             ...($suspeito ? [
                 'km_suspeito' => true,

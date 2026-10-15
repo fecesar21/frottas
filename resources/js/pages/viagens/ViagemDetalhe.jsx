@@ -2,7 +2,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet'
-import { format } from 'date-fns'
+import { format, differenceInMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import * as viagensApi from '../../api/viagens'
 import * as solicitacoesApi from '../../api/solicitacoes'
@@ -12,6 +12,7 @@ import HistoricoCorrecoes from '../../components/shared/HistoricoCorrecoes'
 import { useAuth } from '../../contexts/AuthContext'
 
 const fmtDt  = (s) => s ? format(new Date(s), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '—'
+const fmtHora = (s) => s ? format(new Date(s), 'HH:mm') : '—'
 const fmtKm  = (n) => n != null ? Number(n).toLocaleString('pt-BR') + ' km' : '—'
 
 function AjustarMapa({ pontos }) {
@@ -140,6 +141,22 @@ export default function ViagemDetalhe({ viagem: viagemInicial }) {
           <p className="text-xs text-gray-400 mb-0.5">Destino</p>
           <p className="text-gray-700">{viagem.destino}</p>
         </div>
+        {viagem.paradas?.length > 0 && (
+          <div className="col-span-full">
+            <p className="text-xs text-gray-400 mb-0.5">Paradas no trajeto</p>
+            <ol className="space-y-1">
+              {viagem.paradas.map(p => (
+                <li key={p.id} className="text-gray-700">
+                  {p.ordem}. {p.local}{p.motivo && <span className="text-gray-500"> — {p.motivo}</span>}
+                  <span className="text-xs text-gray-400 ml-2">
+                    {fmtHora(p.chegada_at)} → {p.saida_at ? fmtHora(p.saida_at) : 'em curso'}
+                    {p.saida_at && ` (${differenceInMinutes(new Date(p.saida_at), new Date(p.chegada_at))} min)`}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
         {viagem.colaboradores?.length > 0 && (
           <div className="col-span-full">
             <p className="text-xs text-gray-400 mb-0.5">Colaboradores transportados</p>
