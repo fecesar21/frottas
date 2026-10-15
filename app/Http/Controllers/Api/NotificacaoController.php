@@ -18,13 +18,29 @@ class NotificacaoController extends Controller
         $notificacoes = $request->user()->unreadNotifications()->latest()->limit(20)->get();
 
         // Notificações que apontam para uma solicitação apagada viram popups
-        // quebrados (404 ao aceitar/assumir): marca como lidas e descarta.
+        // quebrados (404 ao aceitar/assumir), e convites ao motorista ficam na
+        // tela até serem respondidos: marca como lidas e descarta as que não
+        // aguardam mais resposta deste usuário.
         $ids = $notificacoes->pluck('data.solicitacao_id')->filter()->unique();
-        $existentes = Solicitacao::whereIn('id', $ids)->pluck('id')->all();
-        [$orfas, $notificacoes] = $notificacoes->partition(
-            fn ($n) => isset($n->data['solicitacao_id']) && ! in_array($n->data['solicitacao_id'], $existentes, true)
-        );
-        $orfas->each->markAsRead();
+        $solicitacoes = Solicitacao::whereIn('id', $ids)->get(['id', 'status', 'motorista_pendente_id'])->keyBy('id');
+        $motoristaId = $request->user()->motorista_id;
+        [$obsoletas, $notificacoes] = $notificacoes->partition(function ($n) use ($solicitacoes, $motoristaId) {
+            if (! isset($n->data['solicitacao_id'])) {
+                return false;
+            }
+            $solicitacao = $solicitacoes->get($n->data['solicitacao_id']);
+            if (! $solicitacao) {
+                return true;
+            }
+
+            return match (class_basename($n->type)) {
+                'NovaViagemDesignada' => $solicitacao->motorista_pendente_id !== $motoristaId
+                    || $solicitacao->status !== (($n->data['fila'] ?? false) ? 'aguardando_finalizacao_trajeto' : 'pendente_motorista'),
+                'NovaSolicitacaoDisponivel' => $solicitacao->status !== 'aberto',
+                default => false,
+            };
+        });
+        $obsoletas->each->markAsRead();
         $notificacoes = $notificacoes->values();
 
         return response()->json([

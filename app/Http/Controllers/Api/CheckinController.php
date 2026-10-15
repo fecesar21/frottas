@@ -145,6 +145,15 @@ class CheckinController extends Controller
 
         $checkin = $this->service->checkout($checkin, $request->validated(), $isOperador);
 
+        // Motorista saiu de serviço: o que aguardava resposta dele volta para a
+        // gestão redesignar (o pop-up de convite some junto).
+        if (! Checkin::where('motorista_id', $checkin->motorista_id)->where('status', 'ativo')->exists()) {
+            Solicitacao::whereIn('status', ['pendente_motorista', 'aguardando_finalizacao_trajeto'])
+                ->where('motorista_pendente_id', $checkin->motorista_id)
+                ->get()
+                ->each(fn (Solicitacao $s) => app(SolicitacaoService::class)->devolverParaFila($s));
+        }
+
         return new CheckinResource($checkin);
     }
 }

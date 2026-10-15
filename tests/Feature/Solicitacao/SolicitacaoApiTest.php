@@ -132,6 +132,7 @@ class SolicitacaoApiTest extends TestCase
         $solicitacao = Solicitacao::factory()->create(['motivo' => 'tfd', 'status' => 'aberto']);
         $motorista = Motorista::factory()->create();
         $veiculo = Veiculo::factory()->create();
+        Checkin::factory()->create(['motorista_id' => $motorista->id, 'veiculo_id' => $veiculo->id, 'status' => 'ativo']);
 
         $response = $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
             'motorista_id' => $motorista->id,
@@ -339,6 +340,7 @@ class SolicitacaoApiTest extends TestCase
         $this->app['auth']->forgetGuards();
         $outroMotorista = Motorista::factory()->create();
         $outroVeiculo = Veiculo::factory()->create();
+        Checkin::factory()->create(['motorista_id' => $outroMotorista->id, 'veiculo_id' => $outroVeiculo->id, 'status' => 'ativo']);
 
         $this->patchJson("/api/solicitacoes/{$solicitacao->id}/aceitar", [
             'motorista_id' => $outroMotorista->id,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Solicitacao\StoreSolicitacaoRequest;
 use App\Http\Resources\SolicitacaoResource;
+use App\Models\Checkin;
 use App\Models\Localidade;
 use App\Models\Solicitacao;
 use App\Models\Unidade;
@@ -130,6 +131,10 @@ class SolicitacaoController extends Controller
             'motorista_id' => 'required|uuid|exists:motoristas,id',
             'veiculo_id' => 'required|uuid|exists:veiculos,id',
         ]);
+
+        if (! Checkin::where('motorista_id', $data['motorista_id'])->where('status', 'ativo')->exists()) {
+            throw ValidationException::withMessages(['motorista_id' => 'Motorista sem check-in ativo.']);
+        }
 
         $solicitacao = $this->service->aceitar($solicitacao, $data['motorista_id'], $data['veiculo_id']);
 

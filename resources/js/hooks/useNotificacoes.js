@@ -25,6 +25,10 @@ function tocarBeep() {
   }
 }
 
+function exigeResposta(notificacao) {
+  return !!notificacao.type?.match(/(NovaViagemDesignada|NovaSolicitacaoDisponivel)$/)
+}
+
 function chaveAnunciados(userId) {
   return `notificacoes_popup_anunciados_${userId}`
 }
@@ -52,6 +56,7 @@ export function useNotificacoes() {
   const qc = useQueryClient()
   const totalAnteriorRef = useRef(0)
   const anunciadosRef = useRef(null)
+  const convitesExibidosRef = useRef(new Set())
   const [pendentes, setPendentes] = useState([])
   const habilitado = user?.perfil === 'admin' || user?.perfil === 'gestor' || (user?.perfil === 'operador' && !!user?.motorista_id)
 
@@ -79,10 +84,20 @@ export function useNotificacoes() {
       anunciadosRef.current = lerAnunciados(user.id)
     }
 
-    const novas = notificacoes.filter(n => !anunciadosRef.current.has(n.id))
+    // Convites ao motorista só são lembrados durante a sessão: após recarregar a
+    // página o pop-up volta enquanto o backend os listar (até aceitar ou recusar).
+    const novas = notificacoes.filter(n => exigeResposta(n)
+      ? !convitesExibidosRef.current.has(n.id)
+      : !anunciadosRef.current.has(n.id))
     if (novas.length === 0) return
 
-    novas.forEach(n => anunciadosRef.current.add(n.id))
+    novas.forEach(n => {
+      if (exigeResposta(n)) {
+        convitesExibidosRef.current.add(n.id)
+      } else {
+        anunciadosRef.current.add(n.id)
+      }
+    })
     salvarAnunciados(user.id, anunciadosRef.current)
     setPendentes(prev => [...prev, ...novas])
   }, [notificacoes, user?.id])

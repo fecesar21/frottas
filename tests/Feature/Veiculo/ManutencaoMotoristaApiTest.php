@@ -136,6 +136,7 @@ class ManutencaoMotoristaApiTest extends TestCase
     {
         $veiculo = Veiculo::factory()->create(['status' => 'manutencao']);
         $motorista = Motorista::factory()->create();
+        Checkin::factory()->create(['motorista_id' => $motorista->id, 'veiculo_id' => Veiculo::factory()->create()->id, 'status' => 'ativo']);
         $solicitacao = Solicitacao::factory()->create();
         $this->loginGestor();
 
