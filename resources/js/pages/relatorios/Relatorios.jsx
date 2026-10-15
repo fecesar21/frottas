@@ -6,11 +6,11 @@ import RelatorioChecklistVeiculo from './RelatorioChecklistVeiculo'
 import RelatorioManutencoes from './RelatorioManutencoes'
 
 const tabs = [
-  { to: 'abastecimentos', label: 'Abastecimentos' },
-  { to: 'viagens', label: 'Viagens' },
-  { to: 'checklist-veiculo', label: 'Checklist de Veículo' },
-  { to: 'manutencoes', label: 'Manutenções' },
-  { to: 'motoristas', label: 'Motoristas' },
+  { to: '/relatorios/abastecimentos', label: 'Abastecimentos' },
+  { to: '/relatorios/viagens', label: 'Viagens' },
+  { to: '/relatorios/checklist-veiculo', label: 'Checklist de Veículo' },
+  { to: '/relatorios/manutencoes', label: 'Manutenções' },
+  { to: '/relatorios/motoristas', label: 'Motoristas' },
 ]
 
 export default function Relatorios() {
