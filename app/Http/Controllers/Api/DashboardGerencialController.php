@@ -15,8 +15,11 @@ use Illuminate\Http\Request;
  */
 class DashboardGerencialController extends Controller
 {
-    /** Acordo fixo entre autorização da referência e fim da transferência. */
+    /** Acordo fixo entre autorização da referência e início da viagem. */
     public const ACORDO_MINUTOS = 30;
+
+    /** Máximo de pares origem/destino exibidos no painel. */
+    public const LIMITE_ROTAS = 8;
 
     public function transferencias(Request $r): JsonResponse
     {
@@ -53,7 +56,7 @@ class DashboardGerencialController extends Controller
             ->where('status', '!=', 'cancelada')
             ->whereBetween('saida_at', [$inicio, $fim])
             ->when($filtroUnidades, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->whereIn('unidades.id', $filtroUnidades)))
-            ->get(['id', 'saida_at', 'chegada_at']);
+            ->get(['id', 'origem', 'destino', 'saida_at', 'chegada_at']);
 
         $minutos = fn ($de, $ate) => $de && $ate && $ate->gte($de) ? $de->diffInSeconds($ate) / 60 : null;
         $media = function ($valores) {
@@ -63,11 +66,24 @@ class DashboardGerencialController extends Controller
         };
 
         $tempos = $viagens->map(fn ($v) => [
+            'autorizacao_inicio' => $minutos($v->solicitacao?->autorizacao_referencia_em, $v->saida_at),
             'autorizacao_fim' => $minutos($v->solicitacao?->autorizacao_referencia_em, $v->chegada_at),
             'autorizacao_solicitacao' => $minutos($v->solicitacao?->autorizacao_referencia_em, $v->solicitacao?->created_at),
             'solicitacao_inicio' => $minutos($v->solicitacao?->created_at, $v->saida_at),
             'inicio_fim' => $minutos($v->saida_at, $v->chegada_at),
         ]);
+
+        // Quantidade por par origem → destino, das rotas mais frequentes.
+        $porRota = $viagens
+            ->groupBy(fn ($v) => ($v->origem ?: '—').'|'.($v->destino ?: '—'))
+            ->map(function ($grupo, $chave) {
+                [$origem, $destino] = explode('|', $chave, 2);
+
+                return ['origem' => $origem, 'destino' => $destino, 'total' => $grupo->count()];
+            })
+            ->sortBy([['total', 'desc'], ['origem', 'asc'], ['destino', 'asc']])
+            ->values()
+            ->take(self::LIMITE_ROTAS);
 
         return response()->json([
             'mes' => $inicio->month,
@@ -77,12 +93,14 @@ class DashboardGerencialController extends Controller
             'unidade_id' => $unidadeId,
             'total_transferencias' => $viagens->count(),
             'medias_minutos' => [
+                'autorizacao_inicio' => $media($tempos->pluck('autorizacao_inicio')),
                 'autorizacao_fim' => $media($tempos->pluck('autorizacao_fim')),
                 'autorizacao_solicitacao' => $media($tempos->pluck('autorizacao_solicitacao')),
                 'solicitacao_inicio' => $media($tempos->pluck('solicitacao_inicio')),
                 'inicio_fim' => $media($tempos->pluck('inicio_fim')),
             ],
-            'concluidas_com_autorizacao' => $tempos->whereNotNull('autorizacao_fim')->count(),
+            'por_rota' => $porRota,
+            'concluidas_com_autorizacao' => $tempos->whereNotNull('autorizacao_inicio')->count(),
         ]);
     }
 }

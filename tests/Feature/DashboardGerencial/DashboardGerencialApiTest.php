@@ -49,10 +49,29 @@ class DashboardGerencialApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('acordo_minutos', 30)
             ->assertJsonPath('total_transferencias', 2)
+            ->assertJsonPath('medias_minutos.autorizacao_inicio', 13)
             ->assertJsonPath('medias_minutos.autorizacao_fim', 25)
             ->assertJsonPath('medias_minutos.autorizacao_solicitacao', 5)
             ->assertJsonPath('medias_minutos.solicitacao_inicio', 8)
             ->assertJsonPath('medias_minutos.inicio_fim', 12);
+    }
+
+    public function test_agrupa_transferencias_por_origem_e_destino(): void
+    {
+        $this->loginAs('dashboard');
+        $saida = Carbon::create(2026, 9, 5, 9, 0);
+        foreach ([['HOSPITAL A', 'HOSPITAL B'], ['HOSPITAL A', 'HOSPITAL B'], ['UPA C', 'HOSPITAL B']] as [$o, $d]) {
+            Viagem::factory()->create([
+                'motivo_viagem' => 'transferencia_paciente', 'status' => 'concluida',
+                'origem' => $o, 'destino' => $d, 'saida_at' => $saida,
+            ]);
+        }
+
+        $this->getJson('/api/relatorios/dashboard-gerencial/transferencias?mes=9&ano=2026')
+            ->assertOk()
+            ->assertJsonCount(2, 'por_rota')
+            ->assertJsonPath('por_rota.0', ['origem' => 'HOSPITAL A', 'destino' => 'HOSPITAL B', 'total' => 2])
+            ->assertJsonPath('por_rota.1', ['origem' => 'UPA C', 'destino' => 'HOSPITAL B', 'total' => 1]);
     }
 
     public function test_conta_viagem_de_transferencia_lancada_sem_solicitacao(): void
@@ -69,7 +88,7 @@ class DashboardGerencialApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('total_transferencias', 1)
             ->assertJsonPath('medias_minutos.inicio_fim', 40)
-            ->assertJsonPath('medias_minutos.autorizacao_fim', null);
+            ->assertJsonPath('medias_minutos.autorizacao_inicio', null);
     }
 
     public function test_perfil_dashboard_nao_acessa_outras_rotas(): void

@@ -61,7 +61,7 @@
 .painel-select:focus-visible, .painel-botao:focus-visible { outline: 3px solid var(--seg-2); outline-offset: 2px; }
 
 /* Destaque */
-.painel-corpo { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 72px); align-content: center; row-gap: clamp(16px, 3vh, 40px); }
+.painel-corpo { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: clamp(24px, 4vw, 72px); align-content: center; row-gap: clamp(16px, 3vh, 40px); }
 .painel-rotulo { color: var(--muted); font-size: clamp(1rem, 1.3vw, 1.375rem); font-weight: 600; margin: 0; }
 .painel-numero { font-size: clamp(4.5rem, min(11vw, 22vh), 12rem); font-weight: 800; line-height: .9; letter-spacing: -0.04em; margin: 16px 0 0; }
 .painel-numero small { font-size: .32em; font-weight: 700; letter-spacing: -0.01em; margin-left: .2em; color: var(--muted); }
@@ -103,6 +103,18 @@
   .painel-total { border-left: 0; border-top: 1px solid var(--rule); padding: 24px 0 0; }
   .painel-etapas { grid-template-columns: 1fr; }
 }
+
+/* Quadro por origem / destino */
+.painel-rotas { grid-column: 3; grid-row: 1; align-self: center; max-height: 100%; overflow: hidden; border-left: 1px solid var(--rule); padding-left: clamp(24px, 3vw, 48px); }
+.painel-rotas .painel-rotulo { font-size: clamp(.85rem, 1vw, 1.1rem); }
+.painel-rotas-vazio { color: var(--muted); margin: 12px 0 0; }
+.painel-tabela { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: clamp(.75rem, .8vw, .95rem); }
+.painel-tabela th { text-align: left; color: var(--muted); font-weight: 600; padding: 4px 8px 4px 0; border-bottom: 1px solid var(--rule); }
+.painel-tabela td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--rule); font-weight: 500; overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .painel-rotas { grid-column: 1 / -1; grid-row: auto; border-left: 0; padding-left: 0; }
+}
+.painel-tabela .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 800; padding-right: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .painel, .painel-seg { transition: none; }

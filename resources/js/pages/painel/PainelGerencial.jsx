@@ -18,9 +18,9 @@ const STATUS = {
 }
 
 const ETAPAS = [
-  { chave: 'autorizacao_solicitacao', nome: 'Autorização Até Solicitação De Transporte' },
-  { chave: 'solicitacao_inicio', nome: 'Solicitação Até Início Da Viagem' },
-  { chave: 'inicio_fim', nome: 'Início Até Fim Da Viagem' },
+  { chave: 'autorizacao_solicitacao', nome: 'Tempo Médio De Autorização Até Solicitação De Transporte' },
+  { chave: 'solicitacao_inicio', nome: 'Tempo Médio De Solicitação Até Início Da Viagem' },
+  { chave: 'inicio_fim', nome: 'Tempo Médio De Início Até Fim Da Viagem' },
 ]
 
 const CHAVE_TEMA = 'hd_painel_tema'
@@ -69,6 +69,30 @@ function LinhaDoTempo({ medias, acordo }) {
   )
 }
 
+function PorRota({ rotas }) {
+  return (
+    <section className="painel-rotas">
+      <p className="painel-rotulo">Transferências Por Origem / Destino</p>
+      {rotas.length === 0 ? (
+        <p className="painel-rotas-vazio">Nenhuma Transferência No Período</p>
+      ) : (
+        <table className="painel-tabela">
+          <thead>
+            <tr><th>Origem</th><th>Destino</th><th className="num">Qtd.</th></tr>
+          </thead>
+          <tbody>
+            {rotas.map(r => (
+              <tr key={`${r.origem}|${r.destino}`}>
+                <td>{r.origem}</td><td>{r.destino}</td><td className="num">{r.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  )
+}
+
 export default function PainelGerencial() {
   const { user, logout } = useAuth()
   const hoje = new Date()
@@ -97,7 +121,7 @@ export default function PainelGerencial() {
 
   const acordo = data?.acordo_minutos ?? 30
   const medias = data?.medias_minutos ?? {}
-  const cor = corDoTempo(medias.autorizacao_fim, acordo)
+  const cor = corDoTempo(medias.autorizacao_inicio, acordo)
   const anos = Array.from({ length: 5 }, (_, i) => hoje.getFullYear() - i)
 
   const alternarTema = () => {
@@ -116,7 +140,7 @@ export default function PainelGerencial() {
       <header className="painel-topo">
         <div>
           <h1 className="painel-titulo">Transferência De Pacientes</h1>
-          <p className="painel-sub">Acordo De {acordo} Minutos Entre A Autorização Da Referência E A Chegada Ao Destino</p>
+          <p className="painel-sub">Acordo De {acordo} Minutos Entre A Autorização Da Referência E O Início Da Viagem</p>
         </div>
         <div className="painel-controles">
           {(data?.unidades?.length ?? 0) > 1 && (
@@ -152,8 +176,8 @@ export default function PainelGerencial() {
       ) : (
         <main className="painel-corpo">
           <section className="painel-destaque" data-cor={cor}>
-            <p className="painel-rotulo">Tempo Médio Da Autorização Até O Fim Da Viagem</p>
-            <p className="painel-numero"><Tempo minutos={medias.autorizacao_fim} /></p>
+            <p className="painel-rotulo">Tempo Médio Da Autorização Até O Início Da Viagem</p>
+            <p className="painel-numero"><Tempo minutos={medias.autorizacao_inicio} /></p>
             <p className="painel-status">{STATUS[cor](acordo)}</p>
           </section>
 
@@ -168,6 +192,8 @@ export default function PainelGerencial() {
           </section>
 
           <LinhaDoTempo medias={medias} acordo={acordo} />
+
+          <PorRota rotas={data?.por_rota ?? []} />
         </main>
       )}
 

@@ -13,7 +13,7 @@ export function sairModoKiosk() {
   }
 }
 
-// Cor do tempo médio autorização → fim da viagem frente ao acordo de 30 min:
+// Cor do tempo médio autorização → início da viagem frente ao acordo de 30 min:
 // verde < 25, laranja entre 25 e 30, vermelho > 30.
 export function corDoTempo(minutos, acordo = 30) {
   if (minutos == null) return 'neutro'
