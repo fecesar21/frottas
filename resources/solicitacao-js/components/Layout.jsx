@@ -29,7 +29,7 @@ export default function Layout({ children, lateral }) {
     <div className="min-h-screen bg-gray-50 md:flex">
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-navy-950/70 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-30 bg-navy-950/70 backdrop-blur-xs md:hidden"
           onClick={() => setOpen(false)}
         />
       )}

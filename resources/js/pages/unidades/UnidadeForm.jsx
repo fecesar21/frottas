@@ -49,7 +49,7 @@ export default function UnidadeForm({ unidade, onSuccess }) {
           onChange={set('nome')}
           maxLength={120}
           placeholder="Ex: Filial São Paulo"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         />
         {fieldErrors.nome && <p className="text-red-500 text-xs mt-1">{fieldErrors.nome[0]}</p>}
       </div>
@@ -59,7 +59,7 @@ export default function UnidadeForm({ unidade, onSuccess }) {
         <select
           value={form.tipo}
           onChange={set('tipo')}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         >
           <option value="matriz">Matriz</option>
           <option value="filial">Filial</option>
@@ -73,7 +73,7 @@ export default function UnidadeForm({ unidade, onSuccess }) {
             id="ativo"
             checked={form.ativo}
             onChange={set('ativo')}
-            className="rounded"
+            className="rounded-sm"
           />
           <label htmlFor="ativo" className="text-sm text-gray-700">Unidade ativa</label>
         </div>

@@ -122,7 +122,7 @@ export default function NovaSolicitacao() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xs border border-gray-100 p-6 space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Motivo da Viagem *</label>
           <div className="space-y-2">
@@ -169,7 +169,7 @@ export default function NovaSolicitacao() {
                 required
                 value={form.origem_id}
                 onChange={(e) => setPonto('origem', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">Selecione...</option>
                 {pontos.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
@@ -183,7 +183,7 @@ export default function NovaSolicitacao() {
                 required
                 value={form.destino_id}
                 onChange={(e) => setPonto('destino', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">Selecione...</option>
                 {pontosDestino.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
@@ -203,7 +203,7 @@ export default function NovaSolicitacao() {
               max={999999}
               value={form.numero_atendimento}
               onChange={(e) => setField('numero_atendimento', e.target.value.slice(0, 6))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
             />
             {fe('numero_atendimento')}
           </div>
@@ -218,7 +218,7 @@ export default function NovaSolicitacao() {
               max={agoraLocal()}
               value={form.autorizacao_referencia_em}
               onChange={(e) => setField('autorizacao_referencia_em', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
             />
             {fe('autorizacao_referencia_em')}
           </div>
@@ -232,7 +232,7 @@ export default function NovaSolicitacao() {
               required
               value={form.cidade}
               onChange={(e) => setField('cidade', e.target.value.toUpperCase())}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
             />
             {fe('cidade')}
           </div>
@@ -246,7 +246,7 @@ export default function NovaSolicitacao() {
               required
               value={form.hospital_destino}
               onChange={(e) => setField('hospital_destino', e.target.value.toUpperCase())}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
             />
             {fe('hospital_destino')}
           </div>
@@ -260,7 +260,7 @@ export default function NovaSolicitacao() {
               required
               value={form.fornecedor_nome}
               onChange={(e) => setField('fornecedor_nome', e.target.value.toUpperCase())}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
             />
             {fe('fornecedor_nome')}
           </div>
@@ -272,7 +272,7 @@ export default function NovaSolicitacao() {
             rows={3}
             value={form.observacoes}
             onChange={(e) => setField('observacoes', e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
           />
         </div>
 

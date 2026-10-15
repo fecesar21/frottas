@@ -130,20 +130,20 @@ export default function ViagensList() {
             </div>
             {v.status === 'em_andamento' && v.id !== activeTrip?.id && <ParadaControle viagem={v} />}
             {v.id === activeTrip?.id && (v.paradas ?? []).filter(p => !p.saida_at).map(p => (
-              <p key={p.id} className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+              <p key={p.id} className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm px-2 py-1">
                 Parado em {p.local} desde {format(new Date(p.chegada_at), 'HH:mm')}
               </p>
             ))}
             <div className="flex items-center gap-2">
               {v.status === 'em_andamento' && v.id !== activeTrip?.id && (
                 <button onClick={() => abrirChegada(v)}
-                  className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors">
+                  className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded-sm px-2 py-1 hover:bg-green-50 transition-colors">
                   <MapPin size={12} /> Chegada
                 </button>
               )}
               {isGestor && (
                 <button onClick={() => setDetalhesTarget(v)}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors">
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-sm px-2 py-1 hover:bg-blue-50 transition-colors">
                   <Eye size={12} /> Trajeto
                 </button>
               )}
@@ -186,7 +186,7 @@ export default function ViagensList() {
                   <div className="flex items-center gap-2">
                     {v.status === 'em_andamento' && (
                       <button onClick={() => abrirChegada(v)}
-                        className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors">
+                        className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-300 rounded-sm px-2 py-1 hover:bg-green-50 transition-colors">
                         <MapPin size={12} /> Chegada
                       </button>
                     )}
@@ -233,7 +233,7 @@ export default function ViagensList() {
             <input type="number" min={chegadaTarget?.km_saida ?? 0} required value={chegadaForm.km_chegada}
               onChange={e => { setKmAlerta(null); setChegadaForm(f => ({ ...f, km_chegada: e.target.value })) }}
               inputMode="numeric"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
             <p className="text-xs text-gray-500 mt-1">KM saída: {fmtKm(chegadaTarget?.km_saida)}</p>
             <KmEco valor={chegadaForm.km_chegada} referencia={chegadaTarget?.km_saida} />
           </div>
@@ -241,7 +241,7 @@ export default function ViagensList() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
             <textarea rows={3} value={chegadaForm.observacoes} onChange={e => setChegadaForm(f => ({ ...f, observacoes: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex justify-end">
             <button type="submit" disabled={doChegada.isPending} className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-green-700 disabled:opacity-60">

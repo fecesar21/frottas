@@ -77,7 +77,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <input
             type="text" required value={form.host} onChange={set('host')}
             placeholder="Ex: 10.0.0.5 ou dc.unidade.local"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.host && <p className="text-red-500 text-xs mt-1">{fieldErrors.host[0]}</p>}
         </div>
@@ -86,16 +86,16 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <label className="block text-sm font-medium text-gray-700 mb-1">Porta *</label>
           <input
             type="number" required value={form.port} onChange={set('port')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div className="flex items-end gap-4 pb-2">
           <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" checked={form.use_ssl} onChange={set('use_ssl')} className="rounded" /> LDAPS (SSL)
+            <input type="checkbox" checked={form.use_ssl} onChange={set('use_ssl')} className="rounded-sm" /> LDAPS (SSL)
           </label>
           <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" checked={form.use_starttls} onChange={set('use_starttls')} className="rounded" /> StartTLS
+            <input type="checkbox" checked={form.use_starttls} onChange={set('use_starttls')} className="rounded-sm" /> StartTLS
           </label>
         </div>
 
@@ -104,7 +104,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <input
             type="text" required value={form.base_dn} onChange={set('base_dn')}
             placeholder='Ex: OU=Funcionarios,DC=empresa,DC=local'
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.base_dn && <p className="text-red-500 text-xs mt-1">{fieldErrors.base_dn[0]}</p>}
         </div>
@@ -114,7 +114,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <input
             type="text" value={form.ou_colaboradores} onChange={set('ou_colaboradores')}
             placeholder='Ex: OU=Colaboradores,OU=Unidade,DC=empresa,DC=local'
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-gray-500 text-xs mt-1">Usuários desta OU aparecem como colaboradores da unidade em viagens de transporte de colaborador. Em branco, usa o Base DN.</p>
           {fieldErrors.ou_colaboradores && <p className="text-red-500 text-xs mt-1">{fieldErrors.ou_colaboradores[0]}</p>}
@@ -125,7 +125,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <input
             type="text" required value={form.username} onChange={set('username')}
             placeholder="usuario@dominio.local"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.username && <p className="text-red-500 text-xs mt-1">{fieldErrors.username[0]}</p>}
         </div>
@@ -137,7 +137,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <input
             type="password" required={!config} value={form.password} onChange={set('password')}
             placeholder={config ? '••••••' : ''}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password[0]}</p>}
         </div>
@@ -147,7 +147,7 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <input
             type="text" value={form.unidade_attribute} onChange={set('unidade_attribute')}
             placeholder="department"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -156,14 +156,14 @@ export default function UnidadeLdapConfigForm({ unidadeId, config, onSuccess }) 
           <input
             type="text" value={form.valoresAdTexto} onChange={set('valoresAdTexto')}
             placeholder="Ex: HOSP-CENTRO, HOSP-CENTRO-ANEXO"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-xs text-gray-400 mt-1">Opcional — reservado para uso futuro (desambiguação de unidade por atributo). Hoje o sistema não consulta este valor durante o login. Separe múltiplos valores por vírgula.</p>
           {fieldErrors.valores_ad && <p className="text-red-500 text-xs mt-1">{fieldErrors.valores_ad[0]}</p>}
         </div>
 
         <div className="col-span-2 flex items-center gap-2">
-          <input type="checkbox" id="ativo" checked={form.ativo} onChange={set('ativo')} className="rounded" />
+          <input type="checkbox" id="ativo" checked={form.ativo} onChange={set('ativo')} className="rounded-sm" />
           <label htmlFor="ativo" className="text-sm text-gray-700">Configuração ativa (participa da tentativa de login)</label>
         </div>
       </div>

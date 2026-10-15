@@ -96,21 +96,21 @@ export default function UsuarioForm({ usuario, onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
         <input type="text" required value={form.nome} onChange={set('nome')}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         {fe('nome')}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label>
         <input type="text" value={form.cpf} onChange={handleCpfChange}
           placeholder="000.000.000-00" required={!usuario?.cpf} maxLength={14}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         {ehDashboard && <p className="text-gray-400 text-xs mt-1">Pode ser um CPF genérico, como 000.000.000-00.</p>}
         {fe('cpf')}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
         <input type="email" value={form.email} onChange={set('email')}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         {fe('email')}
       </div>
       <div>
@@ -118,13 +118,13 @@ export default function UsuarioForm({ usuario, onSuccess }) {
           Senha {usuario ? '(deixe em branco para manter)' : '*'}
         </label>
         <input type="password" value={form.senha} onChange={set('senha')} required={!usuario} minLength={6}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         {fe('senha')}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Perfil *</label>
         <select value={form.perfil} onChange={set('perfil')} required
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
           <option value="operador">Operador</option>
           <option value="gestor">Gestor</option>
           <option value="dashboard">Dashboard (painel kiosk)</option>
@@ -139,7 +139,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
             <div className="border border-gray-300 rounded-lg divide-y divide-gray-100 max-h-48 overflow-y-auto">
               {unidades.map(u => (
                 <label key={u.id} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50">
-                  <input type="checkbox" className="rounded" checked={form.unidades.includes(u.id)} onChange={() => alternarUnidade(u.id)} />
+                  <input type="checkbox" className="rounded-sm" checked={form.unidades.includes(u.id)} onChange={() => alternarUnidade(u.id)} />
                   {u.nome} ({u.tipo === 'matriz' ? 'Matriz' : 'Filial'})
                 </label>
               ))}
@@ -155,7 +155,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
         <select
           value={form.unidade_id}
           onChange={set('unidade_id')}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Sem unidade específica</option>
           {unidades.map(u => (
@@ -174,7 +174,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
             value={form.motorista_id}
             onChange={set('motorista_id')}
             required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Selecione um motorista...</option>
             {opcoesMotorista.map(m => (
@@ -192,7 +192,7 @@ export default function UsuarioForm({ usuario, onSuccess }) {
 
       {usuario && (
         <div className="flex items-center gap-2">
-          <input type="checkbox" id="ativo" checked={form.ativo} onChange={set('ativo')} className="rounded" />
+          <input type="checkbox" id="ativo" checked={form.ativo} onChange={set('ativo')} className="rounded-sm" />
           <label htmlFor="ativo" className="text-sm text-gray-700">Usuário ativo</label>
         </div>
       )}

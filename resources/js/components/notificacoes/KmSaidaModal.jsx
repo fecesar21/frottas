@@ -30,7 +30,7 @@ export default function KmSaidaModal({ onConfirmar, onCancelar, loading, erro: e
             autoFocus
             value={km}
             onChange={e => { setKm(e.target.value); setErro('') }}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500"
             placeholder="Ex: 12345"
           />
           {erroExibido && <p className="text-xs text-red-600 mt-1">{erroExibido}</p>}

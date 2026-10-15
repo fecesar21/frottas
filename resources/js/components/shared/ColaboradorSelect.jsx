@@ -36,7 +36,7 @@ export default function ColaboradorSelect({ value, onChange }) {
   const adicionar = (c) => { if (!selecionadosIds.has(c.id)) onChange([...value, c]) }
   const remover = (id) => onChange(value.filter(c => c.id !== id))
 
-  const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500'
 
   return (
     <div className="space-y-2">

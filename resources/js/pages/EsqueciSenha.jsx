@@ -65,7 +65,7 @@ export default function EsqueciSenha() {
                       autoFocus
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
+                      className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
                       placeholder="seu@email.com"
                     />
                   </div>

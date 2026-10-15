@@ -92,7 +92,7 @@ export default function Layout() {
 
   if (bloqueadoPorChecklist) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/70 backdrop-blur-sm p-2 sm:p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/70 backdrop-blur-xs p-2 sm:p-4">
         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
           <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-2xl">
             <h2 className="text-base font-semibold text-gray-800">Checklist do veículo obrigatório</h2>

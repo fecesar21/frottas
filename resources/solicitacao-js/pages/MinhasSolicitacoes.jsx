@@ -33,7 +33,7 @@ export default function MinhasSolicitacoes() {
       <h1 className="text-xl font-bold text-gray-900 mb-1">Minhas Solicitações</h1>
       <p className="text-sm text-gray-500 mb-6">Acompanhe o status das suas solicitações de transporte.</p>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
         {loading ? (
           <p className="p-6 text-sm text-gray-500">Carregando...</p>
         ) : solicitacoes.length === 0 ? (

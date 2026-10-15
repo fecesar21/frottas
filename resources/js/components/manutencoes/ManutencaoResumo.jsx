@@ -34,7 +34,7 @@ export default function ManutencaoResumo({ data, loading }) {
           color={CHART_COLORS[3]}
         />
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-100 p-5">
           <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Em manutenção agora</h3>
           {loading ? (
             <div className="h-40 animate-pulse bg-gray-100 rounded-lg" />

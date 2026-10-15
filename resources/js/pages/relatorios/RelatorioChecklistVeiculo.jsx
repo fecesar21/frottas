@@ -68,7 +68,7 @@ export default function RelatorioChecklistVeiculo() {
                     {r.itens_nao_conforme > 0 && (
                       <button
                         onClick={() => setDetalheAberto(r)}
-                        className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded px-2 py-1 hover:bg-red-50 transition-colors"
+                        className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded-sm px-2 py-1 hover:bg-red-50 transition-colors"
                       >
                         <AlertTriangle size={12} /> Ver não conformidades
                       </button>

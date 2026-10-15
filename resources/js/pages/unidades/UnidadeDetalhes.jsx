@@ -65,7 +65,7 @@ function VincularModal({ unidadeId, tipo, jaVinculados, onClose }) {
                 type="checkbox"
                 checked={selecionados.includes(item.id)}
                 onChange={() => toggle(item.id)}
-                className="rounded accent-blue-600"
+                className="rounded-sm accent-blue-600"
               />
               {tipo === 'motoristas' ? (
                 <span className="text-sm text-gray-700">

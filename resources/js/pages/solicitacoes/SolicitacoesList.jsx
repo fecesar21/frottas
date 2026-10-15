@@ -128,13 +128,13 @@ export default function SolicitacoesList() {
               <div className="flex gap-2">
                 <button
                   onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
-                  className="flex-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-2 hover:bg-blue-50 transition-colors"
+                  className="flex-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-sm px-2 py-2 hover:bg-blue-50 transition-colors"
                 >
                   {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
                 </button>
                 <button
                   onClick={() => abrirRecusa(s)}
-                  className="flex-1 text-xs text-red-600 hover:text-red-800 border border-red-200 rounded px-2 py-2 hover:bg-red-50 transition-colors"
+                  className="flex-1 text-xs text-red-600 hover:text-red-800 border border-red-200 rounded-sm px-2 py-2 hover:bg-red-50 transition-colors"
                 >
                   Recusar
                 </button>
@@ -188,13 +188,13 @@ export default function SolicitacoesList() {
                     <div className="flex flex-col gap-1">
                       <button
                         onClick={() => { setAceitarTarget(s); setAceitarForm({ motorista_id: '', veiculo_id: '' }); setError('') }}
-                        className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors whitespace-nowrap"
+                        className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-sm px-2 py-1 hover:bg-blue-50 transition-colors whitespace-nowrap"
                       >
                         {s.status === 'recusada' ? 'Redesignar' : 'Aceitar'}
                       </button>
                       <button
                         onClick={() => abrirRecusa(s)}
-                        className="text-xs text-red-600 hover:text-red-800 border border-red-200 rounded px-2 py-1 hover:bg-red-50 transition-colors whitespace-nowrap"
+                        className="text-xs text-red-600 hover:text-red-800 border border-red-200 rounded-sm px-2 py-1 hover:bg-red-50 transition-colors whitespace-nowrap"
                       >
                         Recusar
                       </button>
@@ -223,7 +223,7 @@ export default function SolicitacoesList() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Motorista *</label>
             <select required value={aceitarForm.motorista_id}
               onChange={e => setAceitarForm(f => ({ ...f, motorista_id: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
               <option value="">Selecione...</option>
               {(motoristas ?? []).map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
             </select>
@@ -232,7 +232,7 @@ export default function SolicitacoesList() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Veículo *</label>
             <select required value={aceitarForm.veiculo_id}
               onChange={e => setAceitarForm(f => ({ ...f, veiculo_id: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
               <option value="">Selecione...</option>
               {(veiculos ?? []).map(v => <option key={v.id} value={v.id}>{v.placa} — {v.modelo}</option>)}
             </select>
@@ -259,7 +259,7 @@ export default function SolicitacoesList() {
             <textarea id="motivo-recusa" required maxLength={500} rows={3} value={motivoRecusa}
               onChange={e => setMotivoRecusa(e.target.value)}
               placeholder="Explique ao solicitante por que a solicitação foi recusada"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-red-500" />
             <p className="text-xs text-gray-400 text-right">{motivoRecusa.length}/500</p>
           </div>
           <div className="flex justify-end gap-2">

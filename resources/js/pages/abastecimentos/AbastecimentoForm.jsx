@@ -88,25 +88,25 @@ export default function AbastecimentoForm({ onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Posto</label>
           <input type="text" value={form.posto} onChange={e => setForm(f => ({ ...f, posto: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Combustível *</label>
           <select value={form.combustivel} onChange={e => setForm(f => ({ ...f, combustivel: e.target.value }))} required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
             {combustiveis.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Litros *</label>
           <input type="number" step="0.01" min="0" required value={form.litros} onChange={e => setForm(f => ({ ...f, litros: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           {fe('litros')}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Preço por litro *</label>
           <input type="number" step="0.001" min="0" required value={form.valor_litro} onChange={e => setForm(f => ({ ...f, valor_litro: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         </div>
         {valorTotal && (
           <div className="col-span-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm text-blue-800">
@@ -116,13 +116,13 @@ export default function AbastecimentoForm({ onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">KM no momento *</label>
           <input type="number" min={0} required value={form.km_momento} onChange={e => setForm(f => ({ ...f, km_momento: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           {fe('km_momento')}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Nota fiscal</label>
           <input type="text" value={form.nota_fiscal} onChange={e => setForm(f => ({ ...f, nota_fiscal: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
 

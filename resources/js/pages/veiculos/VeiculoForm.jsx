@@ -109,7 +109,7 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
         type={type}
         value={form[key] ?? ''}
         onChange={set(key)}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         {...extra}
       />
       {fieldErrors[key] && <p className="text-red-500 text-xs mt-1">{fieldErrors[key][0]}</p>}
@@ -130,7 +130,7 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
             required
             maxLength={8}
             placeholder="ABC-1234"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 uppercase"
           />
           {fieldErrors.placa && <p className="text-red-500 text-xs mt-1">{fieldErrors.placa[0]}</p>}
         </div>
@@ -138,7 +138,7 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
           <select value={form.marca ?? ''} onChange={set('marca')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
             <option value="">Selecione...</option>
             {marcas.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
@@ -150,7 +150,7 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
         {field('RENAVAM', 'renavam', 'text', { maxLength: 11 })}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Combustível</label>
-          <select value={form.combustivel} onChange={set('combustivel')} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select value={form.combustivel} onChange={set('combustivel')} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
             {combustiveis.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
           </select>
         </div>
@@ -162,7 +162,7 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
         <textarea value={form.observacoes ?? ''} onChange={set('observacoes')} rows={3}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
       </div>
 
       {/* Seção de Unidades — apenas em modo edição */}
@@ -220,7 +220,7 @@ export default function VeiculoForm({ veiculo, onSuccess }) {
                       type="checkbox"
                       checked={selecionados.includes(u.id)}
                       onChange={() => toggleSelecionado(u.id)}
-                      className="rounded accent-blue-600"
+                      className="rounded-sm accent-blue-600"
                     />
                     <span className="text-sm text-gray-700">
                       {u.nome}

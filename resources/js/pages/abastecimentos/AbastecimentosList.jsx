@@ -121,12 +121,12 @@ export default function AbastecimentosList() {
             </div>
             <div className="flex gap-2">
             {isAdmin && (
-              <button onClick={() => setEditTarget(a)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors w-fit">
+              <button onClick={() => setEditTarget(a)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-sm px-2 py-1 hover:bg-blue-50 transition-colors w-fit">
                 <Pencil size={12} /> Corrigir
               </button>
             )}
             {isAdmin && (
-              <button onClick={() => excluir.mutate(a.id)} className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-200 rounded px-2 py-1 hover:bg-red-50 transition-colors w-fit">
+              <button onClick={() => excluir.mutate(a.id)} className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-200 rounded-sm px-2 py-1 hover:bg-red-50 transition-colors w-fit">
                 <Trash2 size={12} /> Excluir
               </button>
             )}

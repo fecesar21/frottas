@@ -16,7 +16,7 @@ export default function BarChartCard({
   const height = isHorizontal ? Math.max(220, (data?.length ?? 0) * 40) : 260
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+    <div className="bg-white rounded-2xl shadow-xs border border-gray-100 p-5">
       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">{title}</h3>
       {loading ? (
         <div className="h-64 animate-pulse bg-gray-100 rounded-lg" />

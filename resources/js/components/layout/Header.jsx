@@ -50,7 +50,7 @@ export default function Header({ title, onMenuClick }) {
   }, [painelAberto])
 
   return (
-    <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-200/80 flex items-center justify-between px-5 shrink-0 shadow-sm sticky top-0 z-20">
+    <header className="h-14 bg-white/80 backdrop-blur-xs border-b border-gray-200/80 flex items-center justify-between px-5 shrink-0 shadow-xs sticky top-0 z-20">
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}

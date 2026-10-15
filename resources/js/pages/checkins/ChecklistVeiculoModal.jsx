@@ -220,7 +220,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
                       value={valor}
                       onChange={(e) => setValor(e.target.value)}
                       placeholder="Informe o valor"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-green-400"
                     />
                     <div className="flex justify-end">
                       <button
@@ -250,7 +250,7 @@ export default function ChecklistVeiculoModal({ onDone }) {
                           value={valor}
                           onChange={(e) => setValor(e.target.value)}
                           placeholder="Informe o valor"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-red-400"
                         />
                       </div>
                     )}
@@ -259,12 +259,12 @@ export default function ChecklistVeiculoModal({ onDone }) {
                       onChange={(e) => setObservacao(e.target.value)}
                       placeholder="Justifique o motivo da não conformidade"
                       rows={2}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-red-400"
                     />
                     {fotos.length > 0 && (
                       <ul className="space-y-1">
                         {fotos.map((f, i) => (
-                          <li key={i} className="flex items-center justify-between gap-2 text-xs text-gray-600 bg-white border border-gray-200 rounded px-2 py-1">
+                          <li key={i} className="flex items-center justify-between gap-2 text-xs text-gray-600 bg-white border border-gray-200 rounded-sm px-2 py-1">
                             <span className="truncate">{f.name}</span>
                             <button type="button" onClick={() => removerFoto(i)} aria-label={`Remover foto ${i + 1}`} className="text-gray-400 hover:text-red-600">
                               <X size={14} />

@@ -47,11 +47,11 @@ export default function ParadaControle({ viagem, circular = false }) {
   if (paradaAberta) {
     return (
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm px-2 py-1">
           Parado em {paradaAberta.local} desde {format(new Date(paradaAberta.chegada_at), 'HH:mm')}
         </span>
         <button onClick={() => retomar.mutate()} disabled={retomar.isPending}
-          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded px-2 py-1 hover:bg-blue-50 transition-colors disabled:opacity-60">
+          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-300 rounded-sm px-2 py-1 hover:bg-blue-50 transition-colors disabled:opacity-60">
           <Play size={12} /> {retomar.isPending ? 'Retomando...' : 'Retomar viagem'}
         </button>
         {erro && <span className="text-xs text-red-600">{erro}</span>}
@@ -68,7 +68,7 @@ export default function ParadaControle({ viagem, circular = false }) {
         </button>
       ) : (
         <button onClick={() => { setForm({ local: '', motivo: '' }); setErro(''); setAberto(true) }}
-          className="flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 border border-amber-300 rounded px-2 py-1 hover:bg-amber-50 transition-colors">
+          className="flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 border border-amber-300 rounded-sm px-2 py-1 hover:bg-amber-50 transition-colors">
           <Pause size={12} /> Parada
         </button>
       )}
@@ -79,7 +79,7 @@ export default function ParadaControle({ viagem, circular = false }) {
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="parada-local">Local *</label>
             <input id="parada-local" required maxLength={150} list="parada-localidades" value={form.local}
               onChange={e => setForm(f => ({ ...f, local: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
             <datalist id="parada-localidades">
               {localidades.filter(l => l.ativo).map(l => <option key={l.id} value={l.nome.toUpperCase()} />)}
             </datalist>
@@ -88,7 +88,7 @@ export default function ParadaControle({ viagem, circular = false }) {
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="parada-motivo">Motivo</label>
             <input id="parada-motivo" maxLength={250} value={form.motivo} placeholder="Ex.: buscar acompanhante"
               onChange={e => setForm(f => ({ ...f, motivo: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex justify-end">
             <button type="submit" disabled={registrar.isPending}

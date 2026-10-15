@@ -53,7 +53,7 @@ export default function LocalidadeForm({ localidade, onSuccess }) {
           onChange={set('nome')}
           maxLength={150}
           placeholder="Ex: Clínica Parceira ABC"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         />
         {fieldErrors.nome && <p className="text-red-500 text-xs mt-1">{fieldErrors.nome[0]}</p>}
       </div>
@@ -65,7 +65,7 @@ export default function LocalidadeForm({ localidade, onSuccess }) {
           value={form.endereco}
           onChange={set('endereco')}
           maxLength={255}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         />
         {fieldErrors.endereco && <p className="text-red-500 text-xs mt-1">{fieldErrors.endereco[0]}</p>}
       </div>
@@ -78,7 +78,7 @@ export default function LocalidadeForm({ localidade, onSuccess }) {
             step="any"
             value={form.latitude}
             onChange={set('latitude')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.latitude && <p className="text-red-500 text-xs mt-1">{fieldErrors.latitude[0]}</p>}
         </div>
@@ -89,7 +89,7 @@ export default function LocalidadeForm({ localidade, onSuccess }) {
             step="any"
             value={form.longitude}
             onChange={set('longitude')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.longitude && <p className="text-red-500 text-xs mt-1">{fieldErrors.longitude[0]}</p>}
         </div>
@@ -103,7 +103,7 @@ export default function LocalidadeForm({ localidade, onSuccess }) {
             value={form.telefone}
             onChange={set('telefone')}
             maxLength={20}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.telefone && <p className="text-red-500 text-xs mt-1">{fieldErrors.telefone[0]}</p>}
         </div>
@@ -113,7 +113,7 @@ export default function LocalidadeForm({ localidade, onSuccess }) {
             type="email"
             value={form.email}
             onChange={set('email')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email[0]}</p>}
         </div>
@@ -126,7 +126,7 @@ export default function LocalidadeForm({ localidade, onSuccess }) {
             id="ativo"
             checked={form.ativo}
             onChange={set('ativo')}
-            className="rounded"
+            className="rounded-sm"
           />
           <label htmlFor="ativo" className="text-sm text-gray-700">Localidade ativa</label>
         </div>

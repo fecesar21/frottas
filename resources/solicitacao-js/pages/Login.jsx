@@ -49,7 +49,7 @@ export default function Login() {
                     autoFocus
                     value={form.usuario}
                     onChange={(e) => setForm(f => ({ ...f, usuario: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400"
+                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400"
                     placeholder="mesmo usuário do computador"
                   />
                 </div>
@@ -64,7 +64,7 @@ export default function Login() {
                     required
                     value={form.senha}
                     onChange={(e) => setForm(f => ({ ...f, senha: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400"
+                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400"
                     placeholder="••••••"
                   />
                 </div>

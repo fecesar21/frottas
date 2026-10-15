@@ -51,7 +51,7 @@ export default function PainelFrota() {
   const lista = aba === 'veiculos' ? veiculos : motoristas
 
   return (
-    <section className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+    <section className="bg-white border border-gray-200 rounded-2xl shadow-xs overflow-hidden">
       <header className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">Frota agora</h2>

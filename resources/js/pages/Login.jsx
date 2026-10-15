@@ -79,7 +79,7 @@ export default function Login() {
                     inputMode="numeric"
                     value={form.usuario}
                     onChange={(e) => setForm(f => ({ ...f, usuario: mascaraCpf(e.target.value) }))}
-                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
+                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
                     placeholder="000.000.000-00"
                   />
                 </div>
@@ -104,7 +104,7 @@ export default function Login() {
                     minLength={6}
                     value={form.senha}
                     onChange={(e) => setForm(f => ({ ...f, senha: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
+                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
                     placeholder="••••••"
                   />
                 </div>

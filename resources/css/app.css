@@ -1,6 +1,18 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config '../../tailwind.config.js';
+
+/*
+  Compatibilidade com o visual do Tailwind 3: no v4 a borda padrão passou a
+  usar currentColor e botões perderam o cursor de mão.
+*/
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 @layer base {
   :root {

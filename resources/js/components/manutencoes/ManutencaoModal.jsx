@@ -6,7 +6,7 @@ import Alert from '../ui/Alert'
 import { TIPOS_MANUTENCAO, primeiroErro } from './tipos'
 
 const VAZIO = { tipo: '', motivo: '', km_entrada: '', km_chegada: '', local: '' }
-const input = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400'
+const input = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-yellow-400'
 
 export const invalidarManutencao = (qc) =>
   ['veiculos', 'checkins', 'viagens', 'manutencoes', 'solicitacoes', 'dashboard']

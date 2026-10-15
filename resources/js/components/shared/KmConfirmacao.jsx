@@ -30,7 +30,7 @@ export default function KmConfirmacao({ alerta, justificativa, onJustificativa }
       <textarea rows={2} required minLength={5} maxLength={250} value={justificativa}
         onChange={e => onJustificativa(e.target.value)}
         placeholder="Ex.: confirmei no odômetro; viagem longa registrada depois"
-        className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-amber-500" />
     </div>
   )
 }

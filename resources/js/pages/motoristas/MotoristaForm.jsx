@@ -107,7 +107,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
   const fe = (key) => fieldErrors[key] ? <p className="text-red-500 text-xs mt-1">{fieldErrors[key][0]}</p> : null
   const inp = (key, type = 'text', extra = {}) => (
     <input type={type} value={form[key] ?? ''} onChange={set(key)}
-      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
       {...extra} />
   )
 
@@ -124,14 +124,14 @@ export default function MotoristaForm({ motorista, onSuccess }) {
           <label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label>
           <input type="text" required value={form.cpf} onChange={setMask('cpf', mascaraCpf)}
             placeholder="000.000.000-00" inputMode="numeric"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           {fe('cpf')}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
           <input type="text" value={form.telefone} onChange={setMask('telefone', mascaraTelefone)}
             placeholder="(00) 00000-0000" inputMode="numeric"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           {fe('telefone')}
         </div>
         <div>
@@ -145,7 +145,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
           <select value={form.cnh_categoria} onChange={set('cnh_categoria')} required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
             {['A', 'B', 'C', 'D', 'E', 'AB', 'AC', 'AD', 'AE'].map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
@@ -156,7 +156,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Turno padrão</label>
           <select value={form.turno_padrao} onChange={set('turno_padrao')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
             <option value="">Não definido</option>
             <option value="dia">Dia</option>
             <option value="noite">Noite</option>
@@ -166,7 +166,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
           <label className="flex items-start gap-2 text-sm text-gray-700">
             <input type="checkbox" checked={form.permite_checkin_duplo}
               onChange={e => setForm(f => ({ ...f, permite_checkin_duplo: e.target.checked }))}
-              className="mt-0.5 rounded border-gray-300" />
+              className="mt-0.5 rounded-sm border-gray-300" />
             <span>
               Permitir 2 check-ins simultâneos
               <span className="block text-xs text-gray-500">Para quem alterna entre ambulância e carro administrativo no mesmo plantão.</span>
@@ -176,7 +176,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
           <textarea value={form.observacoes ?? ''} onChange={set('observacoes')} rows={3}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
 
@@ -235,7 +235,7 @@ export default function MotoristaForm({ motorista, onSuccess }) {
                       type="checkbox"
                       checked={selecionados.includes(u.id)}
                       onChange={() => toggleSelecionado(u.id)}
-                      className="rounded accent-blue-600"
+                      className="rounded-sm accent-blue-600"
                     />
                     <span className="text-sm text-gray-700">
                       {u.nome}

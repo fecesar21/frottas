@@ -134,13 +134,13 @@ export default function ViagemForm({ onSuccess }) {
           <label className="block text-sm font-medium text-gray-700 mb-1">Origem *</label>
           {transferencia ? (
             <select required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
               <option value="">Selecione a localidade...</option>
               {nomesLocalidades.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           ) : (
             <input type="text" required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value.toUpperCase() }))}
-              className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           )}
           {fe('origem')}
         </div>
@@ -148,14 +148,14 @@ export default function ViagemForm({ onSuccess }) {
           <label className="block text-sm font-medium text-gray-700 mb-1">Destino *</label>
           {transferencia ? (
             <select required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
               <option value="">Selecione a localidade...</option>
               {nomesLocalidades.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           ) : (
             <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value.toUpperCase() }))}
               {...(form.motivo_viagem === 'tfd' && { pattern: String.raw`[^\/]+\/[A-Za-z]{2}`, title: 'Para TFD, informe o destino no formato CIDADE/UF (ex.: RECIFE/PE)', placeholder: 'CIDADE/UF' })}
-              className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="uppercase w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           )}
           {fe('destino')}
         </div>
@@ -167,7 +167,7 @@ export default function ViagemForm({ onSuccess }) {
           onChange={e => setForm(f => ({ ...f, motivo_viagem: e.target.value, numero_atendimento: e.target.value === 'transferencia_paciente' ? f.numero_atendimento : '',
             // Ao entrar/sair de transferência, origem/destino mudam de texto livre para lista.
             ...((e.target.value === 'transferencia_paciente') !== (f.motivo_viagem === 'transferencia_paciente') ? { origem: '', destino: '' } : {}) }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
           <option value="">Selecione...</option>
           {motivos.map(m => <option key={m.codigo} value={m.codigo}>{m.nome}</option>)}
         </select>
@@ -197,7 +197,7 @@ export default function ViagemForm({ onSuccess }) {
             const v = e.target.value.replace(/\D/g, '').slice(0, 6)
             setForm(f => ({ ...f, numero_atendimento: v }))
           }}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         {fe('numero_atendimento')}
       </div>
       )}
@@ -206,7 +206,7 @@ export default function ViagemForm({ onSuccess }) {
         <label className="block text-sm font-medium text-gray-700 mb-1">KM saída *</label>
         <input type="number" inputMode="numeric" min={0} required value={form.km_saida}
           onChange={e => { setKmAlerta(null); setForm(f => ({ ...f, km_saida: e.target.value })) }}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         <KmEco valor={form.km_saida} />
         {fe('km_saida')}
       </div>

@@ -53,7 +53,7 @@ function CorrecaoKm({ viagem, onCorrigido }) {
   if (!aberto) {
     return (
       <div className="space-y-2">
-      <button onClick={() => setAberto(true)} className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors">
+      <button onClick={() => setAberto(true)} className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-sm px-2 py-1 hover:bg-blue-50 transition-colors">
         Corrigir KM (admin)
       </button>
       <HistoricoCorrecoes entidade="viagem" entidadeId={viagem.id} />

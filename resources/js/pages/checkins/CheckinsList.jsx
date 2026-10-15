@@ -23,7 +23,7 @@ const KmRetorno = ({ c }) => (
     {c.km_retorno ? fmtKm(c.km_retorno) : '—'}
     {!!c.divergencia_km && (
       <span title={`Esperado ${fmtKm(c.km_retorno_esperado)} — ${c.justificativa_divergencia_km ?? ''}`}
-        className="ml-1 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-1">
+        className="ml-1 text-xs text-red-700 bg-red-50 border border-red-200 rounded-sm px-1">
         {c.divergencia_km > 0 ? '+' : ''}{fmtKm(c.divergencia_km)} km
       </span>
     )}
@@ -59,13 +59,13 @@ function CorrecaoKmCheckin({ checkin, onClose }) {
         <label className="block">
           <span className="text-sm font-medium text-gray-700">KM de saída</span>
           <input type="number" min="0" required value={kmSaida} onChange={(e) => setKmSaida(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         </label>
         {encerrado && (
           <label className="block">
             <span className="text-sm font-medium text-gray-700">KM de retorno</span>
             <input type="number" min="0" required={checkin.km_retorno != null} value={kmRetorno} onChange={(e) => setKmRetorno(e.target.value)}
-              className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           </label>
         )}
       </div>
@@ -105,7 +105,7 @@ export default function CheckinsList() {
 
   const botaoCorrecao = (c) => isAdmin && (
     <button onClick={() => setCorrecaoTarget(c)} title="Corrigir KM lançado"
-      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors w-fit whitespace-nowrap">
+      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-sm px-2 py-1 hover:bg-blue-50 transition-colors w-fit whitespace-nowrap">
       <Pencil size={12} /> Corrigir KM
     </button>
   )
@@ -121,19 +121,19 @@ export default function CheckinsList() {
     if (c.status !== 'ativo' || !c.veiculo) return null
     return c.veiculo.status === 'manutencao' ? (
       <button onClick={() => setEncerrarVeiculo(c.veiculo)} title="Retirar da manutenção"
-        className="flex items-center gap-1 text-xs text-green-700 hover:text-green-900 border border-green-300 rounded px-2 py-1 hover:bg-green-50 transition-colors w-fit whitespace-nowrap">
+        className="flex items-center gap-1 text-xs text-green-700 hover:text-green-900 border border-green-300 rounded-sm px-2 py-1 hover:bg-green-50 transition-colors w-fit whitespace-nowrap">
         <Wrench size={12} /> Liberar
       </button>
     ) : (
       <button onClick={() => setManutencaoVeiculo(c.veiculo)}
-        className="flex items-center gap-1 text-xs text-yellow-700 hover:text-yellow-900 border border-yellow-300 rounded px-2 py-1 hover:bg-yellow-50 transition-colors w-fit whitespace-nowrap">
+        className="flex items-center gap-1 text-xs text-yellow-700 hover:text-yellow-900 border border-yellow-300 rounded-sm px-2 py-1 hover:bg-yellow-50 transition-colors w-fit whitespace-nowrap">
         <Wrench size={12} /> Manutenção
       </button>
     )
   }
 
   const avisoManutencao = (c) => c.status === 'ativo' && c.veiculo?.status === 'manutencao' && (
-    <p className="text-xs text-yellow-800 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+    <p className="text-xs text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-sm px-2 py-1">
       Em manutenção há {tempoDecorrido(c.veiculo.manutencao_atual?.inicio ?? c.veiculo.manutencao_inicio)}
       {' – '}{rotuloTipo(c.veiculo.manutencao_atual?.tipo)}
       {c.veiculo.manutencao_atual?.motivo ? ` (${c.veiculo.manutencao_atual.motivo})` : ''}
@@ -209,7 +209,7 @@ export default function CheckinsList() {
               <div className="flex flex-wrap gap-2">
                 {c.status === 'ativo' && (
                   <button onClick={() => abrirCheckout(c)}
-                    className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
+                    className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded-sm px-2 py-1 hover:bg-orange-50 transition-colors w-fit">
                     <LogOut size={12} /> Checkout
                   </button>
                 )}
@@ -256,7 +256,7 @@ export default function CheckinsList() {
                   <div className="flex gap-2">
                     {c.status === 'ativo' && (
                       <button onClick={() => abrirCheckout(c)}
-                        className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 transition-colors">
+                        className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 border border-orange-300 rounded-sm px-2 py-1 hover:bg-orange-50 transition-colors">
                         <LogOut size={12} /> Checkout
                       </button>
                     )}
@@ -300,7 +300,7 @@ export default function CheckinsList() {
               <label className="block text-sm font-medium text-gray-700">KM de chegada da viagem *</label>
               <input type="number" required min={viagemAberta.km_saida} value={checkoutForm.km_chegada_viagem}
                 onChange={e => setCheckoutForm(f => ({ ...f, km_chegada_viagem: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
             </div>
           )}
           <div>
@@ -308,7 +308,7 @@ export default function CheckinsList() {
             <input type="number" required min={checkoutTarget?.km_saida ?? 0} value={checkoutForm.km_retorno}
               readOnly={checkoutTarget?.km_retorno_fixo != null}
               onChange={e => setCheckoutForm(f => ({ ...f, km_retorno: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:text-gray-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:text-gray-500" />
             {checkoutTarget?.km_retorno_fixo != null && (
               <p className="text-xs text-gray-500 mt-1">Nenhuma viagem registrada após o check-in: o KM de retorno é o da saída{checkoutTarget.km_retorno_fixo !== checkoutTarget.km_saida ? ' somado ao KM rodado em manutenção' : ''}.</p>
             )}
@@ -323,19 +323,19 @@ export default function CheckinsList() {
               </label>
               <textarea required rows={2} maxLength={500} value={checkoutForm.justificativa_divergencia_km}
                 onChange={e => setCheckoutForm(f => ({ ...f, justificativa_divergencia_km: e.target.value }))}
-                className="w-full border border-red-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                className="w-full border border-red-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-red-500" />
             </div>
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nível combustível retorno (%)</label>
             <input type="number" min={0} max={100} value={checkoutForm.nivel_combustivel_retorno}
               onChange={e => setCheckoutForm(f => ({ ...f, nivel_combustivel_retorno: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ocorrências</label>
             <textarea value={checkoutForm.ocorrencias} onChange={e => setCheckoutForm(f => ({ ...f, ocorrencias: e.target.value }))} rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex justify-end">
             <button type="submit" disabled={doCheckout.isPending} className="bg-orange-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-orange-700 disabled:opacity-60">

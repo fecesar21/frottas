@@ -81,7 +81,7 @@ export default function CheckinForm({ onSuccess }) {
         <label className="block text-sm font-medium text-gray-700 mb-1">Turno *</label>
         <select value={form.turno} onChange={e => setForm(f => ({ ...f, turno: e.target.value }))}
           disabled={!!turnoPadrao}
-          className="w-full disabled:bg-gray-50 disabled:text-gray-700 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          className="w-full disabled:bg-gray-50 disabled:text-gray-700 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
           <option value="dia">Dia</option>
           <option value="noite">Noite</option>
         </select>
@@ -91,14 +91,14 @@ export default function CheckinForm({ onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">KM saída *</label>
         <input type="number" min={0} required value={form.km_saida} onChange={e => setForm(f => ({ ...f, km_saida: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
         {fieldErrors.km_saida && <p className="text-red-500 text-xs mt-1">{fieldErrors.km_saida[0]}</p>}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Nível combustível saída (%)</label>
         <input type="number" min={0} max={100} value={form.nivel_combustivel_saida} onChange={e => setForm(f => ({ ...f, nivel_combustivel_saida: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500" />
       </div>
 
       <div className="flex justify-end">

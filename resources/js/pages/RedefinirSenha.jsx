@@ -82,7 +82,7 @@ export default function RedefinirSenha() {
                       minLength={6}
                       value={senha}
                       onChange={(e) => setSenha(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
+                      className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
                       placeholder="••••••"
                     />
                   </div>
@@ -102,7 +102,7 @@ export default function RedefinirSenha() {
                       minLength={6}
                       value={confirmacao}
                       onChange={(e) => setConfirmacao(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
+                      className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 placeholder-gray-300"
                       placeholder="••••••"
                     />
                   </div>

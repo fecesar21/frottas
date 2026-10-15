@@ -45,7 +45,7 @@ function MotivoForm({ motivo, onSuccess }) {
     salvar.mutate(form)
   }
 
-  const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100'
+  const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -71,13 +71,13 @@ function MotivoForm({ motivo, onSuccess }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <input id="mv-disp" type="checkbox" className="rounded"
+        <input id="mv-disp" type="checkbox" className="rounded-sm"
           checked={form.disponivel_solicitacao} onChange={set('disponivel_solicitacao')} />
         <label htmlFor="mv-disp" className="text-sm text-gray-700">Disponível em solicitações</label>
       </div>
 
       <div className="flex items-center gap-2">
-        <input id="mv-ativo" type="checkbox" className="rounded"
+        <input id="mv-ativo" type="checkbox" className="rounded-sm"
           checked={form.ativo} onChange={set('ativo')} />
         <label htmlFor="mv-ativo" className="text-sm text-gray-700">Ativo</label>
       </div>
@@ -133,7 +133,7 @@ export default function MotivosViagem() {
 
       <div className="flex items-center justify-between">
         <label className="flex items-center gap-2 text-sm text-gray-600">
-          <input type="checkbox" className="rounded" checked={mostrarInativos}
+          <input type="checkbox" className="rounded-sm" checked={mostrarInativos}
             onChange={(e) => setMostrarInativos(e.target.checked)} />
           Mostrar inativos
         </label>

@@ -10,7 +10,7 @@ export default function Card({ title, value, sub, icon: Icon, color = 'blue', cl
   const { icon: iconClass, accent } = colorMap[color] ?? colorMap.blue
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 p-4 sm:p-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4 transition-all duration-200 hover:-translate-y-0.5 ${accent} ${className}`}>
+    <div className={`bg-white rounded-2xl shadow-xs hover:shadow-md border border-gray-100 p-4 sm:p-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4 transition-all duration-200 hover:-translate-y-0.5 ${accent} ${className}`}>
       {Icon && (
         <div className={`rounded-xl p-3 shrink-0 ${iconClass}`}>
           <Icon size={22} />
