@@ -59,6 +59,10 @@ class StoreSolicitacaoRequest extends FormRequest
                 $validator->errors()->add('motivo', 'TFD só pode ser solicitado pelo HMA.');
             }
 
+            if (! MotivoViagem::permitidoPorUoNaUpa($usuario, $this->input('motivo'))) {
+                $validator->errors()->add('motivo', 'Este motivo não está disponível para a sua UO.');
+            }
+
             if (! $usuario->unidade_id || ! MotivoViagem::origemNaUnidadeDoSolicitante($this->input('motivo'))) {
                 return;
             }

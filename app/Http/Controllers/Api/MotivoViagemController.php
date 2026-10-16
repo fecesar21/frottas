@@ -32,6 +32,9 @@ class MotivoViagemController extends Controller
             }
         }
         $motivos = $q->get();
+        if ($r->boolean('solicitacao')) {
+            $motivos = $motivos->filter(fn ($m) => MotivoViagem::permitidoPorUoNaUpa($r->user(), $m->codigo))->values();
+        }
         if ($todos) {
             $motivos->each(fn ($m) => $m->setAttribute('em_uso', $m->emUso()));
         }

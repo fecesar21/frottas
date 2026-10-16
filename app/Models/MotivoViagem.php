@@ -134,6 +134,28 @@ class MotivoViagem extends Model
         return ! $usuario->unidade_id || preg_match('/\bHMA\b/i', (string) $usuario->unidade?->nome) === 1;
     }
 
+    /** UOs (departamento do AD) da UPA que só solicitam Transferência de Paciente e Exames. */
+    public const UOS_ASSISTENCIAIS_UPA = ['enfermagem', 'pronto atendimento'];
+
+    /**
+     * Na UPA, a UO do solicitante define os motivos: Enfermagem/Pronto Atendimento
+     * só veem Transferência e Exames; as demais UOs veem todos, exceto esses.
+     * Fora da UPA, ou sem departamento conhecido no AD, não há restrição.
+     */
+    public static function permitidoPorUoNaUpa(Usuario $usuario, ?string $codigo): bool
+    {
+        if (preg_match('/\bUPA\b/i', (string) $usuario->unidade?->nome) !== 1 || ! $usuario->ldap_guid) {
+            return true;
+        }
+        $departamento = Colaborador::where('ldap_guid', $usuario->ldap_guid)->value('departamento');
+        if (blank($departamento)) {
+            return true;
+        }
+        $assistencial = in_array(Str::of($departamento)->ascii()->lower()->squish()->toString(), self::UOS_ASSISTENCIAIS_UPA, true);
+
+        return $assistencial === self::origemNaUnidadeDoSolicitante($codigo);
+    }
+
     public function scopeSelecionaveis(Builder $q): Builder
     {
         return $q->where('codigo', '!=', self::RETORNO);
