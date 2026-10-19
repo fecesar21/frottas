@@ -8,6 +8,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 /**
  * Enviada a motoristas em atividade elegíveis para uma nova solicitação,
@@ -24,7 +26,9 @@ class NovaSolicitacaoDisponivel extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return $notifiable->email ? ['mail', 'database'] : ['database'];
+        $canais = $notifiable->email ? ['mail', 'database'] : ['database'];
+
+        return [...$canais, WebPushChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -37,6 +41,22 @@ class NovaSolicitacaoDisponivel extends Notification implements ShouldQueue
             ->line("Detalhe: {$this->detalhe()}")
             ->action('Abrir o sistema', url('/'))
             ->line('Acesse o sistema para assumir essa viagem.');
+    }
+
+    /**
+     * Push no celular do motorista, para o aviso chegar com o app fechado.
+     */
+    public function toWebPush(object $notifiable, $notification): WebPushMessage
+    {
+        return (new WebPushMessage)
+            ->title('Nova solicitação disponível')
+            ->body(MotivoViagem::rotulo($this->solicitacao->motivo).' — '.$this->detalhe())
+            ->tag('solicitacao-disponivel-'.$this->solicitacao->id)
+            ->renotify()
+            ->requireInteraction()
+            ->vibrate([300, 150, 300, 150, 300])
+            ->data(['url' => '/', 'solicitacao_id' => $this->solicitacao->id])
+            ->options(['TTL' => 1800, 'urgency' => 'high']);
     }
 
     /**

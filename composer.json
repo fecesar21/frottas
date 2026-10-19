@@ -11,6 +11,7 @@
         "dedoc/scramble": "^0.13.31",
         "directorytree/ldaprecord-laravel": "^4.0",
         "doctrine/dbal": "^4.4",
+        "laravel-notification-channels/webpush": "^10.5",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9"

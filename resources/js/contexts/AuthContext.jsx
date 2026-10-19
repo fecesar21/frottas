@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import * as authApi from '../api/auth'
+import { desativarPush } from '../lib/push'
 
 const AuthContext = createContext(null)
 
@@ -72,6 +73,7 @@ export function AuthProvider({ children }) {
   }, [qc])
 
   const logout = useCallback(async () => {
+    await desativarPush()
     try { await authApi.logout() } catch { /* ignora erro de rede */ }
     localStorage.removeItem('hd_token')
     localStorage.removeItem('hd_user')

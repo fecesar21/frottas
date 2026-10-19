@@ -8,6 +8,7 @@ import * as checklistVeiculoApi from '../../api/checklistVeiculo'
 import ChecklistVeiculoModal from '../../pages/checkins/ChecklistVeiculoModal'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import AvisoAtivarPush from '../notificacoes/AvisoAtivarPush'
 
 const pageTitles = {
   '/': 'Dashboard',
@@ -111,6 +112,7 @@ export default function Layout() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
+        <AvisoAtivarPush />
         {rastreando && !erroRastreamento && (
           <div className="bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs px-4 py-2 flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

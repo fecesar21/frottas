@@ -95,3 +95,25 @@ self.addEventListener('sync', event => {
     );
   }
 });
+
+// Notificação push (Web Push / VAPID) — nova solicitação ou viagem designada.
+// O payload vem de WebPushMessage (Laravel): { title, body, tag, data, ... }.
+self.addEventListener('push', event => {
+  let dados = {};
+  try { dados = event.data ? event.data.json() : {}; } catch { dados = { body: event.data?.text() }; }
+  const { title = 'Health Drive', ...opcoes } = dados;
+  event.waitUntil(self.registration.showNotification(title, opcoes));
+});
+
+// Toque na notificação: foca o app já aberto ou abre um novo.
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const destino = new URL(event.notification.data?.url || '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(janelas => {
+      const aberta = janelas.find(j => new URL(j.url).origin === self.location.origin);
+      if (aberta) return aberta.focus();
+      return self.clients.openWindow(destino);
+    })
+  );
+});

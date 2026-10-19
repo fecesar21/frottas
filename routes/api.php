@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\MotoristaController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Api\PlantaoController;
 use App\Http\Controllers\Api\PontoViagemController;
+use App\Http\Controllers\Api\PushInscricaoController;
 use App\Http\Controllers\Api\RelatorioController;
 use App\Http\Controllers\Api\SolicitacaoController;
 use App\Http\Controllers\Api\UnidadeController;
@@ -105,6 +106,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito', 'da
     Route::patch('solicitacoes/{solicitacao}/motorista-aceitar', [SolicitacaoController::class, 'motoristaAceitar'])->name('solicitacoes.motorista-aceitar');
     Route::patch('solicitacoes/{solicitacao}/assumir', [SolicitacaoController::class, 'assumir'])->name('solicitacoes.assumir');
     Route::patch('solicitacoes/{solicitacao}/motorista-recusar', [SolicitacaoController::class, 'motoristaRecusar'])->name('solicitacoes.motorista-recusar');
+    Route::patch('solicitacoes/{solicitacao}/devolver', [SolicitacaoController::class, 'devolver'])->name('solicitacoes.devolver');
     Route::apiResource('solicitacoes', SolicitacaoController::class)->parameters(['solicitacoes' => 'solicitacao'])->only(['index', 'show', 'store']);
 
     // Abastecimentos
@@ -132,6 +134,7 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito', 'da
         Route::get('checklist-veiculo', [RelatorioController::class, 'checklistVeiculo']);
         Route::get('manutencoes', [RelatorioController::class, 'manutencoes']);
         Route::get('manutencoes/pdf', [RelatorioController::class, 'manutencoesPdf']);
+        Route::get('devolucoes', [RelatorioController::class, 'devolucoes']);
     });
 
     // Unidades
@@ -163,6 +166,11 @@ Route::middleware(['auth:sanctum', 'escopo.unidade', 'solicitante.restrito', 'da
     Route::get('notificacoes/nao-lidas', [NotificacaoController::class, 'naoLidas'])->name('notificacoes.nao-lidas');
     Route::post('notificacoes/marcar-lidas', [NotificacaoController::class, 'marcarTodasLidas'])->name('notificacoes.marcar-lidas');
     Route::patch('notificacoes/{id}/lida', [NotificacaoController::class, 'marcarLida'])->name('notificacoes.marcar-lida');
+
+    // Inscrição em notificações push (Web Push) do aparelho atual
+    Route::get('push/chave-publica', [PushInscricaoController::class, 'chavePublica'])->name('push.chave-publica');
+    Route::post('push/inscricao', [PushInscricaoController::class, 'store'])->name('push.inscricao.store');
+    Route::delete('push/inscricao', [PushInscricaoController::class, 'destroy'])->name('push.inscricao.destroy');
 
     // Usuários e configurações — somente admin
     Route::middleware('admin')->group(function () {

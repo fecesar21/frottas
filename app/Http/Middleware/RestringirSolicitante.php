@@ -27,6 +27,9 @@ class RestringirSolicitante
         'notificacoes.nao-lidas',
         'notificacoes.marcar-lidas',
         'notificacoes.marcar-lida',
+        'push.chave-publica',
+        'push.inscricao.store',
+        'push.inscricao.destroy',
     ];
 
     public function handle(Request $request, Closure $next): Response

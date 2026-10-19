@@ -7,6 +7,8 @@ use App\Models\Solicitacao;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class NovaViagemDesignada extends Notification implements ShouldQueue
 {
@@ -19,7 +21,23 @@ class NovaViagemDesignada extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', WebPushChannel::class];
+    }
+
+    /**
+     * Push no celular do motorista, para o aviso chegar com o app fechado.
+     */
+    public function toWebPush(object $notifiable, $notification): WebPushMessage
+    {
+        return (new WebPushMessage)
+            ->title('Nova viagem para você')
+            ->body(MotivoViagem::rotulo($this->solicitacao->motivo).' — '.$this->detalhe())
+            ->tag('viagem-designada-'.$this->solicitacao->id)
+            ->renotify()
+            ->requireInteraction()
+            ->vibrate([300, 150, 300, 150, 300])
+            ->data(['url' => '/', 'solicitacao_id' => $this->solicitacao->id])
+            ->options(['TTL' => 1800, 'urgency' => 'high']);
     }
 
     /**
