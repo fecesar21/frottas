@@ -3,27 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import * as notificacoesApi from '../api/notificacoes'
 
-const MAX_IDS_ANUNCIADOS = 200
+import { tocarBeep, tocarChamada, vibrar } from '../utils/somAlerta'
 
-function tocarBeep() {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext
-    const ctx = new AudioContextClass()
-    const oscillator = ctx.createOscillator()
-    const gain = ctx.createGain()
-    oscillator.type = 'sine'
-    oscillator.frequency.value = 880
-    gain.gain.setValueAtTime(0.15, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
-    oscillator.connect(gain)
-    gain.connect(ctx.destination)
-    oscillator.start()
-    oscillator.stop(ctx.currentTime + 0.3)
-    oscillator.onended = () => ctx.close()
-  } catch {
-    // Ambiente sem suporte a Web Audio API (ex: alguns navegadores headless) — falha silenciosamente.
-  }
-}
+const MAX_IDS_ANUNCIADOS = 200
+const INTERVALO_CHAMADA_MS = 3_000
 
 function exigeResposta(notificacao) {
   return !!notificacao.type?.match(/(NovaViagemDesignada|NovaSolicitacaoDisponivel)$/)
@@ -71,11 +54,24 @@ export function useNotificacoes() {
   const notificacoes = data?.notificacoes ?? []
 
   useEffect(() => {
-    if (total > totalAnteriorRef.current) {
+    // Convites ao motorista têm toque próprio (abaixo); o bipe é para os demais avisos.
+    if (total > totalAnteriorRef.current && !notificacoes.some(exigeResposta)) {
       tocarBeep()
     }
     totalAnteriorRef.current = total
-  }, [total])
+  }, [total]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Enquanto houver convite aberto sem resposta, toca e vibra em loop (estilo app de corrida).
+  const temConviteAberto = pendentes.some(exigeResposta)
+  useEffect(() => {
+    if (!temConviteAberto) return
+    tocarChamada()
+    const id = setInterval(tocarChamada, INTERVALO_CHAMADA_MS)
+    return () => {
+      clearInterval(id)
+      vibrar(0)
+    }
+  }, [temConviteAberto])
 
   useEffect(() => {
     if (!user?.id || notificacoes.length === 0) return
