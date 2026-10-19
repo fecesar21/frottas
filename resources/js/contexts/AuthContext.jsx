@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import * as authApi from '../api/auth'
 
 const AuthContext = createContext(null)
@@ -17,6 +18,7 @@ const checkinsDoUsuario = (u) =>
   u?.checkins_ativos ?? (u?.checkin_ativo ? [u.checkin_ativo] : [])
 
 export function AuthProvider({ children }) {
+  const qc = useQueryClient()
   const [user, setUser] = useState(readStorage)
   const [checkinsAtivos, setCheckinsAtivosState] = useState(() => checkinsDoUsuario(readStorage()))
 
@@ -59,12 +61,15 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (credentials) => {
     const { data } = await authApi.login(credentials)
+    // Dados em cache são do usuário anterior (ex.: convites já assumidos por
+    // outro motorista), não podem reaparecer para quem acabou de entrar.
+    qc.clear()
     localStorage.setItem('hd_token', data.token)
     localStorage.setItem('hd_user', JSON.stringify(data.user))
     setUser(data.user)
     setCheckinsAtivosState(checkinsDoUsuario(data.user))
     return data.user
-  }, [])
+  }, [qc])
 
   const logout = useCallback(async () => {
     try { await authApi.logout() } catch { /* ignora erro de rede */ }
@@ -72,7 +77,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('hd_user')
     setUser(null)
     setCheckinsAtivosState([])
-  }, [])
+    qc.clear()
+  }, [qc])
 
   const permiteCheckinDuplo = !!user?.permite_checkin_duplo
 
