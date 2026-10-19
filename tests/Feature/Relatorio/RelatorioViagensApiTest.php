@@ -74,6 +74,18 @@ class RelatorioViagensApiTest extends TestCase
         $this->assertNull($linhas[$semSolicitacao->id]['autorizacao_referencia_em']);
     }
 
+    public function test_viagem_com_varias_solicitacoes_conta_uma_vez(): void
+    {
+        $this->loginGestor();
+        $viagem = Viagem::factory()->create(['saida_at' => now(), 'motivo_viagem' => 'transferencia_paciente']);
+        Solicitacao::factory()->count(2)->create(['viagem_id' => $viagem->id]);
+
+        $resposta = $this->getJson('/api/relatorios/viagens')->assertOk();
+
+        $this->assertCount(1, $resposta->json('rows'));
+        $this->assertSame(1, $resposta->json('totais.total_viagens'));
+    }
+
     public function test_pdf_do_relatorio_de_viagens_e_gerado(): void
     {
         $this->loginAdmin();
