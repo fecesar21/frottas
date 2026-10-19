@@ -32,6 +32,8 @@ class NovaViagemDesignada extends Notification implements ShouldQueue
         return (new WebPushMessage)
             ->title('Nova viagem para você')
             ->body(MotivoViagem::rotulo($this->solicitacao->motivo).' — '.$this->detalhe())
+            ->icon('/icons/icon-192.png')
+            ->badge('/icons/badge-96.png')
             ->tag('viagem-designada-'.$this->solicitacao->id)
             ->renotify()
             ->requireInteraction()

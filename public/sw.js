@@ -1,4 +1,6 @@
-const CACHE_NAME = 'fleetcore-v3';
+// Trocar a versão sempre que mudarem arquivos sem hash no nome (manifest, ícones),
+// que de outro modo ficariam presos no cache "cache primeiro" abaixo.
+const CACHE_NAME = 'fleetcore-v4';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

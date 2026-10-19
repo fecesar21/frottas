@@ -51,6 +51,8 @@ class NovaSolicitacaoDisponivel extends Notification implements ShouldQueue
         return (new WebPushMessage)
             ->title('Nova solicitação disponível')
             ->body(MotivoViagem::rotulo($this->solicitacao->motivo).' — '.$this->detalhe())
+            ->icon('/icons/icon-192.png')
+            ->badge('/icons/badge-96.png')
             ->tag('solicitacao-disponivel-'.$this->solicitacao->id)
             ->renotify()
             ->requireInteraction()
