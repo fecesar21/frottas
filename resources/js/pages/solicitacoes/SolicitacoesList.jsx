@@ -170,7 +170,7 @@ export default function SolicitacoesList() {
               <tr key={s.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.criado_em)}</td>
                 <td className="px-3 py-3 font-medium text-gray-800 truncate" title={s.usuario_nome}>{s.usuario_nome ?? '—'}</td>
-                <td className="px-3 py-3 text-gray-600 truncate" title={rotuloMotivo(s)}>{rotuloMotivo(s)}</td>
+                <td className="px-3 py-3 text-gray-600 whitespace-normal break-words">{rotuloMotivo(s)}</td>
                 <td className="px-3 py-3 text-gray-500 whitespace-normal break-words">{detalheMotivo(s)}</td>
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.saida_at)}</td>
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.chegada_at)}</td>
