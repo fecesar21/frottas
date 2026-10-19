@@ -25,7 +25,7 @@ class MotoristaController extends Controller
     {
         $unidadeId = $this->unidadeFiltro($r);
 
-        $motoristas = Motorista::with('checkinAtivo.veiculo')
+        $motoristas = Motorista::with(['checkinAtivo.veiculo', 'usuario' => fn ($q) => $q->withCount('pushSubscriptions')])
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
             ->when($unidadeId, fn ($q) => $q->whereHas('unidades', fn ($u) => $u->where('unidades.id', $unidadeId)))
             ->orderBy('nome')

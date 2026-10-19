@@ -25,6 +25,10 @@ class MotoristaResource extends JsonResource
             'permite_checkin_duplo' => (bool) $this->permite_checkin_duplo,
             'unidades' => $this->whenLoaded('unidades', fn () => $this->unidades->map(fn ($u) => ['id' => $u->id, 'nome' => $u->nome, 'tipo' => $u->tipo])),
             'checkin_ativo' => $this->whenLoaded('checkinAtivo', fn () => new CheckinResource($this->checkinAtivo)),
+            // null = motorista sem usuário de acesso (não tem como receber push)
+            'push_ativo' => $this->whenLoaded('usuario', fn () => $this->usuario
+                ? ($this->usuario->push_subscriptions_count ?? $this->usuario->pushSubscriptions()->count()) > 0
+                : null),
             'atualizado_em' => $this->updated_at,
         ];
     }

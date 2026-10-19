@@ -13,7 +13,20 @@ export default function AvisoAtivarPush() {
     if (isOperador && permissao === 'granted') sincronizarPush().catch(() => {})
   }, [isOperador, permissao])
 
-  if (!isOperador || permissao !== 'default') return null
+  if (!isOperador) return null
+
+  // Bloqueado: o navegador não deixa pedir de novo, só o motorista pode
+  // liberar nas configurações do site. Sem este aviso ele fica sem push sem saber.
+  if (permissao === 'denied') {
+    return (
+      <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs px-4 py-2">
+        As notificações estão bloqueadas neste celular e você não será avisado de novas viagens com o app fechado.
+        Para liberar: toque no cadeado ao lado do endereço → <strong>Permissões</strong> → <strong>Notificações</strong> → <strong>Permitir</strong>, e recarregue a página.
+      </div>
+    )
+  }
+
+  if (permissao !== 'default') return null
 
   const ativar = async () => {
     setAtivando(true)

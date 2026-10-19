@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, AlertTriangle, Bell, BellOff } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import * as motoristasApi from '../../api/motoristas'
@@ -64,7 +64,7 @@ export default function MotoristasList() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              {['Nome', 'CPF', 'CNH', 'Cat.', 'Validade CNH', 'Turno', 'Status', 'Ativo', ''].map(h => (
+              {['Nome', 'CPF', 'CNH', 'Cat.', 'Validade CNH', 'Turno', 'Status', 'Push', 'Ativo', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
@@ -93,6 +93,19 @@ export default function MotoristasList() {
                   <td className="px-4 py-3 text-gray-500 capitalize">{m.turno_padrao ?? '—'}</td>
                   <td className="px-4 py-3"><Badge value={m.status} /></td>
                   <td className="px-4 py-3">
+                    {m.push_ativo == null ? (
+                      <span className="text-gray-300" title="Motorista sem usuário de acesso">—</span>
+                    ) : m.push_ativo ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-medium" title="Recebe avisos no celular">
+                        <Bell size={14} /> Ativo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-gray-400 text-xs" title="Ainda não ativou as notificações no celular">
+                        <BellOff size={14} /> Inativo
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     {isGestor ? (
                       <input
                         type="checkbox"
@@ -117,7 +130,7 @@ export default function MotoristasList() {
               )
             })}
             {(data ?? []).length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Nenhum motorista encontrado</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">Nenhum motorista encontrado</td></tr>
             )}
           </tbody>
         </table>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Notificacao;
 
+use App\Models\Motorista;
 use App\Models\Solicitacao;
 use App\Models\Usuario;
 use App\Notifications\NovaSolicitacaoDisponivel;
@@ -62,6 +63,23 @@ class PushInscricaoTest extends TestCase
 
         Sanctum::actingAs(Usuario::factory()->create(['perfil' => 'operador']));
         $this->getJson('/api/push/chave-publica')->assertOk()->assertJsonPath('chave', 'CHAVE-PUBLICA');
+    }
+
+    public function test_listagem_de_motoristas_indica_quem_tem_push_ativo(): void
+    {
+        $comPush = Motorista::factory()->create(['nome' => 'A Com Push']);
+        $semPush = Motorista::factory()->create(['nome' => 'B Sem Push']);
+        $semUsuario = Motorista::factory()->create(['nome' => 'C Sem Usuario']);
+        Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $comPush->id])
+            ->updatePushSubscription('https://fcm.googleapis.com/fcm/send/x', 'k', 'a');
+        Usuario::factory()->create(['perfil' => 'operador', 'motorista_id' => $semPush->id]);
+
+        Sanctum::actingAs(Usuario::factory()->create(['perfil' => 'admin']));
+        $push = collect($this->getJson('/api/motoristas')->assertOk()->json('data'))->pluck('push_ativo', 'id');
+
+        $this->assertTrue($push[$comPush->id]);
+        $this->assertFalse($push[$semPush->id]);
+        $this->assertNull($push[$semUsuario->id]);
     }
 
     public function test_notificacoes_ao_motorista_tambem_vao_por_push(): void
