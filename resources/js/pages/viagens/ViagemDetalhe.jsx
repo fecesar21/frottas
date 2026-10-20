@@ -163,6 +163,18 @@ export default function ViagemDetalhe({ viagem: viagemInicial }) {
             <p className="text-gray-700">{viagem.colaboradores.map(c => c.nome).join(', ')}</p>
           </div>
         )}
+        {viagem.numero_atendimento && (
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Nº do atendimento</p>
+            <p className="text-gray-700">{viagem.numero_atendimento}</p>
+          </div>
+        )}
+        {viagem.autorizacao_referencia_em && (
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Autorização pela referência</p>
+            <p className="text-gray-700">{fmtDt(viagem.autorizacao_referencia_em)}</p>
+          </div>
+        )}
         <div>
           <p className="text-xs text-gray-400 mb-0.5">Saída</p>
           <p className="text-gray-700">{fmtDt(viagem.saida_at)}</p>

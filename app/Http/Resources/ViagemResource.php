@@ -22,7 +22,9 @@ class ViagemResource extends JsonResource
             'destino' => $this->destino,
             'motivo_viagem' => $this->motivo_viagem,
             'motivo_nome' => MotivoViagem::rotulo($this->motivo_viagem),
-            'numero_atendimento' => $this->numero_atendimento,
+            'numero_atendimento' => $this->numero_atendimento
+                ?? ($this->relationLoaded('solicitacao') ? $this->solicitacao?->numero_atendimento : null),
+            'autorizacao_referencia_em' => $this->whenLoaded('solicitacao', fn () => $this->solicitacao?->autorizacao_referencia_em),
             'km_saida' => $this->km_saida,
             'km_chegada' => $this->km_chegada,
             'km_percorrido' => $this->when($this->km_chegada, fn () => $this->km_chegada - $this->km_saida),
@@ -31,6 +33,7 @@ class ViagemResource extends JsonResource
             'saida_at' => $this->saida_at,
             'chegada_at' => $this->chegada_at,
             'status' => $this->status,
+            'solicitacao_id' => $this->whenLoaded('solicitacao', fn () => $this->solicitacao?->id),
             'observacoes' => $this->observacoes,
             'motorista' => $this->whenLoaded('motorista', fn () => new MotoristaResource($this->motorista)),
             'veiculo' => $this->whenLoaded('veiculo', fn () => new VeiculoResource($this->veiculo)),

@@ -27,7 +27,7 @@ class ViagemController extends Controller
         $unidadeId = $r->unidade_efetiva;
         $isOperador = auth()->user()->perfil === 'operador';
 
-        $query = Viagem::with(['veiculo', 'motorista', 'paradas'])
+        $query = Viagem::with(['veiculo', 'motorista', 'paradas', 'solicitacao:id,viagem_id,numero_atendimento,autorizacao_referencia_em'])
             ->when($r->status, fn ($q, $s) => $q->where('status', $s))
             // Motorista vê só as viagens do mês corrente (as em andamento sempre aparecem)
             ->when($isOperador, fn ($q) => $q->where('motorista_id', auth()->user()->motorista_id)
@@ -49,7 +49,7 @@ class ViagemController extends Controller
             abort(403);
         }
 
-        return new ViagemResource($viagem->load(['veiculo', 'motorista', 'paradas', 'colaboradores.unidade:id,nome']));
+        return new ViagemResource($viagem->load(['veiculo', 'motorista', 'paradas', 'colaboradores.unidade:id,nome', 'solicitacao:id,viagem_id,numero_atendimento,autorizacao_referencia_em']));
     }
 
     public function store(StoreViagemRequest $request)
