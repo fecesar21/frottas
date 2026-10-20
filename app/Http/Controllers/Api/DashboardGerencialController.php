@@ -48,15 +48,31 @@ class DashboardGerencialController extends Controller
         $fim = $inicio->copy()->endOfMonth();
 
         // Base: viagens de transferência (muitas são lançadas direto, sem
-        // solicitação). A unidade da viagem é a do motorista, como na lista
-        // de viagens. Autorização e horário da solicitação vêm da solicitação
-        // vinculada, quando existir.
-        $viagens = Viagem::with('solicitacao:id,viagem_id,autorizacao_referencia_em,created_at')
+        // solicitação). Autorização e horário da solicitação vêm da
+        // solicitação vinculada, quando existir.
+        $viagens = Viagem::with('solicitacao:id,viagem_id,unidade_id,origem_tipo,origem_id,autorizacao_referencia_em,created_at')
             ->where('motivo_viagem', 'transferencia_paciente')
+            ->whereNull('viagem_ida_id') // retorno à origem não é transferência
             ->where('status', '!=', 'cancelada')
             ->whereBetween('saida_at', [$inicio, $fim])
-            ->when($filtroUnidades, fn ($q) => $q->whereHas('motorista.unidades', fn ($u) => $u->whereIn('unidades.id', $filtroUnidades)))
             ->get(['id', 'origem', 'destino', 'saida_at', 'chegada_at']);
+
+        // A unidade da transferência é a de origem: não dá para usar a do
+        // motorista, que costuma atender todas as unidades. Com solicitação,
+        // vale a origem (ou a unidade) dela; sem, o primeiro nome do texto de
+        // origem comparado ao nome da unidade (ex.: "UPA, HRA" → UPA).
+        if ($filtroUnidades) {
+            $porNome = Unidade::pluck('id', 'nome')->mapWithKeys(fn ($id, $nome) => [mb_strtoupper(trim($nome)) => $id]);
+            $unidadeDa = function (Viagem $v) use ($porNome) {
+                $s = $v->solicitacao;
+                if ($s) {
+                    return $s->origem_tipo === 'unidade' && $s->origem_id ? $s->origem_id : $s->unidade_id;
+                }
+
+                return $porNome->get(mb_strtoupper(trim(explode(',', (string) $v->origem)[0])));
+            };
+            $viagens = $viagens->filter(fn ($v) => in_array($unidadeDa($v), $filtroUnidades, true))->values();
+        }
 
         $minutos = fn ($de, $ate) => $de && $ate && $ate->gte($de) ? $de->diffInSeconds($ate) / 60 : null;
         $media = function ($valores) {

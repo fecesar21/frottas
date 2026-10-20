@@ -91,6 +91,21 @@ class DashboardGerencialApiTest extends TestCase
             ->assertJsonPath('medias_minutos.autorizacao_inicio', null);
     }
 
+    public function test_considera_somente_transferencia_de_paciente(): void
+    {
+        $this->loginAs('dashboard');
+        $saida = Carbon::create(2026, 9, 5, 9, 0);
+        $ida = Viagem::factory()->create(['motivo_viagem' => 'transferencia_paciente', 'status' => 'concluida', 'saida_at' => $saida]);
+        Viagem::factory()->create(['motivo_viagem' => 'retorno', 'viagem_ida_id' => $ida->id, 'saida_at' => $saida]);
+        // Retorno antigo que herdou o motivo da ida.
+        Viagem::factory()->create(['motivo_viagem' => 'transferencia_paciente', 'viagem_ida_id' => $ida->id, 'saida_at' => $saida]);
+        Viagem::factory()->create(['motivo_viagem' => 'exames_levar_paciente', 'saida_at' => $saida]);
+
+        $this->getJson('/api/relatorios/dashboard-gerencial/transferencias?mes=9&ano=2026')
+            ->assertOk()
+            ->assertJsonPath('total_transferencias', 1);
+    }
+
     public function test_perfil_dashboard_nao_acessa_outras_rotas(): void
     {
         $this->loginAs('dashboard');
@@ -157,5 +172,31 @@ class DashboardGerencialApiTest extends TestCase
             ->assertJsonCount(2, 'unidades');
         $this->getJson($url.'&unidade_id='.$a->id)->assertOk()->assertJsonPath('total_transferencias', 1);
         $this->getJson($url.'&unidade_id='.$c->id)->assertForbidden();
+    }
+
+    public function test_filtro_de_unidade_usa_origem_da_viagem_e_nao_o_motorista(): void
+    {
+        $this->loginAs('dashboard');
+        $hma = Unidade::factory()->create(['nome' => 'HMA']);
+        $ame = Unidade::factory()->create(['nome' => 'AME']);
+        $upa = Unidade::factory()->create(['nome' => 'UPA']);
+        $saida = Carbon::create(2026, 9, 5, 9, 0);
+
+        // Motorista atende todas as unidades; a unidade vem da origem.
+        foreach (['Hma', 'UPA, HRA', 'HRA'] as $origem) {
+            $v = Viagem::factory()->create([
+                'motivo_viagem' => 'transferencia_paciente', 'status' => 'concluida',
+                'origem' => $origem, 'destino' => 'X', 'saida_at' => $saida,
+            ]);
+            $v->motorista->unidades()->attach([$hma->id, $ame->id, $upa->id]);
+        }
+        // Com solicitação, vale a unidade de origem dela, não o texto.
+        $this->transferencia($saida, 1, 1, 1, ['origem_tipo' => 'unidade', 'origem_id' => $ame->id]);
+
+        $url = '/api/relatorios/dashboard-gerencial/transferencias?mes=9&ano=2026&unidade_id=';
+        $this->getJson($url.$hma->id)->assertOk()->assertJsonPath('total_transferencias', 1);
+        $this->getJson($url.$upa->id)->assertOk()->assertJsonPath('total_transferencias', 1);
+        $this->getJson($url.$ame->id)->assertOk()->assertJsonPath('total_transferencias', 1);
+        $this->getJson('/api/relatorios/dashboard-gerencial/transferencias?mes=9&ano=2026')->assertOk()->assertJsonPath('total_transferencias', 4);
     }
 }
