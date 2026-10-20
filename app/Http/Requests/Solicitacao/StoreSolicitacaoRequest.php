@@ -4,6 +4,7 @@ namespace App\Http\Requests\Solicitacao;
 
 use App\Models\Localidade;
 use App\Models\MotivoViagem;
+use App\Models\Unidade;
 use App\Rules\MotivoViagemValido;
 use App\Rules\PontoViagemExiste;
 use Illuminate\Foundation\Http\FormRequest;
@@ -76,6 +77,15 @@ class StoreSolicitacaoRequest extends FormRequest
             };
             if ($mesmoLocal) {
                 $validator->errors()->add('destino_id', 'O destino não pode ser a mesma unidade de origem.');
+            }
+
+            $destinoNome = match ($this->input('destino_tipo')) {
+                'unidade' => Unidade::whereKey($destinoId)->value('nome'),
+                'localidade' => Localidade::whereKey($destinoId)->value('nome'),
+                default => null,
+            };
+            if (MotivoViagem::destinoBloqueado($usuario, $this->input('motivo'), $destinoNome)) {
+                $validator->errors()->add('destino_id', 'Este destino não está disponível para este motivo na sua unidade.');
             }
         }];
     }

@@ -740,7 +740,7 @@ class SolicitacaoApiTest extends TestCase
 
     public function test_exames_e_transferencia_usam_a_unidade_do_solicitante_como_origem(): void
     {
-        $unidade = Unidade::factory()->create(['nome' => 'UPA Teste', 'tipo' => 'filial']);
+        $unidade = Unidade::factory()->create(['nome' => 'Unidade Teste', 'tipo' => 'filial']);
         $this->loginSolicitanteDa($unidade);
         $exames = MotivoViagem::factory()->create(['codigo' => 'exames_levar_paciente', 'nome' => 'Exames - Levar Paciente', 'disponivel_solicitacao' => true]);
         $destino = Localidade::factory()->create(['nome' => 'Clínica de Imagem']);
@@ -776,9 +776,52 @@ class SolicitacaoApiTest extends TestCase
             ->assertJsonValidationErrors(['destino_id']);
     }
 
+    public function test_transferencia_da_upa_e_do_pai_bloqueia_destinos_nao_atendidos(): void
+    {
+        $dados = ['motivo' => 'transferencia_paciente', 'numero_atendimento' => 1, 'autorizacao_referencia_em' => now()->subHour()->format('Y-m-d\TH:i')];
+        $destinos = collect(['IMED', 'ITPAC', 'AME', 'PAI', 'UPA', 'HRA'])
+            ->mapWithKeys(fn ($nome) => [$nome => Localidade::factory()->create(['nome' => $nome])->id]);
+        $bloqueados = ['UPA' => ['IMED', 'ITPAC', 'AME', 'PAI'], 'PAI' => ['IMED', 'ITPAC', 'UPA', 'AME']];
+
+        foreach ($bloqueados as $origem => $nomes) {
+            $this->loginSolicitanteDa(Unidade::factory()->create(['nome' => $origem, 'tipo' => 'filial']));
+            foreach ($nomes as $nome) {
+                $this->postJson('/api/solicitacoes', $dados + ['destino_tipo' => 'localidade', 'destino_id' => $destinos[$nome]])
+                    ->assertJsonValidationErrors(['destino_id']);
+            }
+            $this->postJson('/api/solicitacoes', $dados + ['destino_tipo' => 'localidade', 'destino_id' => $destinos['HRA']])
+                ->assertCreated();
+        }
+
+    }
+
+    public function test_exames_da_upa_e_do_pai_so_aceitam_hma_hmdo_imed_e_itpac(): void
+    {
+        $exames = MotivoViagem::factory()->create(['codigo' => 'exames_levar_paciente', 'nome' => 'Exames - Levar Paciente', 'disponivel_solicitacao' => true]);
+        $destinos = collect(['HMA', 'HMDO', 'IMED', 'ITPAC', 'AME', 'HRA'])
+            ->mapWithKeys(fn ($nome) => [$nome => Localidade::factory()->create(['nome' => $nome])->id]);
+
+        foreach (['UPA', 'PAI'] as $origem) {
+            $this->loginSolicitanteDa(Unidade::factory()->create(['nome' => $origem, 'tipo' => 'filial']));
+            foreach (['HMA', 'HMDO', 'IMED', 'ITPAC'] as $nome) {
+                $this->postJson('/api/solicitacoes', ['motivo' => $exames->codigo, 'destino_tipo' => 'localidade', 'destino_id' => $destinos[$nome]])
+                    ->assertCreated();
+            }
+            foreach (['AME', 'HRA'] as $nome) {
+                $this->postJson('/api/solicitacoes', ['motivo' => $exames->codigo, 'destino_tipo' => 'localidade', 'destino_id' => $destinos[$nome]])
+                    ->assertJsonValidationErrors(['destino_id']);
+            }
+        }
+
+        // Outras unidades não sofrem a restrição.
+        $this->loginSolicitanteDa(Unidade::factory()->create(['nome' => 'HMA', 'tipo' => 'filial']));
+        $this->postJson('/api/solicitacoes', ['motivo' => $exames->codigo, 'destino_tipo' => 'localidade', 'destino_id' => $destinos['AME']])
+            ->assertCreated();
+    }
+
     public function test_motivo_renomeado_para_exames_tambem_usa_origem_da_unidade(): void
     {
-        $unidade = Unidade::factory()->create(['nome' => 'UPA X', 'tipo' => 'filial']);
+        $unidade = Unidade::factory()->create(['nome' => 'Unidade X', 'tipo' => 'filial']);
         $this->loginSolicitanteDa($unidade);
         $motivo = MotivoViagem::factory()->create(['codigo' => 'levar_paciente', 'nome' => 'Exames - Levar Paciente', 'disponivel_solicitacao' => true]);
 

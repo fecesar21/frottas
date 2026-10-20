@@ -29,6 +29,36 @@ const origemNaUnidade = (motivo) => !!motivo && (
   motivo.codigo === 'transferencia_paciente' || motivo.codigo.startsWith('exames') || normalizar(motivo.nome).startsWith('exames')
 )
 
+// Destinos que a Transferência de Paciente não pode ter, por unidade de origem (espelha MotivoViagem::DESTINOS_BLOQUEADOS_TRANSFERENCIA).
+const DESTINOS_BLOQUEADOS_TRANSFERENCIA = {
+  upa: ['imed', 'itpac', 'ame', 'pai'],
+  pai: ['imed', 'itpac', 'upa', 'ame'],
+}
+
+// Únicos destinos permitidos em "Exames - Levar Paciente", por unidade de origem (espelha MotivoViagem::DESTINOS_PERMITIDOS_EXAMES).
+const DESTINOS_PERMITIDOS_EXAMES = {
+  upa: ['hma', 'hmdo', 'imed', 'itpac'],
+  pai: ['hma', 'hmdo', 'imed', 'itpac'],
+}
+
+const ehExames = (motivo) => !!motivo && (motivo.codigo.startsWith('exames') || normalizar(motivo.nome).startsWith('exames'))
+
+// Espelha MotivoViagem::destinoBloqueado.
+const destinoBloqueado = (motivo, unidadeNome, destinoNome) => {
+  if (!motivo) return false
+  const palavras = normalizar(unidadeNome).split(/[^a-z0-9]+/)
+  const destino = normalizar(destinoNome)
+  if (motivo.codigo === 'transferencia_paciente') {
+    return Object.entries(DESTINOS_BLOQUEADOS_TRANSFERENCIA)
+      .some(([origem, bloqueados]) => palavras.includes(origem) && bloqueados.includes(destino))
+  }
+  if (ehExames(motivo)) {
+    return Object.entries(DESTINOS_PERMITIDOS_EXAMES)
+      .some(([origem, permitidos]) => palavras.includes(origem) && !permitidos.includes(destino))
+  }
+  return false
+}
+
 // "Agora" no formato do input datetime-local (horário local), usado como limite máximo.
 const agoraLocal = () => {
   const d = new Date()
@@ -104,7 +134,8 @@ export default function NovaSolicitacao() {
   const precisaOrigemDestino = exigeOrigemDestino || ['transferencia_paciente', 'transporte_colaborador'].includes(form.motivo)
   // Com origem fixa, o destino não pode ser o próprio local do solicitante.
   const pontosDestino = origemFixa && unidade
-    ? pontos.filter(p => normalizar(p.nome) !== normalizar(unidade.nome))
+    ? pontos.filter(p => normalizar(p.nome) !== normalizar(unidade.nome)
+      && !destinoBloqueado(motivoSelecionado, unidade.nome, p.nome))
     : pontos
   const precisaAtendimento = form.motivo === 'transferencia_paciente'
   const precisaCidade = form.motivo === 'buscar_medico'

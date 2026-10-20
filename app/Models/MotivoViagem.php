@@ -134,6 +134,41 @@ class MotivoViagem extends Model
         return ! $usuario->unidade_id || preg_match('/\bHMA\b/i', (string) $usuario->unidade?->nome) === 1;
     }
 
+    /** Destinos que a Transferência de Paciente não pode ter, por unidade de origem (palavra no nome da unidade). */
+    public const DESTINOS_BLOQUEADOS_TRANSFERENCIA = [
+        'UPA' => ['IMED', 'ITPAC', 'AME', 'PAI'],
+        'PAI' => ['IMED', 'ITPAC', 'UPA', 'AME'],
+    ];
+
+    /** Únicos destinos permitidos em "Exames - Levar Paciente", por unidade de origem (palavra no nome da unidade). */
+    public const DESTINOS_PERMITIDOS_EXAMES = [
+        'UPA' => ['HMA', 'HMDO', 'IMED', 'ITPAC'],
+        'PAI' => ['HMA', 'HMDO', 'IMED', 'ITPAC'],
+    ];
+
+    /** O motivo, partindo da unidade do solicitante, não pode ir para o destino com este nome. */
+    public static function destinoBloqueado(Usuario $usuario, ?string $codigo, ?string $destinoNome): bool
+    {
+        $destino = Str::of((string) $destinoNome)->ascii()->upper()->squish()->toString();
+        $daOrigem = fn (string $origem) => preg_match('/\b'.$origem.'\b/i', (string) $usuario->unidade?->nome) === 1;
+
+        if ($codigo === 'transferencia_paciente') {
+            foreach (self::DESTINOS_BLOQUEADOS_TRANSFERENCIA as $origem => $bloqueados) {
+                if ($daOrigem($origem) && in_array($destino, $bloqueados, true)) {
+                    return true;
+                }
+            }
+        } elseif (self::ehExames($codigo)) {
+            foreach (self::DESTINOS_PERMITIDOS_EXAMES as $origem => $permitidos) {
+                if ($daOrigem($origem) && ! in_array($destino, $permitidos, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /** UOs (departamento do AD) da UPA que só solicitam Transferência de Paciente e Exames. */
     public const UOS_ASSISTENCIAIS_UPA = ['enfermagem', 'pronto atendimento'];
 
