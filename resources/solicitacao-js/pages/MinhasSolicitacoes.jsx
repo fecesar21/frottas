@@ -15,9 +15,15 @@ const STATUS = {
   cancelado: { label: 'Cancelado', className: 'bg-gray-100 text-gray-600 border-gray-200' },
 }
 
+// Espelha SolicitacaoService::STATUS_CANCELAVEIS: viagem iniciada ou realizada não cancela.
+const CANCELAVEIS = ['aberto', 'recusada', 'pendente_motorista', 'aguardando_finalizacao_trajeto']
+
 export default function MinhasSolicitacoes() {
   const [solicitacoes, setSolicitacoes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [confirmarId, setConfirmarId] = useState(null)
+  const [cancelando, setCancelando] = useState(false)
+  const [erro, setErro] = useState('')
 
   const carregar = () => solicitacoesApi.listar().then(({ data }) => setSolicitacoes(data.data ?? data))
 
@@ -28,10 +34,26 @@ export default function MinhasSolicitacoes() {
     return () => clearInterval(timer)
   }, [])
 
+  const cancelar = async (id) => {
+    setCancelando(true)
+    setErro('')
+    try {
+      await solicitacoesApi.cancelar(id)
+      setConfirmarId(null)
+      await carregar()
+    } catch (e) {
+      setErro(e.response?.data?.message ?? 'Não foi possível cancelar a solicitação.')
+    } finally {
+      setCancelando(false)
+    }
+  }
+
   return (
     <Layout>
       <h1 className="text-xl font-bold text-gray-900 mb-1">Minhas Solicitações</h1>
       <p className="text-sm text-gray-500 mb-6">Acompanhe o status das suas solicitações de transporte.</p>
+
+      {erro && <p className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-2">{erro}</p>}
 
       <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
         {loading ? (
@@ -49,6 +71,7 @@ export default function MinhasSolicitacoes() {
                 <th className="text-left px-4 py-3">Chegada</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-left px-4 py-3">Motorista</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -67,6 +90,24 @@ export default function MinhasSolicitacoes() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-gray-700">{s.motorista_nome ?? '—'}</td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    {CANCELAVEIS.includes(s.status) && !s.viagem_id && (confirmarId === s.id ? (
+                      <span className="inline-flex gap-2">
+                        <button onClick={() => cancelar(s.id)} disabled={cancelando}
+                          className="text-xs text-white bg-red-600 hover:bg-red-700 rounded-lg px-3 py-1.5 disabled:opacity-60">
+                          {cancelando ? 'Cancelando...' : 'Confirmar'}
+                        </button>
+                        <button onClick={() => setConfirmarId(null)} className="text-xs text-gray-600 hover:bg-gray-100 rounded-lg px-3 py-1.5">
+                          Voltar
+                        </button>
+                      </span>
+                    ) : (
+                      <button onClick={() => { setConfirmarId(s.id); setErro('') }}
+                        className="text-xs text-red-600 border border-red-200 hover:bg-red-50 rounded-lg px-3 py-1.5">
+                        Cancelar
+                      </button>
+                    ))}
+                  </td>
                 </tr>
               ))}
             </tbody>

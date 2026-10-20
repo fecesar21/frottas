@@ -225,9 +225,70 @@ class SolicitacaoService
         return $solicitacao;
     }
 
+    /**
+     * Status em que a solicitação ainda pode ser cancelada: depois que a
+     * viagem iniciou (em_trajeto) ou foi realizada (finalizado), não pode mais.
+     */
+    public const STATUS_CANCELAVEIS = ['aberto', 'recusada', 'pendente_motorista', 'aguardando_finalizacao_trajeto'];
+
     public function cancelar(Solicitacao $solicitacao): Solicitacao
     {
-        $solicitacao->update(['status' => 'cancelado']);
+        if (! in_array($solicitacao->status, self::STATUS_CANCELAVEIS) || $solicitacao->viagem_id) {
+            throw ValidationException::withMessages([
+                'status' => 'Não é possível cancelar uma solicitação cuja viagem já iniciou ou foi realizada.',
+            ]);
+        }
+
+        $solicitacao->update([
+            'status' => 'cancelado',
+            'motorista_pendente_id' => null,
+            'veiculo_pendente_id' => null,
+        ]);
+
+        return $solicitacao->fresh();
+    }
+
+    /**
+     * Viagens que podem ser vinculadas a uma solicitação: mesmo motivo, ainda
+     * sem solicitação, iniciadas ou concluídas. Em transferência de paciente o
+     * nº do atendimento precisa ser o mesmo.
+     */
+    public function viagensVinculaveis(Solicitacao $solicitacao)
+    {
+        return Viagem::query()
+            ->where('motivo_viagem', $solicitacao->motivo)
+            ->whereIn('status', ['em_andamento', 'concluida'])
+            ->whereDoesntHave('solicitacao')
+            ->when($solicitacao->motivo === 'transferencia_paciente',
+                fn ($q) => $q->where('numero_atendimento', $solicitacao->numero_atendimento));
+    }
+
+    /**
+     * Vincula a solicitação a uma viagem já iniciada/realizada por iniciativa
+     * do motorista, sem criar viagem nova.
+     */
+    public function vincularViagem(Solicitacao $solicitacao, string $viagemId): Solicitacao
+    {
+        if (! in_array($solicitacao->status, ['aberto', 'recusada'])) {
+            throw ValidationException::withMessages(['status' => 'Esta solicitação já foi tratada.']);
+        }
+
+        $viagem = $this->viagensVinculaveis($solicitacao)->find($viagemId);
+
+        if (! $viagem) {
+            throw ValidationException::withMessages([
+                'viagem_id' => $solicitacao->motivo === 'transferencia_paciente'
+                    ? 'A viagem precisa ser uma transferência de paciente com o mesmo nº do atendimento e ainda sem solicitação vinculada.'
+                    : 'A viagem precisa ter o mesmo motivo, estar iniciada ou concluída e ainda sem solicitação vinculada.',
+            ]);
+        }
+
+        $solicitacao->update([
+            'viagem_id' => $viagem->id,
+            'status' => $viagem->status === 'concluida' ? 'finalizado' : 'em_trajeto',
+            'motorista_pendente_id' => null,
+            'veiculo_pendente_id' => null,
+        ]);
 
         return $solicitacao->fresh();
     }

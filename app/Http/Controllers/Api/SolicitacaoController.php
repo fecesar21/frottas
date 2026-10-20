@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Solicitacao\StoreSolicitacaoRequest;
 use App\Http\Resources\SolicitacaoResource;
+use App\Http\Resources\ViagemResource;
 use App\Models\Checkin;
 use App\Models\Localidade;
 use App\Models\Solicitacao;
@@ -204,6 +205,34 @@ class SolicitacaoController extends Controller
         $data = $r->validate(['motivo' => 'required|string|max:500']);
 
         $solicitacao = $this->service->motoristaRecusar($solicitacao, $user->motorista_id, $data['motivo']);
+
+        return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
+    }
+
+    public function viagensCandidatas(Request $r, Solicitacao $solicitacao)
+    {
+        if (! in_array($r->user()->perfil, ['admin', 'gestor'])) {
+            return response()->json(['error' => 'Apenas gestores/admins podem vincular solicitações.'], 403);
+        }
+
+        $viagens = $this->service->viagensVinculaveis($solicitacao)
+            ->with(['motorista', 'veiculo'])
+            ->latest('saida_at')
+            ->limit(50)
+            ->get();
+
+        return ViagemResource::collection($viagens);
+    }
+
+    public function vincularViagem(Request $r, Solicitacao $solicitacao)
+    {
+        if (! in_array($r->user()->perfil, ['admin', 'gestor'])) {
+            return response()->json(['error' => 'Apenas gestores/admins podem vincular solicitações.'], 403);
+        }
+
+        $data = $r->validate(['viagem_id' => 'required|uuid']);
+
+        $solicitacao = $this->service->vincularViagem($solicitacao, $data['viagem_id']);
 
         return new SolicitacaoResource($solicitacao->load(['usuario', 'viagem.motorista', 'viagem.veiculo', 'motoristaPendente', 'veiculoPendente']));
     }

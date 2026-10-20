@@ -14,6 +14,11 @@ import { rotuloMotivo } from '../../utils/solicitacao'
 
 const fmtDt = (s) => s ? format(new Date(s), 'dd/MM HH:mm') : '—'
 
+// Espelha SolicitacaoService::STATUS_CANCELAVEIS: viagem iniciada ou realizada não cancela.
+const CANCELAVEIS = ['aberto', 'recusada', 'pendente_motorista', 'aguardando_finalizacao_trajeto']
+const podeCancelar = (s) => CANCELAVEIS.includes(s.status) && !s.viagem_id
+const podeVincular = (s) => s.status === 'aberto' || s.status === 'recusada'
+
 const detalheMotivo = (s) => {
   if (s.origem || s.destino) {
     const rota = `${s.origem ?? '—'} → ${s.destino ?? '—'}`
@@ -33,6 +38,11 @@ export default function SolicitacoesList() {
   const [recusarTarget, setRecusarTarget] = useState(null)
   const [motivoRecusa, setMotivoRecusa] = useState('')
   const [erroRecusa, setErroRecusa] = useState('')
+  const [vincularTarget, setVincularTarget] = useState(null)
+  const [viagemVinculo, setViagemVinculo] = useState('')
+  const [erroVinculo, setErroVinculo] = useState('')
+  const [cancelarTarget, setCancelarTarget] = useState(null)
+  const [erroCancelar, setErroCancelar] = useState('')
 
   const { marcarTodasLidas } = useNotificacoes()
 
@@ -77,6 +87,33 @@ export default function SolicitacoesList() {
     },
     onError: (e) => setErroRecusa(e.response?.data?.message ?? e.response?.data?.error ?? 'Erro ao recusar solicitação'),
   })
+
+  const { data: candidatas, isLoading: carregandoCandidatas } = useQuery({
+    queryKey: ['viagens-candidatas', vincularTarget?.id],
+    queryFn: () => solicitacoesApi.viagensCandidatas(vincularTarget.id).then(r => r.data.data ?? r.data),
+    enabled: !!vincularTarget,
+  })
+
+  const doVincular = useMutation({
+    mutationFn: ({ id, viagemId }) => solicitacoesApi.vincularViagem(id, viagemId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['solicitacoes'] })
+      setVincularTarget(null)
+    },
+    onError: (e) => setErroVinculo(e.response?.data?.message ?? e.response?.data?.error ?? 'Erro ao vincular viagem'),
+  })
+
+  const doCancelar = useMutation({
+    mutationFn: (id) => solicitacoesApi.cancelar(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['solicitacoes'] })
+      setCancelarTarget(null)
+    },
+    onError: (e) => setErroCancelar(e.response?.data?.message ?? e.response?.data?.error ?? 'Erro ao cancelar solicitação'),
+  })
+
+  const abrirVinculo = (s) => { setVincularTarget(s); setViagemVinculo(''); setErroVinculo('') }
+  const abrirCancelar = (s) => { setCancelarTarget(s); setErroCancelar('') }
 
   const abrirRecusa = (s) => { setRecusarTarget(s); setMotivoRecusa(''); setErroRecusa('') }
 
@@ -141,6 +178,26 @@ export default function SolicitacoesList() {
                 </button>
               </div>
             )}
+            {(podeVincular(s) || podeCancelar(s)) && (
+              <div className="flex gap-2">
+                {podeVincular(s) && (
+                  <button
+                    onClick={() => abrirVinculo(s)}
+                    className="flex-1 text-xs text-gray-700 hover:text-gray-900 border border-gray-300 rounded-sm px-2 py-2 hover:bg-gray-50 transition-colors"
+                  >
+                    Vincular viagem
+                  </button>
+                )}
+                {podeCancelar(s) && (
+                  <button
+                    onClick={() => abrirCancelar(s)}
+                    className="flex-1 text-xs text-gray-700 hover:text-gray-900 border border-gray-300 rounded-sm px-2 py-2 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ))}
         {(data ?? []).length === 0 && (
@@ -203,6 +260,27 @@ export default function SolicitacoesList() {
                       </button>
                     </div>
                   )}
+                  {(podeVincular(s) || podeCancelar(s)) && (
+                    <div className="flex flex-col gap-1 mt-1">
+                      {podeVincular(s) && (
+                        <button
+                          onClick={() => abrirVinculo(s)}
+                          className="text-xs text-gray-700 hover:text-gray-900 border border-gray-300 rounded-sm px-2 py-1 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                          title="Vincular a uma viagem já iniciada ou realizada pelo motorista"
+                        >
+                          Vincular
+                        </button>
+                      )}
+                      {podeCancelar(s) && (
+                        <button
+                          onClick={() => abrirCancelar(s)}
+                          className="text-xs text-gray-700 hover:text-gray-900 border border-gray-300 rounded-sm px-2 py-1 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -246,6 +324,67 @@ export default function SolicitacoesList() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={!!vincularTarget} onClose={() => setVincularTarget(null)} title="Vincular a viagem existente">
+        <form
+          onSubmit={(e) => { e.preventDefault(); doVincular.mutate({ id: vincularTarget.id, viagemId: viagemVinculo }) }}
+          className="space-y-4"
+        >
+          {erroVinculo && <Alert type="error" message={erroVinculo} />}
+          <p className="text-sm text-gray-600">
+            {vincularTarget?.usuario_nome ?? '—'} · {rotuloMotivo(vincularTarget)}
+            {vincularTarget?.numero_atendimento && <> · Atendimento #{vincularTarget.numero_atendimento}</>}
+          </p>
+          {vincularTarget?.motivo === 'transferencia_paciente' && (
+            <p className="text-xs text-gray-500">Só aparecem viagens de transferência com o mesmo nº do atendimento.</p>
+          )}
+          {carregandoCandidatas ? <LoadingSpinner /> : (candidatas ?? []).length === 0 ? (
+            <p className="text-sm text-gray-500">Nenhuma viagem compatível sem solicitação vinculada.</p>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {candidatas.map(v => (
+                <label key={v.id} className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer ${viagemVinculo === v.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <input type="radio" name="viagem" value={v.id} checked={viagemVinculo === v.id}
+                    onChange={() => setViagemVinculo(v.id)} className="mt-1" />
+                  <span className="text-sm text-gray-700">
+                    <span className="block font-medium">{fmtDt(v.saida_at)} · {v.motorista?.nome ?? '—'} · {v.veiculo?.placa ?? '—'}</span>
+                    <span className="block text-xs text-gray-500">
+                      {v.origem || '—'} → {v.destino || '—'}
+                      {v.numero_atendimento && <> · Atend. #{v.numero_atendimento}</>}
+                      {' · '}{v.status === 'concluida' ? 'Concluída' : 'Em andamento'}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setVincularTarget(null)} className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100">
+              Voltar
+            </button>
+            <button type="submit" disabled={doVincular.isPending || !viagemVinculo} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-60">
+              {doVincular.isPending ? 'Vinculando...' : 'Confirmar vínculo'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={!!cancelarTarget} onClose={() => setCancelarTarget(null)} title="Cancelar solicitação">
+        <div className="space-y-4">
+          {erroCancelar && <Alert type="error" message={erroCancelar} />}
+          <p className="text-sm text-gray-600">
+            Cancelar a solicitação de {cancelarTarget?.usuario_nome ?? '—'} · {rotuloMotivo(cancelarTarget)}?
+          </p>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setCancelarTarget(null)} className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100">
+              Voltar
+            </button>
+            <button type="button" disabled={doCancelar.isPending} onClick={() => doCancelar.mutate(cancelarTarget.id)} className="bg-red-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-red-700 disabled:opacity-60">
+              {doCancelar.isPending ? 'Cancelando...' : 'Confirmar cancelamento'}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <Modal open={!!recusarTarget} onClose={() => setRecusarTarget(null)} title="Recusar solicitação">
