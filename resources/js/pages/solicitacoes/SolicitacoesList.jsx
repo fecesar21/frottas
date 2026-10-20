@@ -22,7 +22,7 @@ const detalheMotivo = (s) => {
   if (s.cidade) return s.cidade
   if (s.hospital_destino) return s.hospital_destino
   if (s.fornecedor_nome) return s.fornecedor_nome
-  return s.numero_atendimento ? `Atendimento #${s.numero_atendimento}` : '—'
+  return '—'
 }
 
 export default function SolicitacoesList() {
@@ -104,6 +104,7 @@ export default function SolicitacoesList() {
               <Badge value={s.status} />
             </div>
             <p className="text-sm text-gray-600">{rotuloMotivo(s)}</p>
+            {s.numero_atendimento && <p className="text-sm text-gray-600">Atendimento #{s.numero_atendimento}</p>}
             <p className="text-sm text-gray-500 break-words">{detalheMotivo(s)}</p>
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
               <div>
@@ -154,14 +155,15 @@ export default function SolicitacoesList() {
         <table className="w-full min-w-[900px] text-sm table-fixed">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              <th className="px-3 py-3 text-left font-medium w-[9%]">Data</th>
-              <th className="px-3 py-3 text-left font-medium w-[13%]">Solicitante</th>
-              <th className="px-3 py-3 text-left font-medium w-[14%]">Motivo</th>
-              <th className="px-3 py-3 text-left font-medium w-[15%]">Detalhe</th>
-              <th className="px-3 py-3 text-left font-medium w-[9%]">Saída</th>
-              <th className="px-3 py-3 text-left font-medium w-[9%]">Chegada</th>
-              <th className="px-3 py-3 text-left font-medium w-[13%]">Status</th>
-              <th className="px-3 py-3 text-left font-medium w-[10%]">Motorista</th>
+              <th className="px-3 py-3 text-left font-medium w-[8%]">Data</th>
+              <th className="px-3 py-3 text-left font-medium w-[12%]">Solicitante</th>
+              <th className="px-3 py-3 text-left font-medium w-[8%]">Nº Atend.</th>
+              <th className="px-3 py-3 text-left font-medium w-[13%]">Motivo</th>
+              <th className="px-3 py-3 text-left font-medium w-[14%]">Detalhe</th>
+              <th className="px-3 py-3 text-left font-medium w-[8%]">Saída</th>
+              <th className="px-3 py-3 text-left font-medium w-[8%]">Chegada</th>
+              <th className="px-3 py-3 text-left font-medium w-[12%]">Status</th>
+              <th className="px-3 py-3 text-left font-medium w-[9%]">Motorista</th>
               <th className="px-3 py-3 text-left font-medium w-[8%]"></th>
             </tr>
           </thead>
@@ -169,7 +171,8 @@ export default function SolicitacoesList() {
             {(data ?? []).map((s) => (
               <tr key={s.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.criado_em)}</td>
-                <td className="px-3 py-3 font-medium text-gray-800 truncate" title={s.usuario_nome}>{s.usuario_nome ?? '—'}</td>
+                <td className="px-3 py-3 font-medium text-gray-800 whitespace-normal break-words">{s.usuario_nome ?? '—'}</td>
+                <td className="px-3 py-3 text-gray-600 truncate">{s.numero_atendimento ?? '—'}</td>
                 <td className="px-3 py-3 text-gray-600 whitespace-normal break-words">{rotuloMotivo(s)}</td>
                 <td className="px-3 py-3 text-gray-500 whitespace-normal break-words">{detalheMotivo(s)}</td>
                 <td className="px-3 py-3 text-gray-500 truncate">{fmtDt(s.saida_at)}</td>
@@ -204,7 +207,7 @@ export default function SolicitacoesList() {
               </tr>
             ))}
             {(data ?? []).length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Nenhuma solicitação encontrada</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">Nenhuma solicitação encontrada</td></tr>
             )}
           </tbody>
         </table>
