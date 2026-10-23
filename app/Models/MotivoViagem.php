@@ -152,6 +152,11 @@ class MotivoViagem extends Model
         $destino = Str::of((string) $destinoNome)->ascii()->upper()->squish()->toString();
         $daOrigem = fn (string $origem) => preg_match('/\b'.$origem.'\b/i', (string) $usuario->unidade?->nome) === 1;
 
+        // Renal Center e Instituto de Doenças Renais Tocantins só recebem "Exames - Levar Paciente", de qualquer origem.
+        if (preg_match('/\bRENA(L|IS)\b/', $destino) === 1) {
+            return ! self::ehExames($codigo);
+        }
+
         if ($codigo === 'transferencia_paciente') {
             foreach (self::DESTINOS_BLOQUEADOS_TRANSFERENCIA as $origem => $bloqueados) {
                 if ($daOrigem($origem) && in_array($destino, $bloqueados, true)) {

@@ -48,6 +48,8 @@ const destinoBloqueado = (motivo, unidadeNome, destinoNome) => {
   if (!motivo) return false
   const palavras = normalizar(unidadeNome).split(/[^a-z0-9]+/)
   const destino = normalizar(destinoNome)
+  // Renal Center e Instituto de Doenças Renais Tocantins só recebem Exames, de qualquer origem.
+  if (/\brena(l|is)\b/.test(destino)) return !ehExames(motivo)
   if (motivo.codigo === 'transferencia_paciente') {
     return Object.entries(DESTINOS_BLOQUEADOS_TRANSFERENCIA)
       .some(([origem, bloqueados]) => palavras.includes(origem) && bloqueados.includes(destino))

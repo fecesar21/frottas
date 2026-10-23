@@ -150,7 +150,9 @@ export default function ViagemForm({ onSuccess }) {
             <select required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
               <option value="">Selecione a localidade...</option>
-              {nomesLocalidades.map(n => <option key={n} value={n}>{n}</option>)}
+              {/* Renal Center e Instituto de Doenças Renais só recebem Exames (espelha MotivoViagem::destinoBloqueado). */}
+              {nomesLocalidades.filter(n => !/\bRENA(L|IS)\b/.test(n.normalize('NFD').replace(/[̀-ͯ]/g, '')))
+                .map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           ) : (
             <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value.toUpperCase() }))}
