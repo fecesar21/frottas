@@ -146,6 +146,12 @@ class MotivoViagem extends Model
         'PAI' => ['HMA', 'HMDO', 'IMED', 'ITPAC'],
     ];
 
+    /** Renal Center e Instituto de Doenças Renais Tocantins: nunca origem, e destino só em "Exames - Levar Paciente". */
+    public static function somenteDestino(?string $nome): bool
+    {
+        return preg_match('/\bRENA(L|IS)\b/', Str::of((string) $nome)->ascii()->upper()->toString()) === 1;
+    }
+
     /** O motivo, partindo da unidade do solicitante, não pode ir para o destino com este nome. */
     public static function destinoBloqueado(Usuario $usuario, ?string $codigo, ?string $destinoNome): bool
     {
@@ -153,7 +159,7 @@ class MotivoViagem extends Model
         $daOrigem = fn (string $origem) => preg_match('/\b'.$origem.'\b/i', (string) $usuario->unidade?->nome) === 1;
 
         // Renal Center e Instituto de Doenças Renais Tocantins só recebem "Exames - Levar Paciente", de qualquer origem.
-        if (preg_match('/\bRENA(L|IS)\b/', $destino) === 1) {
+        if (self::somenteDestino($destinoNome)) {
             return ! self::ehExames($codigo);
         }
 

@@ -43,13 +43,15 @@ const DESTINOS_PERMITIDOS_EXAMES = {
 
 const ehExames = (motivo) => !!motivo && (motivo.codigo.startsWith('exames') || normalizar(motivo.nome).startsWith('exames'))
 
+// Renal Center e Instituto de Doenças Renais Tocantins: nunca origem, e destino só em Exames (espelha MotivoViagem::somenteDestino).
+const somenteDestino = (nome) => /\brena(l|is)\b/.test(normalizar(nome))
+
 // Espelha MotivoViagem::destinoBloqueado.
 const destinoBloqueado = (motivo, unidadeNome, destinoNome) => {
   if (!motivo) return false
   const palavras = normalizar(unidadeNome).split(/[^a-z0-9]+/)
   const destino = normalizar(destinoNome)
-  // Renal Center e Instituto de Doenças Renais Tocantins só recebem Exames, de qualquer origem.
-  if (/\brena(l|is)\b/.test(destino)) return !ehExames(motivo)
+  if (somenteDestino(destinoNome)) return !ehExames(motivo)
   if (motivo.codigo === 'transferencia_paciente') {
     return Object.entries(DESTINOS_BLOQUEADOS_TRANSFERENCIA)
       .some(([origem, bloqueados]) => palavras.includes(origem) && bloqueados.includes(destino))
@@ -138,7 +140,8 @@ export default function NovaSolicitacao() {
   const pontosDestino = origemFixa && unidade
     ? pontos.filter(p => normalizar(p.nome) !== normalizar(unidade.nome)
       && !destinoBloqueado(motivoSelecionado, unidade.nome, p.nome))
-    : pontos
+    : pontos.filter(p => !destinoBloqueado(motivoSelecionado, '', p.nome))
+  const pontosOrigem = pontos.filter(p => !somenteDestino(p.nome))
   const precisaAtendimento = form.motivo === 'transferencia_paciente'
   const precisaCidade = form.motivo === 'buscar_medico'
   const precisaHospital = form.motivo === 'material_outro_hospital'
@@ -205,7 +208,7 @@ export default function NovaSolicitacao() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">Selecione...</option>
-                {pontos.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
+                {pontosOrigem.map(p => <option key={`${p.tipo}-${p.id}`} value={p.id}>{p.nome}</option>)}
               </select>
               )}
               {fe('origem_id')}

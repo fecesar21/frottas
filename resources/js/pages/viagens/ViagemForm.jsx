@@ -21,6 +21,9 @@ export function motivosDoVeiculo(motivos, veiculo) {
   return motivos.filter(m => m.tipo_veiculo === 'ambos' || m.tipo_veiculo === tipo)
 }
 
+// Renal Center e Instituto de Doenças Renais Tocantins: nunca origem, e destino só em Exames (espelha MotivoViagem::somenteDestino).
+const somenteDestino = (nome) => /\bRENA(L|IS)\b/.test(nome.normalize('NFD').replace(/[̀-ͯ]/g, ''))
+
 // Motivos em que o número do atendimento não se aplica: o campo fica oculto.
 const MOTIVOS_SEM_ATENDIMENTO = [
   'buscar_medico', 'material_outro_hospital', 'transporte_colaborador', 'buscar_material_fornecedor',
@@ -136,7 +139,7 @@ export default function ViagemForm({ onSuccess }) {
             <select required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
               <option value="">Selecione a localidade...</option>
-              {nomesLocalidades.map(n => <option key={n} value={n}>{n}</option>)}
+              {nomesLocalidades.filter(n => !somenteDestino(n)).map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           ) : (
             <input type="text" required value={form.origem} onChange={e => setForm(f => ({ ...f, origem: e.target.value.toUpperCase() }))}
@@ -150,9 +153,7 @@ export default function ViagemForm({ onSuccess }) {
             <select required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500">
               <option value="">Selecione a localidade...</option>
-              {/* Renal Center e Instituto de Doenças Renais só recebem Exames (espelha MotivoViagem::destinoBloqueado). */}
-              {nomesLocalidades.filter(n => !/\bRENA(L|IS)\b/.test(n.normalize('NFD').replace(/[̀-ͯ]/g, '')))
-                .map(n => <option key={n} value={n}>{n}</option>)}
+              {nomesLocalidades.filter(n => !somenteDestino(n)).map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           ) : (
             <input type="text" required value={form.destino} onChange={e => setForm(f => ({ ...f, destino: e.target.value.toUpperCase() }))}

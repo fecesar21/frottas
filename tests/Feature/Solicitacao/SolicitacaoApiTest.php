@@ -795,6 +795,24 @@ class SolicitacaoApiTest extends TestCase
 
     }
 
+    public function test_clinicas_renais_sao_so_destino_e_apenas_de_exames(): void
+    {
+        $exames = MotivoViagem::factory()->create(['codigo' => 'exames_levar_paciente', 'nome' => 'Exames - Levar Paciente', 'disponivel_solicitacao' => true]);
+        $renais = collect(['Renal Center', 'Instituto de Doenças Renais Tocantins'])
+            ->map(fn ($nome) => Localidade::factory()->create(['nome' => $nome])->id);
+        $hra = Localidade::factory()->create(['nome' => 'HRA'])->id;
+        $this->loginSolicitanteDa(Unidade::factory()->create(['nome' => 'UPA', 'tipo' => 'filial']));
+
+        foreach ($renais as $id) {
+            $this->postJson('/api/solicitacoes', ['motivo' => $exames->codigo, 'destino_tipo' => 'localidade', 'destino_id' => $id])
+                ->assertCreated();
+            $this->postJson('/api/solicitacoes', ['motivo' => 'transferencia_paciente', 'numero_atendimento' => 1, 'autorizacao_referencia_em' => now()->subHour()->format('Y-m-d\TH:i'), 'destino_tipo' => 'localidade', 'destino_id' => $id])
+                ->assertJsonValidationErrors(['destino_id']);
+            $this->postJson('/api/solicitacoes', ['motivo' => 'transporte_colaborador', 'origem_tipo' => 'localidade', 'origem_id' => $id, 'destino_tipo' => 'localidade', 'destino_id' => $hra])
+                ->assertJsonValidationErrors(['origem_id']);
+        }
+    }
+
     public function test_exames_da_upa_e_do_pai_so_aceitam_hma_hmdo_imed_e_itpac(): void
     {
         $exames = MotivoViagem::factory()->create(['codigo' => 'exames_levar_paciente', 'nome' => 'Exames - Levar Paciente', 'disponivel_solicitacao' => true]);

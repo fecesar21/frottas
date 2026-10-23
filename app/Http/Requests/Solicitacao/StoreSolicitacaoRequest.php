@@ -64,6 +64,19 @@ class StoreSolicitacaoRequest extends FormRequest
                 $validator->errors()->add('motivo', 'Este motivo não está disponível para a sua UO.');
             }
 
+            $nomePonto = fn (?string $tipo, ?string $id) => match ($tipo) {
+                'unidade' => Unidade::whereKey($id)->value('nome'),
+                'localidade' => Localidade::whereKey($id)->value('nome'),
+                default => null,
+            };
+            if (MotivoViagem::somenteDestino($nomePonto($this->input('origem_tipo'), $this->input('origem_id')))) {
+                $validator->errors()->add('origem_id', 'Este local só pode ser usado como destino.');
+            }
+            if (MotivoViagem::somenteDestino($nomePonto($this->input('destino_tipo'), $this->input('destino_id')))
+                && ! MotivoViagem::ehExames($this->input('motivo'))) {
+                $validator->errors()->add('destino_id', 'Este destino só está disponível para Exames - Levar Paciente.');
+            }
+
             if (! $usuario->unidade_id || ! MotivoViagem::origemNaUnidadeDoSolicitante($this->input('motivo'))) {
                 return;
             }
