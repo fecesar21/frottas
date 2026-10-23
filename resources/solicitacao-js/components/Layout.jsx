@@ -14,7 +14,7 @@ const items = [
   { to: '/minhas-solicitacoes', label: 'Minhas Solicitações', icon: ClipboardList },
 ]
 
-export default function Layout({ children, lateral }) {
+export default function Layout({ children, lateral, amplo = false }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -113,7 +113,7 @@ export default function Layout({ children, lateral }) {
             <aside className="hidden lg:block sticky top-8">{lateral}</aside>
           </div>
         ) : (
-          <main className="flex-1 p-6 md:p-8 max-w-3xl mx-auto w-full">{children}</main>
+          <main className={`flex-1 p-4 sm:p-6 md:p-8 mx-auto w-full ${amplo ? 'max-w-screen-2xl' : 'max-w-3xl'}`}>{children}</main>
         )}
 
         {lateral && (
